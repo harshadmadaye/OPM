@@ -1,0 +1,27 @@
+{
+  "name": "opm",
+  "displayName": "OPM Engineering Workflow",
+  "version": "0.1.0",
+  "description": "First Economy's private engineering workflow for Claude Code: brainstorm -> plan -> TDD execution with fresh-context subagents -> verification -> captured learnings. Lean reviewers, stack-specific patterns for TypeScript/React, Python and Flutter, and five light safety hooks.",
+  "author": {
+    "name": "First Economy",
+    "email": "developer@firsteconomy.com"
+  },
+  "repository": "https://github.com/harshadmadaye-fe/OPM",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "workflow",
+    "tdd",
+    "code-review",
+    "planning",
+    "hooks",
+    "react",
+    "python",
+    "flutter"
+  ],
+  "skills": [
+    "./skills/"
+  ],
+  "hooks": "./hooks/hooks.json"
+}

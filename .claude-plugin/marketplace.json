@@ -1,0 +1,22 @@
+{
+  "name": "opm",
+  "owner": {
+    "name": "First Economy",
+    "email": "developer@firsteconomy.com"
+  },
+  "metadata": {
+    "description": "Private marketplace for the OPM engineering workflow plugin"
+  },
+  "plugins": [
+    {
+      "name": "opm",
+      "source": "./",
+      "description": "OPM engineering workflow: planning, TDD execution, verification, reviewers, stack patterns and safety hooks",
+      "version": "0.1.0",
+      "author": {
+        "name": "First Economy",
+        "email": "developer@firsteconomy.com"
+      }
+    }
+  ]
+}
