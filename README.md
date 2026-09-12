@@ -8,7 +8,7 @@ your back, and the always-on context cost is under ten kilobytes, roughly two th
 ## Install
 
 ```
-/plugin marketplace add harshadmadaye-fe/OPM
+/plugin marketplace add dev-firsteconomy/OPM
 /plugin install opm@opm
 ```
 
