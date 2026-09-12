@@ -12,6 +12,11 @@ your back, and the always-on context cost is under ten kilobytes, roughly two th
 /plugin install opm@opm
 ```
 
+The repository is private under the `dev-firsteconomy` GitHub account. Before
+installing, ask the repo owner to add you as a collaborator and make sure git
+can authenticate to GitHub on your machine (for example `gh auth login`),
+because Claude Code clones the marketplace with your git credentials.
+
 Then, once per repository, copy the rules you want into the repo so they load
 automatically (plugins cannot ship rules themselves):
 
