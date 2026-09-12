@@ -46,6 +46,25 @@ Supporting skills: `opm:tdd-workflow`, `opm:verification-loop`,
 `opm:using-opm` is injected at session start and tells Claude to check for an
 applicable skill before acting.
 
+## Jump-start: a whole project from one prompt
+
+```
+/opm:jump-start my-new-project A field-sales app for our reps: visit planning, check-in with GPS, order capture that syncs to our ERP, manager dashboard on web. Android first, offline capable.
+```
+
+The skill parses the name and brief, brainstorms only for gaps that would change
+the architecture, and publishes a design artifact: flows, wireframes, data
+model, architecture, stack. It asks for approval after every revision. Once you
+approve and confirm the build, it plans the milestone, builds it wave by wave
+with parallel subagents under `opm:executing-plans` and `opm:tdd-workflow`,
+runs reviewers and the verification loop, then starts the app and hands you
+the local URL, or launches it on a connected device or simulator.
+
+For the build to run unattended, switch Claude Code to auto mode (Shift+Tab)
+when the skill asks, or start `claude --permission-mode bypassPermissions`
+inside the project in a sandbox. OPM does not change permissions itself. The
+detached process is managed by `scripts/dev-server.sh` (start, stop, status).
+
 ## Agents
 
 | Agent | Use it for |
@@ -75,9 +94,10 @@ per-hook switches.
 ```
 .claude-plugin/   plugin.json, marketplace.json
 agents/           5 subagents
-skills/           12 skills (SKILL.md plus templates/scripts where needed)
+skills/           13 skills (SKILL.md plus templates/scripts where needed)
 hooks/            hooks.json and 6 dependency-free Node scripts
 rules/            copy into <repo>/.claude/rules/ with scripts/install-rules.sh
+scripts/          install-rules.sh, dev-server.sh
 tests/            node --test tests/
 docs/             design notes and the source review
 ```

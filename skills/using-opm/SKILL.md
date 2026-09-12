@@ -29,6 +29,7 @@ Then announce "Using opm:<name> to <purpose>" and follow the skill exactly. If i
 5. `opm:compound-learnings` - capture anything non-obvious learned along the way.
 
 Scope larger than about a week, or several phases: use `opm:milestone-planning` between steps 1 and 2.
+New project from a single brief: `opm:jump-start <project-name> <brief>` runs the whole loop.
 
 ## Red Flags
 

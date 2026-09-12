@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 - 2026-09-12
+
+- New skill `opm:jump-start <name> <brief>`: brief to running project in one command. Gap-driven brainstorming, design artifact with per-revision approval, unattended multi-agent build under the developer's chosen permission mode, verification, local run or device launch.
+- New helper `scripts/dev-server.sh` to start, stop and inspect detached dev processes, with tests.
+- `using-opm` mentions jump-start in the workflow map.
+
 ## 0.1.0 - 2026-09-12
 
 Initial release, assembled from a review of ECC, superpowers, compound-engineering and GSD.
