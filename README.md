@@ -28,23 +28,43 @@ sh ~/.claude/plugins/cache/opm/opm/<version>/scripts/install-rules.sh --langs ty
 Or clone this repo and run `scripts/install-rules.sh` from it. Rules land in
 `<repo>/.claude/rules/opm/`. Keep `common/` small: it is loaded in every session.
 
-## The loop
+## Skills
 
-| Step | Skill | What it enforces |
-|---|---|---|
-| 1 | `opm:brainstorming` | No code before the design is agreed. One question at a time. Writes `docs/specs/`. |
-| 2 | `opm:writing-plans` | Bite-sized tasks, each with a failing test, implementation and commit. Writes `docs/plans/`. |
-| 3 | `opm:executing-plans` | One fresh subagent per task, reviewer gate after each, progress ledger survives compaction. |
-| 4 | `opm:verification-before-completion` | No "done" without fresh evidence: test output, build output, a diff. |
-| 5 | `opm:compound-learnings` | Non-obvious fixes get a short doc in `docs/solutions/` that future plans read first. |
+All 13 skills, invoked as `/opm:<name>` or picked up automatically when their
+description matches the task.
 
-For multi-week or greenfield scope use `opm:milestone-planning`, which adds a
-roadmap, phased plans with wave scheduling, and a short STATE digest.
+**The loop**
 
-Supporting skills: `opm:tdd-workflow`, `opm:verification-loop`,
-`opm:react-patterns`, `opm:python-patterns`, `opm:flutter-patterns`.
-`opm:using-opm` is injected at session start and tells Claude to check for an
-applicable skill before acting.
+| Skill | What it does |
+|---|---|
+| `using-opm` | Injected at session start. Tells Claude to check for an applicable skill before any other action and maps the workflow below. |
+| `brainstorming` | No code before the design is agreed. One question at a time, scaled to spike, bounded or architectural work. Writes `docs/specs/`. |
+| `writing-plans` | Turns an approved spec into bite-sized tasks, each with a failing test, implementation and commit. Writes `docs/plans/`. |
+| `executing-plans` | Runs a plan with one fresh subagent per task and a reviewer gate after each. Progress ledger survives compaction. |
+| `verification-before-completion` | No "done", "fixed" or "passing" without fresh command output as evidence. |
+| `compound-learnings` | Captures non-obvious fixes as short docs in `docs/solutions/` with validated frontmatter, and reads them back before planning. |
+
+**Bigger scope**
+
+| Skill | What it does |
+|---|---|
+| `milestone-planning` | Multi-week or greenfield work: roadmap, short STATE digest, phased PLAN files with wave scheduling for parallel subagents, deviation rules. |
+| `jump-start` | A whole project from one prompt. See the next section. |
+
+**Engineering**
+
+| Skill | What it does |
+|---|---|
+| `tdd-workflow` | Strict red, green, refactor with runner detection, a "fails for the right reason" gate, checkpoint commits and an evidence report. |
+| `verification-loop` | Build, types, lint, tests, secrets scan and diff review for Node, Python and Flutter projects, with a pass or fail report. |
+
+**Stack patterns**
+
+| Skill | What it does |
+|---|---|
+| `react-patterns` | React 18/19 and Next.js App Router: hooks discipline, composition, server and client boundaries, data fetching, measured performance work. |
+| `python-patterns` | Modern Python: typing, dataclasses and pydantic at boundaries, pathlib, context managers, async basics, uv, ruff and pytest layout. |
+| `flutter-patterns` | Flutter and Dart 3: widget composition, state management choice, immutability, async and streams, Firebase usage, widget and integration tests. |
 
 ## Jump-start: a whole project from one prompt
 
@@ -67,27 +87,34 @@ detached process is managed by `scripts/dev-server.sh` (start, stop, status).
 
 ## Agents
 
-| Agent | Use it for |
-|---|---|
-| `planner` | Turning an agreed spec into an implementation plan |
-| `code-reviewer` | Diff review with a confidence gate and an explicit false-positive list |
-| `typescript-reviewer` | TS/Node specifics: types, async pitfalls, tsconfig, merge readiness |
-| `security-reviewer` | OWASP checks, dependency audits, Firebase rules review |
-| `silent-failure-hunter` | Swallowed errors, empty catches, misleading fallbacks |
+All 5 subagents. Claude dispatches them on its own when a task matches, or
+you can ask for one by name.
+
+| Agent | Model | Use it for |
+|---|---|---|
+| `planner` | opus | Turning an agreed spec into an implementation plan, then handing off to `writing-plans` |
+| `code-reviewer` | sonnet | Diff review with a confidence gate, reviewer lenses chosen by risk, and an explicit false-positive list |
+| `typescript-reviewer` | sonnet | TypeScript and Node specifics: types, async pitfalls, tsconfig selection, merge readiness |
+| `security-reviewer` | sonnet | OWASP checks, dependency audits for npm, Python and Dart, Firebase rules review |
+| `silent-failure-hunter` | sonnet | Swallowed errors, empty catches, misleading fallbacks, with per-language grep patterns |
 
 ## Hooks
 
+All 6 hooks. Dependency-free Node scripts that never call a model or the
+network, never throw, and exit silently on internal error.
+
 | Event | Script | Effect |
 |---|---|---|
-| SessionStart | `session-start.js` | Injects `using-opm` |
-| PreToolUse Bash | `block-no-verify.js` | Denies `--no-verify` and hook bypasses |
-| PreToolUse Edit/Write | `config-protection.js` | Asks before editing lint/format/tsconfig files |
-| PostToolUse Edit/Write | `post-edit-accumulator.js` | Records edited files for the Stop hooks |
-| Stop | `stop-format-typecheck.js` | Formats edited files, runs tsc/ruff/dart on their project, blocks on type errors |
-| Stop | `check-console-log.js` | Warns about leftover debug output in edited files |
+| SessionStart | `session-start.js` | Injects the `using-opm` skill as context on startup, `/clear` and compaction |
+| PreToolUse on Bash | `block-no-verify.js` | Denies `git commit --no-verify`, `HUSKY=0` and other hook bypasses |
+| PreToolUse on Edit/Write | `config-protection.js` | Asks before editing lint, format, typecheck or `.husky` config files |
+| PostToolUse on Edit/Write | `post-edit-accumulator.js` | Records edited files per session for the Stop hooks |
+| Stop | `stop-format-typecheck.js` | Formats edited files, runs tsc, ruff or dart on their project, blocks on type errors |
+| Stop | `check-console-log.js` | Warns about leftover `console.log`, `print` or `debugPrint` in edited files |
 
-Set `OPM_HOOKS_DISABLED=1` to turn all of them off. See `hooks/README.md` for
-per-hook switches.
+Set `OPM_HOOKS_DISABLED=1` to turn all of them off. Per-hook switches are
+`OPM_ALLOW_CONFIG_EDITS`, `OPM_SKIP_FORMAT` and `OPM_SKIP_TYPECHECK`; see
+`hooks/README.md`.
 
 ## Layout
 
