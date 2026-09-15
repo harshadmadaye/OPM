@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 - 2026-09-15
+
+- Fix: plugin failed to load because the manifest listed `hooks/hooks.json` and `skills/` explicitly; both are standard locations that Claude Code loads automatically, so the duplicate made the whole plugin fail. Removed the entries.
+
 ## 0.2.0 - 2026-09-12
 
 - New skill `opm:jump-start <name> <brief>`: brief to running project in one command. Gap-driven brainstorming, design artifact with per-revision approval, unattended multi-agent build under the developer's chosen permission mode, verification, local run or device launch.

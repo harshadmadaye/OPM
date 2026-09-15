@@ -12,7 +12,7 @@
       "name": "opm",
       "source": "./",
       "description": "OPM engineering workflow: planning, TDD execution, verification, reviewers, stack patterns and safety hooks",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "author": {
         "name": "First Economy",
         "email": "developer@firsteconomy.com"
