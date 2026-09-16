@@ -30,7 +30,7 @@ Or clone this repo and run `scripts/install-rules.sh` from it. Rules land in
 
 ## Skills
 
-All 13 skills, invoked as `/opm:<name>` or picked up automatically when their
+All 14 skills, invoked as `/opm:<name>` or picked up automatically when their
 description matches the task.
 
 **The loop**
@@ -38,6 +38,7 @@ description matches the task.
 | Skill | What it does |
 |---|---|
 | `using-opm` | Injected at session start. Tells Claude to check for an applicable skill before any other action and maps the workflow below. |
+| `brew-idea` | Before brainstorming, when the idea itself is not settled. Four agents argue from product, engineering, skeptic and market angles; one judge ranks features and writes a plan. Writes `docs/specs/` and a readable page in `docs/brew/`. |
 | `brainstorming` | No code before the design is agreed. One question at a time, scaled to spike, bounded or architectural work. Writes `docs/specs/`. |
 | `writing-plans` | Turns an approved spec into bite-sized tasks, each with a failing test, implementation and commit. Writes `docs/plans/`. |
 | `executing-plans` | Runs a plan with one fresh subagent per task and a reviewer gate after each. Progress ledger survives compaction. |
@@ -85,6 +86,18 @@ when the skill asks, or start `claude --permission-mode bypassPermissions`
 inside the project in a sandbox. OPM does not change permissions itself. The
 detached process is managed by `scripts/dev-server.sh` (start, stop, status).
 
+`/opm:brew-idea <brief>` is for the step before that, when you have an idea but
+not a design. Run it inside the project (it reads the code if there is any):
+
+```
+/opm:brew-idea A field-sales app for our reps: visit planning, GPS check-in, order capture synced to the ERP.
+```
+
+One Workflow launch runs a scout, four angle agents that propose and then rebut
+each other, and a judge that marks every feature keep, improve, add or cut with
+the reason and who argued for it. You get a markdown spec and a plain-language
+page to approve; change requests rerun only the judge. Needs the Workflow tool.
+
 ## Agents
 
 All 5 subagents. Claude dispatches them on its own when a task matches, or
@@ -121,11 +134,11 @@ Set `OPM_HOOKS_DISABLED=1` to turn all of them off. Per-hook switches are
 ```
 .claude-plugin/   plugin.json, marketplace.json
 agents/           5 subagents
-skills/           13 skills (SKILL.md plus templates/scripts where needed)
+skills/           14 skills (SKILL.md plus templates/scripts where needed)
 hooks/            hooks.json and 6 dependency-free Node scripts
 rules/            copy into <repo>/.claude/rules/ with scripts/install-rules.sh
 scripts/          install-rules.sh, dev-server.sh
-tests/            node --test tests/
+tests/            node --test tests/*.test.js
 docs/             design notes and the source review
 ```
 
@@ -134,6 +147,6 @@ docs/             design notes and the source review
 - Skills: `name` equals the directory, description in third person with "Use when" triggers, body under 400 lines, no first person.
 - Agents: frontmatter `name`, `description`, `tools`, `model`; under 250 lines.
 - Hooks: builtin Node only, never throw, exit 0 on internal error, add a test.
-- Run `node --test tests/` and `claude plugin validate .` before opening a PR.
+- Run `node --test tests/*.test.js` and `claude plugin validate .` before opening a PR.
 
 Adapted material is credited in `THIRD_PARTY_NOTICES.md`.

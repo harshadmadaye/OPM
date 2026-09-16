@@ -30,6 +30,7 @@ Then announce "Using opm:<name> to <purpose>" and follow the skill exactly. If i
 
 Scope larger than about a week, or several phases: use `opm:milestone-planning` between steps 1 and 2.
 New project from a single brief: `opm:jump-start <project-name> <brief>` runs the whole loop.
+Idea not settled yet: `opm:brew-idea <brief>` has four agents argue it out and returns a ranked feature list and plan to feed step 1.
 
 ## Red Flags
 
