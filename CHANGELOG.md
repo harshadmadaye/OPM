@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0 - 2026-09-16
+
+- New skill `opm:brew-idea <brief>`: one Workflow launch where four angle agents (product, engineering, skeptic, market research with WebSearch) propose and rebut each other and an opus judge ranks features keep / improve / add / cut with a phased plan. The main thread writes `docs/specs/<date>-<slug>-brew.md`, one opus agent renders `docs/brew/<slug>.html`, and change requests rerun only the judge through workflow resume.
+- `using-opm` and the README mention brew-idea.
+- Tests: static checks on the workflow script and the skill, plus a manifest test that the two version fields and the changelog agree.
+
 ## 0.2.2 - 2026-09-16
 
 - Add design spec for `opm:brew-idea`, a multi-agent idea debate skill (`docs/specs/2026-09-16-brew-idea.md`). Spec only, no new skill yet.
