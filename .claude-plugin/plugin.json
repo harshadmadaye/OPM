@@ -1,7 +1,7 @@
 {
   "name": "opm",
   "displayName": "OPM Engineering Workflow",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "First Economy's private engineering workflow for Claude Code: brainstorm -> plan -> TDD execution with fresh-context subagents -> verification -> captured learnings. Lean reviewers, stack-specific patterns for TypeScript/React, Python and Flutter, and five light safety hooks.",
   "author": {
     "name": "First Economy",

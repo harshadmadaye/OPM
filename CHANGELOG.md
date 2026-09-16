@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2 - 2026-09-16
+
+- Add design spec for `opm:brew-idea`, a multi-agent idea debate skill (`docs/specs/2026-09-16-brew-idea.md`). Spec only, no new skill yet.
+
 ## 0.2.1 - 2026-09-15
 
 - Fix: plugin failed to load because the manifest listed `hooks/hooks.json` and `skills/` explicitly; both are standard locations that Claude Code loads automatically, so the duplicate made the whole plugin fail. Removed the entries.
