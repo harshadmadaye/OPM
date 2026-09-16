@@ -71,3 +71,26 @@ test('every phase label matches a meta.phases title', () => {
   assert.ok(used.size >= 4, 'expected phase labels in the script');
   for (const label of used) assert.ok(titles.has(label), `phase "${label}" is not in meta.phases`);
 });
+
+const SKILL = path.resolve(__dirname, '..', 'skills', 'brew-idea', 'SKILL.md');
+const TEMPLATE = path.resolve(__dirname, '..', 'skills', 'brew-idea', 'templates', 'spec.md');
+
+test('SKILL.md frontmatter follows the contributing rules', () => {
+  const text = fs.readFileSync(SKILL, 'utf8');
+  const front = text.match(/^---\n([\s\S]*?)\n---\n/);
+  assert.ok(front, 'frontmatter missing');
+  assert.match(front[1], /^name: brew-idea$/m);
+  assert.match(front[1], /^description: .*Use when/m);
+  assert.match(front[1], /^argument-hint: /m);
+  assert.match(front[1], /^disable-model-invocation: true$/m);
+  const bodyLines = text.slice(front[0].length).split('\n').length;
+  assert.ok(bodyLines < 400, `body is ${bodyLines} lines, limit 400`);
+  assert.ok(text.includes('scripts/brew.workflow.js'), 'skill must point at the workflow script');
+});
+
+test('spec template has every section the skill fills', () => {
+  const text = fs.readFileSync(TEMPLATE, 'utf8');
+  for (const heading of ['## Vision', '## Features', '## Plan', '## Cut', '## Open questions', '## Assumptions', '## Angles', '## Run']) {
+    assert.ok(text.includes(heading), `template missing ${heading}`);
+  }
+});
