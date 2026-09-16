@@ -22,7 +22,8 @@ test('every skill directory is listed in the README and using-opm names brew-ide
   const skills = fs.readdirSync(path.join(ROOT, 'skills')).filter((d) => fs.existsSync(path.join(ROOT, 'skills', d, 'SKILL.md')));
   const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
   for (const s of skills) assert.ok(readme.includes(`\`${s}\``), `README does not list ${s}`);
-  assert.ok(readme.includes(`${skills.length} skills`), `README layout count is not ${skills.length}`);
+  assert.ok(readme.includes(`All ${skills.length} skills`), `README heading does not say All ${skills.length} skills`);
+  assert.ok(readme.includes(`${skills.length} skills (SKILL.md`), `README layout count is not ${skills.length}`);
   const usingOpm = fs.readFileSync(path.join(ROOT, 'skills', 'using-opm', 'SKILL.md'), 'utf8');
   assert.ok(usingOpm.includes('opm:brew-idea'), 'using-opm workflow map does not mention brew-idea');
 });

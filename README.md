@@ -30,7 +30,7 @@ Or clone this repo and run `scripts/install-rules.sh` from it. Rules land in
 
 ## Skills
 
-All 13 skills, invoked as `/opm:<name>` or picked up automatically when their
+All 14 skills, invoked as `/opm:<name>` or picked up automatically when their
 description matches the task.
 
 **The loop**
@@ -138,7 +138,7 @@ skills/           14 skills (SKILL.md plus templates/scripts where needed)
 hooks/            hooks.json and 6 dependency-free Node scripts
 rules/            copy into <repo>/.claude/rules/ with scripts/install-rules.sh
 scripts/          install-rules.sh, dev-server.sh
-tests/            node --test tests/
+tests/            node --test tests/*.test.js
 docs/             design notes and the source review
 ```
 
@@ -147,6 +147,6 @@ docs/             design notes and the source review
 - Skills: `name` equals the directory, description in third person with "Use when" triggers, body under 400 lines, no first person.
 - Agents: frontmatter `name`, `description`, `tools`, `model`; under 250 lines.
 - Hooks: builtin Node only, never throw, exit 0 on internal error, add a test.
-- Run `node --test tests/` and `claude plugin validate .` before opening a PR.
+- Run `node --test tests/*.test.js` and `claude plugin validate .` before opening a PR.
 
 Adapted material is credited in `THIRD_PARTY_NOTICES.md`.

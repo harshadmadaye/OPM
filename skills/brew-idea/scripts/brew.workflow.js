@@ -153,9 +153,10 @@ Take a position on every one of the other angles' ideas by id. Endorse it, or at
 Then return revised: your own ideas after hearing the others, dropping any you no longer defend and keeping ids stable. ${readOnly}`
 }
 
-function judgePrompt(facts, proposals, rebuttals, missingAngles) {
+function judgePrompt(facts, proposals, rebuttals, missingAngles, silentAngles) {
   const feedback = args.feedback ? `\n## Developer feedback on the previous verdict, apply it\n${args.feedback}\n` : ''
   const missing = missingAngles.length ? `\nAngles that returned nothing and are not represented: ${missingAngles.join(', ')}. Say so in assumptions.` : ''
+  const quiet = silentAngles.length ? `\nAngles that proposed but returned no rebuttal: ${silentAngles.join(', ')}. Their ideas were never defended in the debate; say so in assumptions.` : ''
   return `You are the judge of an OPM brew-idea debate. Decide what the project should build.
 Brief:
 """
@@ -169,7 +170,7 @@ ${JSON.stringify(proposals, null, 2)}
 
 Rebuttals by angle (endorse and attack refer to idea ids):
 ${JSON.stringify(rebuttals, null, 2)}
-${missing}${feedback}
+${missing}${quiet}${feedback}
 ## Rules
 - vision: one line saying what the product is for whom.
 - features: every idea that survived, plus existing features worth a decision. decision is keep (exists, leave it), improve (exists, change it), add (new) or cut (remove or do not build). reason is one or two sentences that cite the argument that decided it. votesFor and votesAgainst list the angle names that endorsed or attacked it.
@@ -190,7 +191,7 @@ phase('Propose')
 const proposalResults = await parallel(ANGLES.map((angle) => () =>
   agent(proposePrompt(angle, facts), { label: `propose ${angle.key}`, phase: 'Propose', schema: PROPOSAL_SCHEMA, model: 'sonnet' })
 ))
-const proposals = proposalResults.map((p, i) => (p ? { angle: ANGLES[i].key, ...p } : null)).filter(Boolean)
+const proposals = proposalResults.map((p, i) => (p ? { ...p, angle: ANGLES[i].key } : null)).filter(Boolean)
 const missingAngles = ANGLES.filter((angle, i) => !proposalResults[i]).map((angle) => angle.key)
 if (missingAngles.length) log(`angles with no proposal: ${missingAngles.join(', ')}`)
 if (proposals.length < MIN_PROPOSALS) {
@@ -202,13 +203,13 @@ phase('Debate')
 const rebuttalResults = await parallel(proposals.map((own) => () =>
   agent(debatePrompt(own, proposals.filter((p) => p.angle !== own.angle)), { label: `debate ${own.angle}`, phase: 'Debate', schema: REBUTTAL_SCHEMA, model: 'sonnet' })
 ))
-const rebuttals = rebuttalResults.map((r, i) => (r ? { angle: proposals[i].angle, ...r } : null)).filter(Boolean)
-const silent = proposals.filter((p, i) => !rebuttalResults[i]).map((p) => p.angle)
-if (silent.length) log(`angles with no rebuttal: ${silent.join(', ')}`)
+const rebuttals = rebuttalResults.map((r, i) => (r ? { ...r, angle: proposals[i].angle } : null)).filter(Boolean)
+const silentAngles = proposals.filter((p, i) => !rebuttalResults[i]).map((p) => p.angle)
+if (silentAngles.length) log(`angles with no rebuttal: ${silentAngles.join(', ')}`)
 
 phase('Judge')
-const verdict = await agent(judgePrompt(facts, proposals, rebuttals, missingAngles), { label: 'judge', phase: 'Judge', schema: VERDICT_SCHEMA, model: 'opus', effort: 'high' })
-if (!verdict) return { completed: false, reason: 'judge returned nothing', facts, proposals, rebuttals, missingAngles }
+const verdict = await agent(judgePrompt(facts, proposals, rebuttals, missingAngles, silentAngles), { label: 'judge', phase: 'Judge', schema: VERDICT_SCHEMA, model: 'opus', effort: 'high' })
+if (!verdict) return { completed: false, reason: 'judge returned nothing', facts, proposals, rebuttals, missingAngles, silentAngles }
 
 log(`verdict: ${verdict.features.length} features, ${verdict.cut.length} cut, ${verdict.plan.length} plan phases`)
-return { completed: true, facts, proposals, rebuttals, verdict, missingAngles }
+return { completed: true, facts, proposals, rebuttals, verdict, missingAngles, silentAngles }

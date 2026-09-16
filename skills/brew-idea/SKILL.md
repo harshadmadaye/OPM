@@ -52,13 +52,13 @@ Invoking this skill is the opt-in the Workflow tool requires; do not ask again.
 ```
 Workflow({
   scriptPath: "<plugin root>/skills/brew-idea/scripts/brew.workflow.js",
-  args: { projectRoot: "<abs path>", brief: "<brief>", hasCode: <bool>, date: "<date>" }
+  args: { projectRoot: "<abs path>", brief: "<brief>", hasCode: <bool> }
 })
 ```
 
 Record the runId. Wait for the task notification; do not poll.
 
-Result shape: `{ completed, reason?, facts, proposals, rebuttals, verdict, missingAngles }`
+Result shape: `{ completed, reason?, facts, proposals, rebuttals, verdict, missingAngles, silentAngles }`
 with `verdict = { vision, features: [{ title, decision, reason, votesFor, votesAgainst, impact, effort }], plan: [{ phase, goal, features, risks }], cut: [{ title, reason }], openQuestions, assumptions }`.
 
 `completed: false` fails G2. Report `reason` and what came back (fact sheet,
@@ -74,7 +74,8 @@ Write `docs/specs/<date>-<slug>-brew.md` from `templates/spec.md`:
   `votesAgainst` as comma-separated angle names.
 - One plan section per phase.
 - Every entry in `verdict.cut`.
-- `missingAngles` become an assumption line each.
+- `missingAngles` and `silentAngles` become an assumption line each
+  (returned nothing, or proposed but never rebutted).
 - Angles: one short paragraph per angle from its proposal and rebuttal: its
   position, its strongest idea, what it attacked. An angle in `missingAngles`
   gets "returned nothing".
@@ -144,6 +145,7 @@ Tell the developer the next step:
 | Workflow tool missing | Stop and say so. No Agent-call imitation |
 | `completed: false` | Report `reason`, offer to relaunch. No spec, no page |
 | `missingAngles` not empty | Continue; note the angle in Assumptions and in the page |
+| `silentAngles` not empty | Continue; the judge is told, note it in Assumptions |
 | Market angle reports `webSearchUsed: false` | Note in Run that market claims were not checked online |
 | Renderer fails | Keep the spec, say so, offer to retry the render |
 | Developer interrupts the run | On the next invocation in the same directory, if a runId is known, relaunch with `resumeFromRunId` |
