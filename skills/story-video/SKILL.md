@@ -85,7 +85,7 @@ neural option only when Python was found in Phase 0.
 Run in order. Every step is incremental: unchanged scenes are skipped.
 
 1. `node S/setup.js` installs ffmpeg, ffprobe and edge-tts into the tools folder. First run takes about a minute.
-2. `node S/render-slides.js <storyDir>` writes `slides/`. It ends with `custom scenes to draw: <ids>`.
+2. `node S/render-slides.js <storyDir>` writes `slides/`. It ends with `custom scenes to draw: <ids>`. Above that it prints `orphan slides, not in the storyboard: <ids>` when slide files are left over from scenes that have since been deleted; it never removes one. Delete those files yourself before Phase 6, which commits `slides/` wholesale.
 3. If that list is not `none`, dispatch one agent for all of them:
 
 ```
@@ -157,5 +157,5 @@ the voice used, and that an edit is rebuilt by rerunning Phase 4.
 
 - Narration text leaves the machine only after consent at G2, and only to Microsoft's speech endpoint.
 - Nothing is installed outside `~/.opm/story-video-tools/` (`OPM_STORY_TOOLS` overrides). No PATH changes, no global packages. Deleting that folder is a full uninstall.
-- In the project, the skill writes only under `docs/story/<slug>/`, and commits only at Phase 6. Outside it, only the tools folder above and a temporary browser profile under the system temp directory, removed after each frame.
+- In the project, the skill writes only under `docs/story/<slug>/`, and commits only at Phase 6. Outside it, only the tools folder above and a temporary browser profile under the system temp directory, removed after each frame; when the removal keeps failing the script warns, leaves the profile behind and carries on, so a stuck profile never fails a render.
 - Real people are surfaced at G2. `note` must not describe a real person as made up.

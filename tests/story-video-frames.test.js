@@ -126,6 +126,31 @@ test('a run before render-slides says which file is missing, not a raw ENOENT', 
   assert.ok(!out.stderr.includes('ENOENT'), 'no internal path in the message');
 });
 
+test('a run before render-slides ever made slides/ says the same thing, not a raw ENOENT', () => {
+  const dir = path.join(tmpRoot, 'no-slides-dir');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'storyboard.json'), JSON.stringify({ title: 'T', scenes: [{ id: '01' }] }));
+  for (const argv of [[dir], [dir, '--dry-run']]) {
+    const out = spawnSync(process.execPath, [path.join(SCRIPTS, 'render-frames.js'), ...argv], { encoding: 'utf8' });
+    assert.equal(out.status, 1, `${argv.join(' ')}: ${out.stdout}`);
+    assert.match(out.stderr, /slides\/slides\.css is missing; run render-slides\.js first/);
+    assert.ok(!out.stderr.includes('ENOENT'), 'no raw filesystem error');
+    assert.ok(!out.stderr.includes('scandir'), 'no raw filesystem error');
+  }
+});
+
+test('a storyboard with no scenes is named, not a TypeError', () => {
+  const dir = path.join(tmpRoot, 'no-scenes');
+  fs.mkdirSync(path.join(dir, 'slides'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'slides', 'slides.css'), 'body{}');
+  fs.writeFileSync(path.join(dir, 'storyboard.json'), JSON.stringify({ title: 'T' }));
+  const out = spawnSync(process.execPath, [path.join(SCRIPTS, 'render-frames.js'), dir], { encoding: 'utf8' });
+  assert.equal(out.status, 1);
+  assert.match(out.stderr, /storyboard\.json: no scenes/);
+  assert.ok(!out.stderr.includes('Cannot read properties'), 'no raw TypeError');
+  assert.equal(out.stderr.trim().split('\n').length, 1, 'one line, no stack trace');
+});
+
 const canTestUnremovableDir = process.platform !== 'win32' && process.getuid && process.getuid() !== 0;
 test('a profile directory that cannot be removed warns; the render never hangs', { skip: canTestUnremovableDir ? false : 'needs POSIX permissions and a non-root user' }, async () => {
   const parent = path.join(tmpRoot, 'locked');

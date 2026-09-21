@@ -49,10 +49,24 @@ function listSlides(dir) {
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
+// Run before render-slides there is no slides/ at all, so this comes before
+// anything reads that directory: the operator needs the next command to run,
+// not a scandir error naming a path they never typed.
+function requireSlides(paths) {
+  if (!fs.existsSync(paths.slides) || !fs.existsSync(paths.css)) {
+    throw new Error('slides/slides.css is missing; run render-slides.js first');
+  }
+}
+
 // Only scenes the storyboard still names are worth a browser launch: a slide
 // left behind by a deleted scene is skipped here and reported by render-slides.
+// The full validator belongs to validate-storyboard.js; this needs the shape it
+// is about to read, and says which file is wrong when it does not have it.
 function slidesInStoryboard(paths) {
   const board = loadStoryboard(paths.storyboard);
+  if (!board || !Array.isArray(board.scenes)) {
+    throw new Error(`${paths.storyboard}: no scenes array; run validate-storyboard.js`);
+  }
   const known = new Set(board.scenes.map((scene) => scene.id));
   return listSlides(paths.slides).filter((slide) => known.has(slide.id));
 }
@@ -175,6 +189,7 @@ function renderFrame({
 
 function dryRun(storyDir, log) {
   const paths = storyPaths(storyDir);
+  requireSlides(paths);
   const slides = slidesInStoryboard(paths);
   slides.forEach(({ id, htmlPath }) => {
     const userDataDir = path.join(os.tmpdir(), `opm-story-chrome-${process.pid}-${id}`);
@@ -186,10 +201,8 @@ function dryRun(storyDir, log) {
 
 async function renderAll(storyDir, { log = console.log } = {}) {
   const paths = storyPaths(storyDir);
+  requireSlides(paths);
   const slides = slidesInStoryboard(paths);
-  if (!fs.existsSync(paths.css)) {
-    throw new Error('slides/slides.css is missing; run render-slides.js first');
-  }
   const css = fs.readFileSync(paths.css, 'utf8');
 
   const browser = findBrowser({});
