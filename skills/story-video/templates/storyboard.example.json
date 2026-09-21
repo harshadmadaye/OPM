@@ -90,10 +90,11 @@
       "sub": "Every scene is checked before a build ever starts",
       "slots": {
         "items": [
-          { "label": "Unknown icons and mismatched slots get rejected", "state": "done" },
-          { "label": "Scene ids are two digits and always count upward", "state": "done" },
-          { "label": "Each narration runs between 25 and 110 words", "state": "done" },
-          { "label": "A narration sentence copied straight onto a slide", "state": "problem" }
+          { "label": "Icon vocabulary", "state": "done" },
+          { "label": "Layout slot schema", "state": "done" },
+          { "label": "Id format and order", "state": "done" },
+          { "label": "Narration length", "state": "done" },
+          { "label": "Voice-over text on the slide", "state": "problem" }
         ]
       },
       "visual": "",
@@ -140,7 +141,7 @@
         "highlight": [[3, 1]]
       },
       "visual": "",
-      "narration": "Everything the pipeline writes lands under docs, story, and the slug name, inside the target project. The storyboard file, the slide sources, the finished MP4 and its subtitle file all get committed to the repository. The frames, audio and segment folders stay as working files, listed in a generated gitignore so nobody accidentally commits gigabytes of PNGs and MP3s.",
+      "narration": "Everything the pipeline writes lands under docs, story, and the slug name, inside the target project. The storyboard file, the slide sources, the finished MP4 and its subtitle file all get committed to the repository. The frames, audio and segment folders stay as working files, listed in a generated gitignore so nobody commits them by accident.",
       "source": "Output layout in the target project",
       "planned": false
     },
