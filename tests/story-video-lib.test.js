@@ -90,6 +90,12 @@ test('storyPaths derives every path from the story directory, spaces included', 
   assert.equal(paths.sceneFile(p.frames, '03', 'png'), path.join(root, 'frames', 'scene-03.png'));
 });
 
+test('sceneFile refuses any id that could place output outside the story directory', () => {
+  for (const bad of ['../../../../tmp/pwned', 'scene/../..', '3', '003', 'a1', '', null, undefined]) {
+    assert.throws(() => paths.sceneFile('/p/frames', bad, 'png'), /bad scene id/, `accepted ${String(bad)}`);
+  }
+});
+
 function pngHeader(width, height) {
   const buf = Buffer.alloc(24);
   Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(buf, 0);

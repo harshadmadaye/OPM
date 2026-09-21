@@ -8,6 +8,11 @@ const { spawnSync } = require('node:child_process');
 const { toolsDir, venvPython, toolBinary, findBrowser } = require('./lib/paths');
 
 const PACKAGE_JSON = '{"private":true,"name":"opm-story-video-tools"}\n';
+// Pinned exactly: setup.js runs unattended mid-flow and ffmpeg-static's
+// postinstall downloads a binary, so nobody would see a surprise version land.
+const FFMPEG_SPEC = 'ffmpeg-static@5.3.0';
+const FFPROBE_SPEC = 'ffprobe-static@3.1.0';
+const EDGE_TTS_SPEC = 'edge-tts==7.2.8';
 
 function findPython({ platform = process.platform, which } = {}) {
   const names = platform === 'win32' ? ['python3', 'python', 'py'] : ['python3', 'python'];
@@ -22,11 +27,11 @@ function findPython({ platform = process.platform, which } = {}) {
 function installPlan({ tools, platform = process.platform, python }) {
   const npmCmd = platform === 'win32' ? 'npm.cmd' : 'npm';
   const plan = [
-    { cmd: npmCmd, args: ['install', '--no-audit', '--no-fund', 'ffmpeg-static', 'ffprobe-static'], cwd: tools, shell: platform === 'win32' },
+    { cmd: npmCmd, args: ['install', '--no-audit', '--no-fund', FFMPEG_SPEC, FFPROBE_SPEC], cwd: tools, shell: platform === 'win32' },
   ];
   if (!python) return plan;
   plan.push({ cmd: python.cmd, args: [...python.args, '-m', 'venv', 'venv'], cwd: tools, shell: false });
-  plan.push({ cmd: venvPython(tools, platform), args: ['-m', 'pip', 'install', '--quiet', 'edge-tts'], cwd: tools, shell: false });
+  plan.push({ cmd: venvPython(tools, platform), args: ['-m', 'pip', 'install', '--quiet', EDGE_TTS_SPEC], cwd: tools, shell: false });
   return plan;
 }
 

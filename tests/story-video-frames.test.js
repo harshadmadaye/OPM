@@ -32,9 +32,9 @@ test('findPython prefers python3, then python, then the py launcher on Windows',
 
 test('installPlan: npm into the tools folder, venv and edge-tts only with Python, npm.cmd through a shell on Windows', () => {
   const mac = setup.installPlan({ tools: '/t', platform: 'darwin', python: { cmd: '/usr/bin/python3', args: [] } });
-  assert.deepEqual(mac[0], { cmd: 'npm', args: ['install', '--no-audit', '--no-fund', 'ffmpeg-static', 'ffprobe-static'], cwd: '/t', shell: false });
+  assert.deepEqual(mac[0], { cmd: 'npm', args: ['install', '--no-audit', '--no-fund', 'ffmpeg-static@5.3.0', 'ffprobe-static@3.1.0'], cwd: '/t', shell: false });
   assert.deepEqual(mac[1], { cmd: '/usr/bin/python3', args: ['-m', 'venv', 'venv'], cwd: '/t', shell: false });
-  assert.deepEqual(mac[2], { cmd: '/t/venv/bin/python', args: ['-m', 'pip', 'install', '--quiet', 'edge-tts'], cwd: '/t', shell: false });
+  assert.deepEqual(mac[2], { cmd: '/t/venv/bin/python', args: ['-m', 'pip', 'install', '--quiet', 'edge-tts==7.2.8'], cwd: '/t', shell: false });
   assert.equal(mac.length, 3);
 
   const win = setup.installPlan({ tools: 'C:\\t', platform: 'win32', python: { cmd: 'py', args: ['-3'] } });
@@ -68,9 +68,9 @@ test('toolBinary returns null (not a throw) for a half-installed package, and se
   assert.equal(report.ffmpeg, false);
 });
 
-test('chromeArgs: fixed flags, own user-data-dir, encoded file URL', () => {
+test('chromeArgs: fixed flags, no network, own user-data-dir, encoded file URL', () => {
   const args = frames.chromeArgs({ userDataDir: '/tmp/ud-03', pngPath: '/p/My Project /frames/scene-03.png', htmlPath: '/p/My Project /slides/scene-03.html' });
-  assert.deepEqual(args.slice(0, 7), ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=1', '--window-size=1920,1080', '--no-first-run', '--no-default-browser-check']);
+  assert.deepEqual(args.slice(0, 9), ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=1', '--window-size=1920,1080', '--no-first-run', '--no-default-browser-check', '--host-resolver-rules=MAP * ~NOTFOUND', '--disable-background-networking']);
   assert.ok(args.includes('--user-data-dir=/tmp/ud-03'));
   assert.ok(args.includes('--screenshot=/p/My Project /frames/scene-03.png'));
   assert.equal(args[args.length - 1], 'file:///p/My%20Project%20/slides/scene-03.html');

@@ -10,12 +10,14 @@ import argparse
 import asyncio
 import json
 import os
+import re
 import sys
 
 DEFAULT_VOICE = "en-IN-NeerjaExpressiveNeural"
 DEFAULT_RATE = "+6%"
 MAX_ATTEMPTS = 3
 RETRY_DELAY_SECONDS = 2
+SCENE_ID_PATTERN = re.compile(r"^\d\d$")
 
 
 def clean_text(text):
@@ -52,6 +54,10 @@ async def main():
     by_id = {scene["id"]: scene for scene in board["scenes"]}
     wanted = [item.strip() for item in options.only.split(",") if item.strip()]
     for scene_id in wanted:
+        # Checked before the id is ever joined to the audio directory, so no id
+        # can place an MP3 outside it.
+        if not SCENE_ID_PATTERN.match(scene_id):
+            raise SystemExit(f"error: bad scene id: {scene_id}")
         if scene_id not in by_id:
             raise SystemExit(f"error: unknown scene id: {scene_id}")
 

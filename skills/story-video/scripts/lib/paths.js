@@ -7,6 +7,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
+const SCENE_ID_PATTERN = /^\d\d$/;
+
 function toolsDir({ env = process.env, homedir = os.homedir() } = {}) {
   if (env.OPM_STORY_TOOLS) return env.OPM_STORY_TOOLS;
   return path.join(homedir, '.opm', 'story-video-tools');
@@ -109,7 +111,13 @@ function storyPaths(storyDir) {
   };
 }
 
+// Every writer of scene output goes through here, so the two-digit rule is
+// enforced in one place: an id like "../../tmp/x" would otherwise place output
+// outside the story directory.
 function sceneFile(dir, id, ext) {
+  if (typeof id !== 'string' || !SCENE_ID_PATTERN.test(id)) {
+    throw new Error(`bad scene id: ${id}`);
+  }
   return path.join(dir, `scene-${id}.${ext}`);
 }
 

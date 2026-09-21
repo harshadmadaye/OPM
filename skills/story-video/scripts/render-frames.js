@@ -29,6 +29,11 @@ function chromeArgs({ userDataDir, pngPath, htmlPath }) {
     '--window-size=1920,1080',
     '--no-first-run',
     '--no-default-browser-check',
+    // A custom slide is HTML an agent wrote from the source document, and this
+    // render happens before the narration consent gate. The slides need no
+    // network, so the browser gets none: a stray remote reference cannot leak.
+    '--host-resolver-rules=MAP * ~NOTFOUND',
+    '--disable-background-networking',
     `--user-data-dir=${userDataDir}`,
     `--screenshot=${pngPath}`,
     pathToFileURL(htmlPath).href,

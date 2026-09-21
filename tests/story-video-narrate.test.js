@@ -75,4 +75,8 @@ test('narrate.py --dry-run plans without importing edge_tts', { skip: python ? f
   const bad = spawnSync(python, [path.join(SCRIPTS, 'narrate.py'), EXAMPLE, path.join(tmpRoot, 'audio'), '--only', '99', '--dry-run'], { encoding: 'utf8' });
   assert.equal(bad.status, 1);
   assert.match(bad.stderr, /unknown scene id: 99/);
+
+  const escaping = spawnSync(python, [path.join(SCRIPTS, 'narrate.py'), EXAMPLE, path.join(tmpRoot, 'audio'), '--only', '../../../../tmp/pwned'], { encoding: 'utf8' });
+  assert.equal(escaping.status, 1);
+  assert.match(escaping.stderr, /bad scene id/);
 });
