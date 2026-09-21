@@ -38,3 +38,16 @@ Task 10: complete (commits db9bf0f..aeb5800, 2 tests green, 101 total with 1 exp
 Task 9: review clean (approved; 2 minors deferred: unused `plan` parameter in speakScene, commit trailer)
 Task 11: complete (commit cdf4358, full suite 102/102, claude plugin validate passed)
 Verification (controller, fresh): node --test tests/*.test.js 102 pass 0 fail; claude plugin validate . passed; version 0.4.0 in both manifests and CHANGELOG head; both README skill counts 15; brew-idea/jump-start/milestone-planning each mention story-video exactly once; no secrets; no leftover console.log in shipped scripts
+Final whole-branch review (opus code-reviewer): REQUEST CHANGES - 2 HIGH, 3 MEDIUM, 3 LOW
+Final security review (opus security-reviewer): APPROVE - 0 Critical, 0 High, 3 MEDIUM, 3 LOW, all defence-in-depth
+Verified HIGH 1 myself: render-slides.js has no custom:<id> manifest key, so an edited custom scene is never re-flagged
+Verified HIGH 2 myself: 48 chars at 84px needs ~2200px in a 1740px box so it wraps; a second line ends ~356px while .sub starts at 294px
+Fix round 1/3 dispatched for the combined list from both reviews
+Fix round 1/3 on the final review (commits 83aeec8, caeadc3, a05b4b4, bd66a0d, 8b6efc0): 10 of 11 addressed, no test weakened (re-reviewer checked 7 touched assertions, all equal or stronger)
+Fix round 1 re-review: HIGH 1 NOT ADDRESSED. My own verification of it was wrong - I ran render-slides an extra time between the draw and the edit, which the documented Phase 4 order does not. Re-ran in the documented order and the stale slide still ships with "custom scenes to draw: none".
+Ruling: my verification sequence must match the skill's documented step order, not a convenient one. Recorded here because the same mistake would hide the same class of bug again.
+Fix round 2/3 dispatched: HIGH 1 with an explicit behaviour table, plus 3 new issues the fix wave introduced
+Fix round 2/3 (commits ddc34c9, 5e31abf): HIGH 1 addressed with a 7-row behaviour table, plus the 3 issues the first wave introduced. Suite 119.
+Verified HIGH 1 myself in the documented order: ask->10, edit->10, agent fails->10, redraw->none, no change->none, second edit->10. Friendly errors confirmed for a missing slides dir and a storyboard with no scenes array.
+End-to-end: rendered the example storyboard to 10 real 1920x1080 PNGs with the actual browser. Looked at two frames. Scene 02's flow labels were truncated at 5 steps (292px cards), fixed by shortening them; re-rendered and only scene 02 rebuilt, which also confirms the manifest on real files.
+Ruling: fixed the four flow labels myself rather than dispatching - a content edit I had the rendered evidence for in hand - costs nothing if wrong, the slide is visibly correct
