@@ -1,0 +1,52 @@
+/* Frame for opm:story-video slides. Exactly 1920 x 1080 with a 90px safe margin. */
+:root {
+  --ground: #f2f5f4;
+  --surface: #ffffff;
+  --ink: #101a19;
+  --ink-2: #445553;
+  --line: #d3dcda;
+  --accent: #0d6d67;
+  --accent-soft: #dcecea;
+}
+.tone-teal { --accent: #0d6d67; --accent-soft: #dcecea; }
+.tone-amber { --accent: #b26a00; --accent-soft: #f6ecd8; }
+
+* { box-sizing: border-box; }
+html, body { width: 1920px; height: 1080px; margin: 0; padding: 0; overflow: hidden; }
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: -apple-system, "Segoe UI", "Helvetica Neue", Roboto, "Noto Sans", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.slide { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+
+.chip, .planned {
+  position: absolute;
+  top: 90px;
+  padding: 13px 28px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  border-radius: 999px;
+}
+.chip { left: 90px; color: var(--accent); background: var(--accent-soft); }
+.planned { right: 90px; color: var(--surface); background: var(--ink-2); }
+
+h1 {
+  position: absolute; left: 90px; top: 182px; width: 1740px; margin: 0;
+  font-size: 84px; line-height: 1.04; font-weight: 700; letter-spacing: -0.015em; color: var(--ink);
+}
+.sub {
+  position: absolute; left: 90px; top: 294px; width: 1740px; margin: 0;
+  font-size: 42px; line-height: 1.2; font-weight: 500; color: var(--ink-2);
+}
+.stage { position: absolute; left: 90px; top: 380px; width: 1740px; height: 530px; }
+.stage svg { display: block; width: 1740px; height: 530px; }
+svg text { font-family: inherit; }
+
+.counter {
+  position: absolute; right: 90px; bottom: 90px;
+  font-size: 28px; font-weight: 600; letter-spacing: 0.08em; line-height: 1; color: var(--ink-2);
+}
