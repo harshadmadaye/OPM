@@ -9,6 +9,7 @@ const path = require('node:path');
 
 const SKILL = path.resolve(__dirname, '..', 'skills', 'story-video');
 const { renderSlideHtml, renderAll } = require(path.join(SKILL, 'scripts', 'render-slides.js'));
+const { customRecord, parseCustomRecord, hashOf } = require(path.join(SKILL, 'scripts', 'lib', 'manifest.js'));
 const CLI = path.join(SKILL, 'scripts', 'render-slides.js');
 const EXAMPLE = path.join(SKILL, 'templates', 'storyboard.example.json');
 
@@ -103,7 +104,9 @@ test('editing a custom scene puts it back on the list to draw', () => {
   const after = renderAll(dir, { log: () => {} });
   assert.deepEqual(after.customMissing, []);
   assert.deepEqual(after.customStale, [customId], 'an edited visual makes the drawn slide stale');
-  assert.deepEqual(renderAll(dir, { log: () => {} }).customStale, [], 'the new hash is recorded once');
+  assert.deepEqual(renderAll(dir, { log: () => {} }).customStale, [customId], 'still stale while the drawing on disk is the old one');
+  fs.writeFileSync(path.join(dir, 'slides', `scene-${customId}.html`), '<html>redrawn</html>');
+  assert.deepEqual(renderAll(dir, { log: () => {} }).customStale, [], 'the redrawn html settles it');
 
   const reheaded = board();
   custom(reheaded).visual = revised.scenes.find((s) => s.layout === 'custom').visual;
@@ -112,6 +115,153 @@ test('editing a custom scene puts it back on the list to draw', () => {
   const out = spawnSync(process.execPath, [CLI, dir], { encoding: 'utf8' });
   assert.equal(out.status, 0, out.stderr);
   assert.match(out.stdout, new RegExp(`custom scenes to draw: ${customId}`), 'the CLI lists stale ids, not just missing ones');
+});
+
+// The seven states render-slides has to tell apart for one custom scene. The
+// script never sees the drawing agent work, so it records the brief it asked
+// against and the html that was on disk at that moment; a redraw shows up as
+// changed bytes.
+const CUSTOM_ID = board().scenes.find((s) => s.layout === 'custom').id;
+
+function customStory(name) {
+  const dir = storyDir(name);
+  const slide = path.join(dir, 'slides', `scene-${CUSTOM_ID}.html`);
+  const customScene = (b) => b.scenes.find((s) => s.layout === 'custom');
+  return {
+    dir,
+    run: () => renderAll(dir, { log: () => {} }),
+    draw: (html) => {
+      fs.mkdirSync(path.dirname(slide), { recursive: true });
+      fs.writeFileSync(slide, html);
+    },
+    erase: () => fs.rmSync(slide, { force: true }),
+    editBrief: (visual) => {
+      const b = board();
+      customScene(b).visual = visual;
+      fs.writeFileSync(path.join(dir, 'storyboard.json'), JSON.stringify(b));
+    },
+    recorded: () => parseCustomRecord(JSON.parse(fs.readFileSync(path.join(dir, '.build', 'manifest.json'), 'utf8'))[`custom:${CUSTOM_ID}`]),
+    htmlHash: () => hashOf(fs.readFileSync(slide)),
+  };
+}
+
+test('custom row 1: no file and nothing recorded is missing, and the ask is recorded', () => {
+  const story = customStory('custom row one');
+  const first = story.run();
+  assert.deepEqual(first.customMissing, [CUSTOM_ID]);
+  assert.deepEqual(first.customStale, []);
+  const rec = story.recorded();
+  assert.equal(rec.html, null, 'no html on disk to record');
+  assert.equal(rec.asked, true, 'the record was written while asking');
+});
+
+test('custom row 2: no file stays missing even once recorded', () => {
+  const story = customStory('custom row two');
+  story.run();
+  const brief = story.recorded().brief;
+  const again = story.run();
+  assert.deepEqual(again.customMissing, [CUSTOM_ID]);
+  assert.deepEqual(again.customStale, []);
+  assert.deepEqual(story.recorded(), { brief, html: null, asked: true });
+
+  story.draw('<html>drawn</html>');
+  story.run();
+  story.erase();
+  const gone = story.run();
+  assert.deepEqual(gone.customMissing, [CUSTOM_ID], 'a deleted drawing is missing again');
+  assert.equal(story.recorded().html, null, 'and the recorded html goes with it');
+});
+
+test('custom row 3: a slide drawn before the script ever ran is fresh, not stale', () => {
+  const story = customStory('custom row three');
+  story.draw('<html>hand drawn</html>');
+  const first = story.run();
+  assert.deepEqual(first.customMissing, []);
+  assert.deepEqual(first.customStale, []);
+  assert.deepEqual(story.recorded(), { brief: story.recorded().brief, html: story.htmlHash(), asked: false });
+});
+
+test('custom row 4: the drawing that answers the ask is fresh', () => {
+  const story = customStory('custom row four');
+  story.run();
+  assert.equal(story.recorded().html, null);
+  story.draw('<html>V1</html>');
+  const drawn = story.run();
+  assert.deepEqual(drawn.customMissing, []);
+  assert.deepEqual(drawn.customStale, []);
+  assert.equal(story.recorded().html, story.htmlHash());
+  assert.equal(story.recorded().asked, false, 'the drawing was accepted');
+});
+
+test('custom row 5: html that changed after a stale ask is fresh again', () => {
+  const story = customStory('custom row five');
+  story.run();
+  story.draw('<html>V1</html>');
+  story.run();
+  story.editBrief('A different picture entirely: one badge, no thumbnail.');
+  assert.deepEqual(story.run().customStale, [CUSTOM_ID]);
+  story.draw('<html>V2</html>');
+  const redrawn = story.run();
+  assert.deepEqual(redrawn.customStale, []);
+  assert.deepEqual(redrawn.customMissing, []);
+  assert.equal(story.recorded().html, story.htmlHash());
+  assert.equal(story.recorded().asked, false);
+});
+
+test('custom row 6: an ask the agent never answered stays stale', () => {
+  const story = customStory('custom row six');
+  story.run();
+  story.draw('<html>V1</html>');
+  story.run();
+  story.editBrief('A different picture entirely: one badge, no thumbnail.');
+  const asked = story.run();
+  assert.deepEqual(asked.customStale, [CUSTOM_ID]);
+  const record = story.recorded();
+  assert.equal(record.asked, true);
+
+  const again = story.run();
+  assert.deepEqual(again.customStale, [CUSTOM_ID], 'silence is not a redraw');
+  assert.deepEqual(again.customMissing, []);
+  assert.deepEqual(story.recorded(), record, 'the record is left as it stands');
+});
+
+test('custom row 7: a brief edited after the ask makes the drawing stale', () => {
+  const story = customStory('custom row seven');
+  story.run();
+  story.draw('<html>V1</html>');
+  // The documented Phase 4 order: the storyboard is edited at G3, with no
+  // render-slides run between the drawing and the edit.
+  story.editBrief('A different picture entirely: one badge, no thumbnail.');
+  const edited = story.run();
+  assert.deepEqual(edited.customStale, [CUSTOM_ID], 'the brief changed under the drawing');
+  assert.deepEqual(edited.customMissing, []);
+  const record = story.recorded();
+  assert.equal(record.html, story.htmlHash(), 'the html as it currently stands');
+  assert.equal(record.asked, true);
+});
+
+test('the Phase 4 replay: ask, draw, edit, rerun, no redraw, rerun, redraw, rerun', () => {
+  const story = customStory('custom replay');
+  const toDraw = (result) => [...result.customMissing, ...result.customStale].sort();
+
+  assert.deepEqual(toDraw(story.run()), [CUSTOM_ID], 'first run asks for the drawing');
+  story.draw('<html>V1</html>');
+  story.editBrief('A different picture entirely: one badge, no thumbnail.');
+  assert.deepEqual(toDraw(story.run()), [CUSTOM_ID], 'the edit puts it back on the list');
+  assert.deepEqual(toDraw(story.run()), [CUSTOM_ID], 'and it stays there until it is redrawn');
+  story.draw('<html>V2</html>');
+  assert.deepEqual(toDraw(story.run()), [], 'the redraw clears it');
+  assert.deepEqual(toDraw(story.run()), [], 'and it stays clear');
+});
+
+test('a custom manifest entry round-trips the brief, the html and why it was written', () => {
+  assert.equal(customRecord({ brief: 'b', html: 'h', asked: true }), 'b:h:asked');
+  assert.equal(customRecord({ brief: 'b', html: null, asked: false }), 'b:-:ok');
+  assert.deepEqual(parseCustomRecord('b:h:asked'), { brief: 'b', html: 'h', asked: true });
+  assert.deepEqual(parseCustomRecord('b:-:ok'), { brief: 'b', html: null, asked: false });
+  for (const junk of [undefined, null, 42, '', 'b', 'b:h', 'b:h:maybe', 'b:h:ok:extra', ':h:ok', 'b::ok']) {
+    assert.equal(parseCustomRecord(junk), null, `parsed junk: ${JSON.stringify(junk)}`);
+  }
 });
 
 test('a slide left behind by a deleted scene is reported, never removed', () => {

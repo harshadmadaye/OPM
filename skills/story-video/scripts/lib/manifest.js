@@ -41,6 +41,33 @@ function record(data, key, inputHash) {
   return { ...data, [key]: inputHash };
 }
 
+// A custom slide is drawn by an agent the script cannot watch, so its manifest
+// entry carries three fields: the brief the drawing was asked against, the html
+// that was on disk at that moment ("-" when there was none), and whether that
+// record was written while asking for a drawing or while accepting one. All
+// three are hex hashes or fixed words, so ":" cannot appear inside a field.
+const CUSTOM_SEPARATOR = ':';
+const NO_HTML = '-';
+const ASKED = 'asked';
+const ACCEPTED = 'ok';
+
+function customRecord({ brief, html, asked }) {
+  return [brief, html === null || html === undefined ? NO_HTML : html, asked ? ASKED : ACCEPTED].join(CUSTOM_SEPARATOR);
+}
+
+// Returns null for anything this version did not write, including an entry left
+// by an older manifest: an unreadable record is treated as no record at all,
+// which asks for a drawing rather than claiming one is fresh.
+function parseCustomRecord(value) {
+  if (typeof value !== 'string') return null;
+  const parts = value.split(CUSTOM_SEPARATOR);
+  if (parts.length !== 3) return null;
+  const [brief, html, mode] = parts;
+  if (!brief || !html) return null;
+  if (mode !== ASKED && mode !== ACCEPTED) return null;
+  return { brief, html: html === NO_HTML ? null : html, asked: mode === ASKED };
+}
+
 function slideInput(scene, storyboard, index, total) {
   const slideShape = {
     layout: scene.layout,
@@ -95,6 +122,8 @@ module.exports = {
   saveManifest,
   isFresh,
   record,
+  customRecord,
+  parseCustomRecord,
   inputs: {
     slide: slideInput,
     custom: customInput,

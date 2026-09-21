@@ -7,7 +7,9 @@ const { loadStoryboard, validateStoryboard } = require('./lib/storyboard');
 const { getLayout } = require('./layouts/index');
 const { TONES, esc } = require('./layouts/svg');
 const { storyPaths, sceneFile } = require('./lib/paths');
-const { loadManifest, saveManifest, isFresh, record, inputs } = require('./lib/manifest');
+const {
+  loadManifest, saveManifest, isFresh, record, inputs, hashOf, customRecord, parseCustomRecord,
+} = require('./lib/manifest');
 const { STAGE_WIDTH, STAGE_HEIGHT } = require('./lib/constants');
 
 const SLIDES_CSS_SOURCE = path.join(__dirname, '..', 'templates', 'slides.css');
@@ -75,6 +77,25 @@ function orphanSlides(slidesDir, board) {
     .sort();
 }
 
+// A custom slide is hand-drawn by an agent, so the script cannot tell a drawing
+// apart from the brief that asked for it except by what it wrote down last run.
+// `recorded` is the parsed manifest entry or null, `brief` the current scene
+// hash, `html` the hash of the file's bytes or null when there is no file.
+//   no file                      -> missing, and the ask is recorded
+//   no record                    -> fresh: someone drew it before we ever asked
+//   brief changed                -> stale: the drawing answers an older brief
+//   html changed                 -> fresh: the agent redrew it
+//   nothing changed since an ask -> stale: the agent has not redrawn it yet
+//   nothing changed since an ok  -> fresh
+function customVerdict(recorded, brief, html) {
+  if (html === null) return { report: 'missing', entry: customRecord({ brief, html: null, asked: true }) };
+  if (!recorded) return { report: 'fresh', entry: customRecord({ brief, html, asked: false }) };
+  if (recorded.brief !== brief) return { report: 'stale', entry: customRecord({ brief, html, asked: true }) };
+  if (recorded.html !== html) return { report: 'fresh', entry: customRecord({ brief, html, asked: false }) };
+  if (recorded.asked) return { report: 'stale', entry: customRecord({ brief, html, asked: true }) };
+  return { report: 'fresh', entry: customRecord({ brief, html, asked: false }) };
+}
+
 function renderAll(storyDir, { log = console.log } = {}) {
   const paths = storyPaths(storyDir);
   const board = loadStoryboard(paths.storyboard);
@@ -103,17 +124,12 @@ function renderAll(storyDir, { log = console.log } = {}) {
     if (scene.layout === 'custom') {
       custom.push(scene.id);
       const customKey = `custom:${scene.id}`;
-      const customHash = inputs.custom(scene, index, total);
-      if (!fs.existsSync(file)) {
-        // Nothing drawn yet, so nothing to call fresh: leave the key unrecorded.
-        customMissing.push(scene.id);
-        return;
-      }
-      // A slide seen for the first time is taken as drawn from the brief in
-      // hand; only a recorded hash that no longer matches means "redraw this".
-      const recorded = manifest[customKey];
-      if (recorded !== undefined && recorded !== customHash) customStale.push(scene.id);
-      manifest = record(manifest, customKey, customHash);
+      const brief = inputs.custom(scene, index, total);
+      const html = fs.existsSync(file) ? hashOf(fs.readFileSync(file)) : null;
+      const verdict = customVerdict(parseCustomRecord(manifest[customKey]), brief, html);
+      if (verdict.report === 'missing') customMissing.push(scene.id);
+      if (verdict.report === 'stale') customStale.push(scene.id);
+      manifest = record(manifest, customKey, verdict.entry);
       return;
     }
 
