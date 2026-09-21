@@ -11,6 +11,7 @@ const path = require('node:path');
 const SCRIPTS = path.resolve(__dirname, '..', 'skills', 'story-video', 'scripts');
 const setup = require(path.join(SCRIPTS, 'setup.js'));
 const frames = require(path.join(SCRIPTS, 'render-frames.js'));
+const { toolBinary } = require(path.join(SCRIPTS, 'lib', 'paths.js'));
 
 const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'opm-story-frames-'));
 test.after(() => fs.rmSync(tmpRoot, { recursive: true, force: true }));
@@ -57,6 +58,14 @@ test('setup --check reports a fresh tools folder as not ready', () => {
   assert.equal(report.edgeTts, false);
   assert.equal(report.node, process.version);
   assert.ok(!fs.existsSync(tools), '--check must not create anything');
+});
+
+test('toolBinary returns null (not a throw) for a half-installed package, and setup.check reports it as not ready', () => {
+  const tools = path.join(tmpRoot, 'half-tools');
+  fs.mkdirSync(path.join(tools, 'node_modules', 'ffmpeg-static'), { recursive: true });
+  assert.equal(toolBinary(tools, 'ffmpeg'), null);
+  const report = setup.check({ env: { OPM_STORY_TOOLS: tools }, platform: process.platform });
+  assert.equal(report.ffmpeg, false);
 });
 
 test('chromeArgs: fixed flags, own user-data-dir, encoded file URL', () => {

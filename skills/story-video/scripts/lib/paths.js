@@ -25,7 +25,12 @@ function toolBinary(tools, name) {
   }
   const pkgDir = path.join(tools, 'node_modules', `${name}-static`);
   if (!fs.existsSync(pkgDir)) return null;
-  const exported = require(pkgDir);
+  let exported;
+  try {
+    exported = require(pkgDir);
+  } catch {
+    return null;
+  }
   return name === 'ffmpeg' ? exported : exported.path;
 }
 

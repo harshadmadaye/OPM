@@ -15,6 +15,9 @@ const SCENE_FILE_RE = /^scene-(\d\d)\.html$/;
 const DEFAULT_TIMEOUT_MS = 40000;
 const DEFAULT_SETTLE_MS = 1000;
 const DEFAULT_POLL_MS = 500;
+const EXIT_WAIT_MS = 2000;
+const REMOVE_ATTEMPTS = 5;
+const REMOVE_RETRY_DELAY_MS = 100;
 
 function chromeArgs({ userDataDir, pngPath, htmlPath }) {
   return [
@@ -49,9 +52,40 @@ function pngReady(pngPath) {
   return fs.statSync(pngPath).size > 0;
 }
 
-function cleanup(child, userDataDir) {
+function waitForExit(child, timeoutMs) {
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      resolve();
+    };
+    const timer = setTimeout(finish, timeoutMs);
+    child.once('exit', finish);
+  });
+}
+
+// Chrome is known not to release its profile directory the instant it exits,
+// especially on Windows, so give it a bounded wait plus a few short retries
+// before giving up on the remove.
+async function removeProfileDir(userDataDir) {
+  for (let attempt = 1; attempt <= REMOVE_ATTEMPTS; attempt += 1) {
+    try {
+      fs.rmSync(userDataDir, { recursive: true, force: true });
+      return;
+    } catch (err) {
+      if (attempt === REMOVE_ATTEMPTS) throw err;
+      await sleep(REMOVE_RETRY_DELAY_MS);
+    }
+  }
+}
+
+async function cleanup(child, userDataDir) {
+  const exited = waitForExit(child, EXIT_WAIT_MS);
   if (!child.killed) child.kill();
-  fs.rmSync(userDataDir, { recursive: true, force: true });
+  await exited;
+  await removeProfileDir(userDataDir);
 }
 
 function renderFrame({
@@ -71,10 +105,10 @@ function renderFrame({
     const child = spawn(browser, chromeArgs({ userDataDir, pngPath, htmlPath }), { stdio: 'ignore' });
     let settled = false;
 
-    const fail = (err) => {
+    const fail = async (err) => {
       if (settled) return;
       settled = true;
-      cleanup(child, userDataDir);
+      await cleanup(child, userDataDir);
       reject(err);
     };
 
@@ -98,8 +132,8 @@ function renderFrame({
       await sleep(settleMs);
       if (settled) return;
 
-      cleanup(child, userDataDir);
       settled = true;
+      await cleanup(child, userDataDir);
 
       let size;
       try {
