@@ -116,15 +116,17 @@ test('renderFrame fails on the wrong size and on a timeout, naming the file', as
   assert.equal(b.calls[0].child.killed, true);
 });
 
-test('CLI --dry-run prints one JSON line per slide with its own profile dir and an encoded URL', () => {
+test('CLI --dry-run prints one JSON line per storyboard slide, skipping orphans', () => {
   const dir = path.join(tmpRoot, 'story dir ');
   fs.mkdirSync(path.join(dir, 'slides'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'slides', 'slides.css'), 'body{}');
-  for (const id of ['01', '02']) fs.writeFileSync(path.join(dir, 'slides', `scene-${id}.html`), `<html>${id}</html>`);
+  fs.writeFileSync(path.join(dir, 'storyboard.json'), JSON.stringify({ title: 'T', scenes: [{ id: '01' }, { id: '02' }] }));
+  // scene-03 was deleted from the storyboard but its slide file stayed behind.
+  for (const id of ['01', '02', '03']) fs.writeFileSync(path.join(dir, 'slides', `scene-${id}.html`), `<html>${id}</html>`);
   const out = spawnSync(process.execPath, [path.join(SCRIPTS, 'render-frames.js'), dir, '--dry-run'], { encoding: 'utf8' });
   assert.equal(out.status, 0, out.stderr);
   const lines = out.stdout.trim().split('\n').map((l) => JSON.parse(l));
-  assert.deepEqual(lines.map((l) => l.scene), ['01', '02']);
+  assert.deepEqual(lines.map((l) => l.scene), ['01', '02'], 'an orphan slide costs no browser launch');
   const dirs = lines.map((l) => l.args.find((a) => a.startsWith('--user-data-dir=')));
   assert.notEqual(dirs[0], dirs[1]);
   assert.ok(lines[0].args[lines[0].args.length - 1].includes('story%20dir%20/slides/scene-01.html'));

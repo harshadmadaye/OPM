@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
+const { loadStoryboard } = require('./lib/storyboard');
 const { storyPaths, sceneFile, findBrowser } = require('./lib/paths');
 const { readPngSize } = require('./lib/png');
 const { loadManifest, saveManifest, isFresh, record, inputs } = require('./lib/manifest');
@@ -41,6 +42,14 @@ function listSlides(dir) {
     .filter(Boolean)
     .map((match) => ({ id: match[1], htmlPath: path.join(dir, match[0]) }))
     .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+// Only scenes the storyboard still names are worth a browser launch: a slide
+// left behind by a deleted scene is skipped here and reported by render-slides.
+function slidesInStoryboard(paths) {
+  const board = loadStoryboard(paths.storyboard);
+  const known = new Set(board.scenes.map((scene) => scene.id));
+  return listSlides(paths.slides).filter((slide) => known.has(slide.id));
 }
 
 function sleep(ms) {
@@ -155,7 +164,7 @@ function renderFrame({
 
 function dryRun(storyDir, log) {
   const paths = storyPaths(storyDir);
-  const slides = listSlides(paths.slides);
+  const slides = slidesInStoryboard(paths);
   slides.forEach(({ id, htmlPath }) => {
     const userDataDir = path.join(os.tmpdir(), `opm-story-chrome-${process.pid}-${id}`);
     const pngPath = sceneFile(paths.frames, id, 'png');
@@ -171,7 +180,7 @@ async function renderAll(storyDir, { log = console.log } = {}) {
     throw new Error('no Chromium-family browser found. Looked for Chrome, Chromium, Edge and Brave; set CHROME_PATH to override.');
   }
 
-  const slides = listSlides(paths.slides);
+  const slides = slidesInStoryboard(paths);
   const css = fs.readFileSync(paths.css, 'utf8');
   fs.mkdirSync(paths.frames, { recursive: true });
 

@@ -12,6 +12,7 @@ const { STAGE_WIDTH, STAGE_HEIGHT } = require('./lib/constants');
 
 const SLIDES_CSS_SOURCE = path.join(__dirname, '..', 'templates', 'slides.css');
 const GITIGNORE_CONTENT = 'frames/\naudio/\nsegments/\n.build/\n';
+const SCENE_FILE_RE = /^scene-(\d\d)\.html$/;
 
 function knownPart(scene, storyboard) {
   if (scene.part === undefined || !storyboard.parts) return undefined;
@@ -58,6 +59,20 @@ ${svgInner}
 </body>
 </html>
 `;
+}
+
+// Slide files left behind by a scene that was deleted from the storyboard. They
+// are reported, never removed: the developer may have hand-edited one.
+function orphanSlides(slidesDir, board) {
+  if (!fs.existsSync(slidesDir)) return [];
+  const known = new Set(board.scenes.map((scene) => scene.id));
+  return fs
+    .readdirSync(slidesDir)
+    .map((name) => name.match(SCENE_FILE_RE))
+    .filter(Boolean)
+    .map((match) => match[1])
+    .filter((id) => !known.has(id))
+    .sort();
 }
 
 function renderAll(storyDir, { log = console.log } = {}) {
@@ -119,7 +134,7 @@ function renderAll(storyDir, { log = console.log } = {}) {
 
   saveManifest(paths.manifest, manifest);
 
-  return { written, skipped, custom, customMissing, customStale };
+  return { written, skipped, custom, customMissing, customStale, orphans: orphanSlides(paths.slides, board) };
 }
 
 function run(argv) {
@@ -139,6 +154,9 @@ function run(argv) {
     return;
   }
 
+  if (result.orphans.length > 0) {
+    process.stdout.write(`orphan slides, not in the storyboard: ${result.orphans.join(', ')}\n`);
+  }
   const toDraw = [...result.customMissing, ...result.customStale].sort();
   process.stdout.write(`custom scenes to draw: ${toDraw.length > 0 ? toDraw.join(', ') : 'none'}\n`);
 }
@@ -147,4 +165,4 @@ if (require.main === module) {
   run(process.argv.slice(2));
 }
 
-module.exports = { renderSlideHtml, renderAll, run };
+module.exports = { renderSlideHtml, renderAll, orphanSlides, run };

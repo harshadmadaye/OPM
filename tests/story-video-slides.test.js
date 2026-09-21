@@ -114,6 +114,21 @@ test('editing a custom scene puts it back on the list to draw', () => {
   assert.match(out.stdout, new RegExp(`custom scenes to draw: ${customId}`), 'the CLI lists stale ids, not just missing ones');
 });
 
+test('a slide left behind by a deleted scene is reported, never removed', () => {
+  const dir = storyDir('story four');
+  renderAll(dir, { log: () => {} });
+  assert.deepEqual(renderAll(dir, { log: () => {} }).orphans, []);
+
+  const orphan = path.join(dir, 'slides', 'scene-99.html');
+  fs.writeFileSync(orphan, '<html>left behind</html>');
+  assert.deepEqual(renderAll(dir, { log: () => {} }).orphans, ['99']);
+  assert.ok(fs.existsSync(orphan), 'a hand-edited slide is never deleted for us');
+
+  const out = spawnSync(process.execPath, [CLI, dir], { encoding: 'utf8' });
+  assert.equal(out.status, 0, out.stderr);
+  assert.match(out.stdout, /orphan slides, not in the storyboard: 99/);
+});
+
 test('CLI refuses an invalid storyboard and reports custom scenes', () => {
   const dir = storyDir('story two');
   const ok = spawnSync(process.execPath, [CLI, dir], { encoding: 'utf8' });
