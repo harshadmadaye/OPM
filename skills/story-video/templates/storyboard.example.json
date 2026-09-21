@@ -5,10 +5,20 @@
   "targetMinutes": 4,
   "voice": "en-IN-NeerjaExpressiveNeural",
   "rate": "+6%",
-  "protagonist": { "name": "Asha", "role": "developer", "color": "teal" },
+  "protagonist": {
+    "name": "Asha",
+    "role": "developer",
+    "color": "teal"
+  },
   "parts": {
-    "before": { "label": "BEFORE", "tone": "amber" },
-    "after": { "label": "WITH THE SKILL", "tone": "teal" }
+    "before": {
+      "label": "BEFORE",
+      "tone": "amber"
+    },
+    "after": {
+      "label": "WITH THE SKILL",
+      "tone": "teal"
+    }
   },
   "scenes": [
     {
@@ -17,8 +27,20 @@
       "heading": "Turning a spec into a video",
       "sub": "One hand-drawn run cost 190k tokens and 22 minutes",
       "slots": {
-        "left": { "label": "One hand-drawn run: 190k tokens, 77 calls", "icons": ["clock", "chart"] },
-        "right": { "label": "The scripted kit: layouts filled from data", "icons": ["laptop", "check"] },
+        "left": {
+          "label": "One hand-drawn run: 190k tokens, 77 calls",
+          "icons": [
+            "clock",
+            "chart"
+          ]
+        },
+        "right": {
+          "label": "The scripted kit: layouts filled from data",
+          "icons": [
+            "laptop",
+            "check"
+          ]
+        },
         "footer": "This walkthrough is about the story-video skill itself."
       },
       "visual": "",
@@ -34,11 +56,26 @@
       "sub": "setup, render-slides, render-frames, narrate, build-video",
       "slots": {
         "steps": [
-          { "icon": "laptop", "label": "Set up ffmpeg and edge-tts" },
-          { "icon": "document", "label": "Render each scene to HTML" },
-          { "icon": "camera", "label": "Screenshot every slide" },
-          { "icon": "megaphone", "label": "Narrate the storyboard text" },
-          { "icon": "video", "label": "Encode the finished MP4" }
+          {
+            "icon": "laptop",
+            "label": "Install the tools"
+          },
+          {
+            "icon": "document",
+            "label": "Render each slide"
+          },
+          {
+            "icon": "camera",
+            "label": "Screenshot them"
+          },
+          {
+            "icon": "megaphone",
+            "label": "Narrate scenes"
+          },
+          {
+            "icon": "video",
+            "label": "Encode the MP4"
+          }
         ]
       },
       "visual": "",
@@ -54,9 +91,18 @@
       "sub": "77 tool calls and 22 minutes for 14 slides",
       "slots": {
         "stages": [
-          { "label": "Tokens spent drawing slides by hand", "value": "190k" },
-          { "label": "Tool calls made along the way", "value": "77" },
-          { "label": "Minutes to finish 14 slides", "value": "22" }
+          {
+            "label": "Tokens spent drawing slides by hand",
+            "value": "190k"
+          },
+          {
+            "label": "Tool calls made along the way",
+            "value": "77"
+          },
+          {
+            "label": "Minutes to finish 14 slides",
+            "value": "22"
+          }
         ]
       },
       "visual": "",
@@ -72,9 +118,21 @@
       "sub": "No animation between slides, no background music",
       "slots": {
         "cards": [
-          { "icon": "video", "label": "Animation between slides", "crossed": true },
-          { "icon": "megaphone", "label": "A background music track", "crossed": true },
-          { "icon": "laptop", "label": "Still frames plus one clear voice", "crossed": false }
+          {
+            "icon": "video",
+            "label": "Animation between slides",
+            "crossed": true
+          },
+          {
+            "icon": "megaphone",
+            "label": "A background music track",
+            "crossed": true
+          },
+          {
+            "icon": "laptop",
+            "label": "Still frames plus one clear voice",
+            "crossed": false
+          }
         ]
       },
       "visual": "",
@@ -90,11 +148,26 @@
       "sub": "Every scene is checked before a build ever starts",
       "slots": {
         "items": [
-          { "label": "Icon vocabulary", "state": "done" },
-          { "label": "Layout slot schema", "state": "done" },
-          { "label": "Id format and order", "state": "done" },
-          { "label": "Narration length", "state": "done" },
-          { "label": "Voice-over text on the slide", "state": "problem" }
+          {
+            "label": "Icon vocabulary",
+            "state": "done"
+          },
+          {
+            "label": "Layout slot schema",
+            "state": "done"
+          },
+          {
+            "label": "Id format and order",
+            "state": "done"
+          },
+          {
+            "label": "Narration length",
+            "state": "done"
+          },
+          {
+            "label": "Voice-over text on the slide",
+            "state": "problem"
+          }
         ]
       },
       "visual": "",
@@ -113,8 +186,14 @@
           {
             "app": "story-video",
             "messages": [
-              { "from": "Skill", "text": "Build with the neural voice, or keep everything local?" },
-              { "from": "Asha", "text": "Neural voice, nothing sensitive in this walkthrough." }
+              {
+                "from": "Skill",
+                "text": "Build with the neural voice, or keep everything local?"
+              },
+              {
+                "from": "Asha",
+                "text": "Neural voice, nothing sensitive in this walkthrough."
+              }
             ]
           }
         ]
@@ -131,14 +210,34 @@
       "heading": "What gets committed, what stays local",
       "sub": "Frames, audio and segments are working files only",
       "slots": {
-        "columns": ["Path", "Committed?"],
-        "rows": [
-          ["storyboard.json", "Yes"],
-          ["slides/", "Yes"],
-          ["slug.mp4 and slug.srt", "Yes"],
-          ["frames/, audio/, segments/", "No, gitignored"]
+        "columns": [
+          "Path",
+          "Committed?"
         ],
-        "highlight": [[3, 1]]
+        "rows": [
+          [
+            "storyboard.json",
+            "Yes"
+          ],
+          [
+            "slides/",
+            "Yes"
+          ],
+          [
+            "slug.mp4 and slug.srt",
+            "Yes"
+          ],
+          [
+            "frames/, audio/, segments/",
+            "No, gitignored"
+          ]
+        ],
+        "highlight": [
+          [
+            3,
+            1
+          ]
+        ]
       },
       "visual": "",
       "narration": "Everything the pipeline writes lands under docs, story, and the slug name, inside the target project. The storyboard file, the slide sources, the finished MP4 and its subtitle file all get committed to the repository. The frames, audio and segment folders stay as working files, listed in a generated gitignore so nobody commits them by accident.",
@@ -154,10 +253,20 @@
       "slots": {
         "window": {
           "title": "Contact sheet review",
-          "nav": ["Frames", "Fix", "Rerun"],
+          "nav": [
+            "Frames",
+            "Fix",
+            "Rerun"
+          ],
           "panels": [
-            { "title": "All frames tiled together", "lines": 3 },
-            { "title": "Open one only if it looks wrong", "lines": 2 }
+            {
+              "title": "All frames tiled together",
+              "lines": 3
+            },
+            {
+              "title": "Open one only if it looks wrong",
+              "lines": 2
+            }
           ]
         }
       },
@@ -174,9 +283,27 @@
       "sub": "Azure AI Speech is named but not implemented",
       "slots": {
         "phases": [
-          { "label": "Today: unofficial neural voice", "items": ["Talks to Microsoft's edge-tts", "No licence or uptime guarantee"] },
-          { "label": "Also today: local OS voice", "items": ["Nothing ever leaves the machine", "Sounds noticeably more robotic"] },
-          { "label": "Not yet: a licensed voice", "items": ["Azure AI Speech for client work", "Named, but not implemented"] }
+          {
+            "label": "Today: unofficial neural voice",
+            "items": [
+              "Talks to Microsoft's edge-tts",
+              "No licence or uptime guarantee"
+            ]
+          },
+          {
+            "label": "Also today: local OS voice",
+            "items": [
+              "Nothing ever leaves the machine",
+              "Sounds noticeably more robotic"
+            ]
+          },
+          {
+            "label": "Not yet: a licensed voice",
+            "items": [
+              "Azure AI Speech for client work",
+              "Named, but not implemented"
+            ]
+          }
         ]
       },
       "visual": "",
