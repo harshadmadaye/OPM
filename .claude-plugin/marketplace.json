@@ -11,8 +11,8 @@
     {
       "name": "opm",
       "source": "./",
-      "description": "An opinionated engineering workflow: brainstorm, plan, TDD execution with fresh-context subagents, verification, captured learnings. Lean reviewers, stack patterns and six light safety hooks.",
-      "version": "0.3.0",
+      "description": "An opinionated engineering workflow: brainstorm, plan, TDD execution with fresh-context subagents, verification, captured learnings. Lean reviewers, stack patterns, six light safety hooks, and a skill that turns a spec into a narrated explainer video.",
+      "version": "0.4.0",
       "author": {
         "name": "Harshad Madaye",
         "url": "https://github.com/harshadmadaye"

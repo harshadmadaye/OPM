@@ -157,6 +157,7 @@ If the app cannot start, treat it as a failing verification: fix, then retry.
 1. Run `opm:compound-learnings` if anything non-obvious was learned.
 2. Commit everything.
 3. Report using `templates/final-report.md`: what was built, the URL or device, how to stop, test and review numbers, known gaps and assumptions, next steps.
+4. Optional: `/opm:story-video <path>` turns this into a narrated explainer.
 
 ## Resuming
 
