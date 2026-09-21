@@ -1,0 +1,197 @@
+{
+  "title": "How story-video turns a spec into a video",
+  "note": "Asha is an illustrative composite developer, not a real person. Everything shown is drawn from the story-video design spec itself.",
+  "source": "docs/specs/2026-09-18-story-video.md",
+  "targetMinutes": 4,
+  "voice": "en-IN-NeerjaExpressiveNeural",
+  "rate": "+6%",
+  "protagonist": { "name": "Asha", "role": "developer", "color": "teal" },
+  "parts": {
+    "before": { "label": "BEFORE", "tone": "amber" },
+    "after": { "label": "WITH THE SKILL", "tone": "teal" }
+  },
+  "scenes": [
+    {
+      "id": "01",
+      "layout": "title",
+      "heading": "Turning a spec into a video",
+      "sub": "One hand-drawn run cost 190k tokens and 22 minutes",
+      "slots": {
+        "left": { "label": "One hand-drawn run: 190k tokens, 77 calls", "icons": ["clock", "chart"] },
+        "right": { "label": "The scripted kit: layouts filled from data", "icons": ["laptop", "check"] },
+        "footer": "This walkthrough is about the story-video skill itself."
+      },
+      "visual": "",
+      "narration": "Meet Asha, a developer who needs a narrated video from a design document, with nobody free to animate it by hand. The first run of this pipeline was done by hand, and drawing and reviewing fourteen slides cost about 190,000 tokens, seventy seven tool calls, and twenty two minutes. This is the scripted kit built to make that cheap and repeatable.",
+      "source": "Why the design looks like this",
+      "planned": false
+    },
+    {
+      "id": "02",
+      "part": "after",
+      "layout": "flow",
+      "heading": "Five scripts, no drawing by hand",
+      "sub": "setup, render-slides, render-frames, narrate, build-video",
+      "slots": {
+        "steps": [
+          { "icon": "laptop", "label": "Set up ffmpeg and edge-tts" },
+          { "icon": "document", "label": "Render each scene to HTML" },
+          { "icon": "camera", "label": "Screenshot every slide" },
+          { "icon": "megaphone", "label": "Narrate the storyboard text" },
+          { "icon": "video", "label": "Encode the finished MP4" }
+        ]
+      },
+      "visual": "",
+      "narration": "Once Asha approves the storyboard, five scripts run in order, with no manual drawing. Setup installs ffmpeg and edge-tts into a private tools folder, never touching the system. Render-slides turns each scene into an HTML file from the layout kit, and render-frames screenshots every slide with a headless browser. Narrate voices the script, then build-video stitches it all into one finished file.",
+      "source": "Scripts table; Phase 4: build",
+      "planned": false
+    },
+    {
+      "id": "03",
+      "part": "before",
+      "layout": "funnel",
+      "heading": "What the hand-drawn run cost",
+      "sub": "77 tool calls and 22 minutes for 14 slides",
+      "slots": {
+        "stages": [
+          { "label": "Tokens spent drawing slides by hand", "value": "190k" },
+          { "label": "Tool calls made along the way", "value": "77" },
+          { "label": "Minutes to finish 14 slides", "value": "22" }
+        ]
+      },
+      "visual": "",
+      "narration": "The pipeline was run once by hand, just to measure its real cost. Drawing and reviewing fourteen slides burned about one hundred ninety thousand tokens across seventy seven separate tool calls, and still took twenty two minutes. The slides themselves were only about sixty seven kilobytes of plain HTML, so turn count and image review were the true cost, not the drawing itself.",
+      "source": "Why the design looks like this",
+      "planned": false
+    },
+    {
+      "id": "04",
+      "part": "after",
+      "layout": "crossed",
+      "heading": "Stills and voice, not animation",
+      "sub": "No animation between slides, no background music",
+      "slots": {
+        "cards": [
+          { "icon": "video", "label": "Animation between slides", "crossed": true },
+          { "icon": "megaphone", "label": "A background music track", "crossed": true },
+          { "icon": "laptop", "label": "Still frames plus one clear voice", "crossed": false }
+        ]
+      },
+      "visual": "",
+      "narration": "This skill produces a narrated slideshow with fades between still frames, not an animated video, and the skill's own description says so plainly. Animation between slides was ruled out on purpose, and so was any background music track. What stays is simple: one clear still frame per scene, paired with one steady narrated voice, the same shape that proved itself in the reference run.",
+      "source": "Goal; Decisions table (Slides, Out of scope)",
+      "planned": false
+    },
+    {
+      "id": "05",
+      "part": "after",
+      "layout": "checklist",
+      "heading": "The validator catches mistakes first",
+      "sub": "Every scene is checked before a build ever starts",
+      "slots": {
+        "items": [
+          { "label": "Every fact traces back to the source document", "state": "done" },
+          { "label": "Scene ids are two digits and always count upward", "state": "done" },
+          { "label": "Each narration runs between 25 and 110 words", "state": "done" },
+          { "label": "A narration sentence copied straight onto a slide", "state": "problem" }
+        ]
+      },
+      "visual": "",
+      "narration": "Before any video gets built, a validator script checks every scene against a fixed set of rules. Every fact in the narration and on the slide must trace back to the source document. Scene ids must be two digits and always count upward, never repeat. A sentence copied straight from the narration onto a slide gets caught and refused.",
+      "source": "Validator rules (validate-storyboard.js)",
+      "planned": false
+    },
+    {
+      "id": "06",
+      "part": "after",
+      "layout": "chat",
+      "heading": "Consent before any audio leaves",
+      "sub": "Neural voice online, or a local voice offline",
+      "slots": {
+        "windows": [
+          {
+            "app": "story-video",
+            "messages": [
+              { "from": "Skill", "text": "Build with the neural voice, or keep everything local?" },
+              { "from": "Asha", "text": "Neural voice, nothing sensitive in this walkthrough." }
+            ]
+          }
+        ]
+      },
+      "visual": "",
+      "narration": "Before any audio leaves the machine, the skill asks one plain question and waits for an answer. It offers the neural voice, which sends narration text to Microsoft's speech service with no licence or uptime guarantee, or the local OS voice, which never leaves the computer but sounds more robotic. Asha picks the neural voice, since this walkthrough has nothing sensitive to protect.",
+      "source": "Phase 3: approve storyboard, consent to audio (G2)",
+      "planned": false
+    },
+    {
+      "id": "07",
+      "part": "after",
+      "layout": "spreadsheet",
+      "heading": "What gets committed, what stays local",
+      "sub": "Frames, audio and segments are working files only",
+      "slots": {
+        "columns": ["Path", "Committed?"],
+        "rows": [
+          ["storyboard.json", "Yes"],
+          ["slides/", "Yes"],
+          ["slug.mp4 and slug.srt", "Yes"],
+          ["frames/, audio/, segments/", "No, gitignored"]
+        ],
+        "highlight": [[3, 1]]
+      },
+      "visual": "",
+      "narration": "Everything the pipeline writes lands under docs, story, and the slug name, inside the target project. The storyboard file, the slide sources, the finished MP4 and its subtitle file all get committed to the repository. The frames, audio and segment folders stay as working files, listed in a generated gitignore so nobody accidentally commits gigabytes of PNGs and MP3s.",
+      "source": "Output layout in the target project",
+      "planned": false
+    },
+    {
+      "id": "08",
+      "part": "after",
+      "layout": "wireframe",
+      "heading": "One contact sheet, not fourteen files",
+      "sub": "Look once; open a frame only if it looks wrong",
+      "slots": {
+        "window": {
+          "title": "Contact sheet review",
+          "nav": ["Frames", "Fix", "Rerun"],
+          "panels": [
+            { "title": "All frames tiled together", "lines": 3 },
+            { "title": "Open one only if it looks wrong", "lines": 2 }
+          ]
+        }
+      },
+      "visual": "",
+      "narration": "Before Asha trusts a build, every rendered frame gets checked at once instead of one at a time. Build-video tiles every frame into a single contact sheet image, and Asha looks at that one picture rather than scrolling through fourteen files. Only when a tile looks wrong does Asha open the full frame, fix the slot, and rerun the incremental steps.",
+      "source": "Phase 4: build, step 5 (contact sheet)",
+      "planned": false
+    },
+    {
+      "id": "09",
+      "part": "after",
+      "layout": "roadmap",
+      "heading": "Voice today, and one voice not yet built",
+      "sub": "Azure AI Speech is named but not implemented",
+      "slots": {
+        "phases": [
+          { "label": "Today: unofficial neural voice", "items": ["Talks to Microsoft's edge-tts", "No licence or uptime guarantee"] },
+          { "label": "Also today: local OS voice", "items": ["Nothing ever leaves the machine", "Sounds noticeably more robotic"] },
+          { "label": "Not yet: a licensed voice", "items": ["Azure AI Speech for client work", "Named, but not implemented"] }
+        ]
+      },
+      "visual": "",
+      "narration": "Two voice options already ship today. The neural voice talks to Microsoft's edge-tts service, an unofficial route with no licence or uptime guarantee, while the local OS voice keeps everything on the machine but sounds robotic. For client-facing videos, the design names a third path, Azure AI Speech, a licensed route. It is only named, not implemented, so this scene stays marked planned.",
+      "source": "Decisions table (Licensed TTS)",
+      "planned": true
+    },
+    {
+      "id": "10",
+      "layout": "custom",
+      "heading": "What this video intentionally leaves out",
+      "sub": "No burned-in captions, no translation, no player",
+      "visual": "A mockup of a video player's chrome: a play button, a scrubber and a timecode, plus a disabled CC caption toggle and a disabled language picker, since no kit layout draws player controls or flag icons.",
+      "narration": "One thing this skill deliberately does not build is a video player. Captions ship only as a sidecar dot srt file, never burned into the frame, and there is no built-in way to translate narration into another language. No kit layout draws player chrome, so this closing scene is hand-drawn by an agent, honestly marked as planned rather than finished.",
+      "source": "Decisions table (Subtitles, Out of scope)",
+      "planned": true
+    }
+  ]
+}
