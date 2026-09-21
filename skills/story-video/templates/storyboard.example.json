@@ -90,14 +90,14 @@
       "sub": "Every scene is checked before a build ever starts",
       "slots": {
         "items": [
-          { "label": "Every fact traces back to the source document", "state": "done" },
+          { "label": "Unknown icons and mismatched slots get rejected", "state": "done" },
           { "label": "Scene ids are two digits and always count upward", "state": "done" },
           { "label": "Each narration runs between 25 and 110 words", "state": "done" },
           { "label": "A narration sentence copied straight onto a slide", "state": "problem" }
         ]
       },
       "visual": "",
-      "narration": "Before any video gets built, a validator script checks every scene against a fixed set of rules. Every fact in the narration and on the slide must trace back to the source document. Scene ids must be two digits and always count upward, never repeat. A sentence copied straight from the narration onto a slide gets caught and refused.",
+      "narration": "Before any video gets built, a validator script checks every scene against a fixed set of rules. Icon names must be ones the pictogram kit recognizes, and every slide's slots must match its layout's own schema. Scene ids must be two digits and always count upward, never repeat. A sentence copied straight from the narration onto a slide gets caught and refused.",
       "source": "Validator rules (validate-storyboard.js)",
       "planned": false
     },
@@ -148,7 +148,7 @@
       "id": "08",
       "part": "after",
       "layout": "wireframe",
-      "heading": "One contact sheet, not fourteen files",
+      "heading": "One contact sheet, looked at once",
       "sub": "Look once; open a frame only if it looks wrong",
       "slots": {
         "window": {
@@ -161,7 +161,7 @@
         }
       },
       "visual": "",
-      "narration": "Before Asha trusts a build, every rendered frame gets checked at once instead of one at a time. Build-video tiles every frame into a single contact sheet image, and Asha looks at that one picture rather than scrolling through fourteen files. Only when a tile looks wrong does Asha open the full frame, fix the slot, and rerun the incremental steps.",
+      "narration": "Before Asha trusts a build, every rendered frame gets checked at once instead of one at a time. Build-video tiles every frame into a single contact sheet image, and Asha looks at that one picture rather than opening every frame one at a time. Only when a tile looks wrong does Asha open the full frame, fix the slot, and rerun the incremental steps.",
       "source": "Phase 4: build, step 5 (contact sheet)",
       "planned": false
     },
@@ -186,11 +186,11 @@
     {
       "id": "10",
       "layout": "custom",
-      "heading": "What this video intentionally leaves out",
-      "sub": "No burned-in captions, no translation, no player",
-      "visual": "A mockup of a video player's chrome: a play button, a scrubber and a timecode, plus a disabled CC caption toggle and a disabled language picker, since no kit layout draws player controls or flag icons.",
-      "narration": "One thing this skill deliberately does not build is a video player. Captions ship only as a sidecar dot srt file, never burned into the frame, and there is no built-in way to translate narration into another language. No kit layout draws player chrome, so this closing scene is hand-drawn by an agent, honestly marked as planned rather than finished.",
-      "source": "Decisions table (Subtitles, Out of scope)",
+      "heading": "What stays out of every build",
+      "sub": "No burn-in, no translation, no Azure integration",
+      "visual": "A single video frame thumbnail with three small crossed-out badges beside it: subtitle text baked into the picture, a globe standing for translation, and a cloud standing for Azure, none of which the pictogram kit or any layout can draw.",
+      "narration": "Three things stay out of this build entirely. Subtitles never get burned into the picture; they only ship as a separate dot srt file next to the video. There is no built-in way to translate narration into another language. Azure integration, the licensed alternative, is not wired into the pipeline either. No kit layout draws crossed-out globes or clouds, so an agent draws this scene by hand.",
+      "source": "Decisions table (Subtitles, Voice, Out of scope)",
       "planned": true
     }
   ]
