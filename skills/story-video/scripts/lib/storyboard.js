@@ -8,7 +8,12 @@ const { has } = require('../pictograms');
 const { TONES } = require('../layouts/svg');
 const { WORDS_PER_MINUTE } = require('./constants');
 
-const HEADING_LIMIT = 48;
+// Measured against templates/slides.css: h1 is 84px on a 1740px line, sitting at
+// top 182px, and .sub occupies 294px to 344px. One heading line clears the sub;
+// a second one runs straight through it. With no sub there is room for two lines
+// before the stage starts at 380px.
+const HEADING_LIMIT_WITH_SUB = 38;
+const HEADING_LIMIT_NO_SUB = 48;
 const SUB_LIMIT = 90;
 const NARRATION_MIN_WORDS = 25;
 const NARRATION_MAX_WORDS = 110;
@@ -93,12 +98,15 @@ function validatePart(scene, board, errors, prefix) {
 
 function validateHeadingAndSub(scene, errors, prefix) {
   const heading = scene && scene.heading;
+  const sub = scene && scene.sub;
+  const hasSub = Boolean(sub);
+  const limit = hasSub ? HEADING_LIMIT_WITH_SUB : HEADING_LIMIT_NO_SUB;
+  const because = hasSub ? 'when the scene has a sub line' : 'when the scene has no sub line';
   if (!heading) {
     errors.push(prefix('heading: required'));
-  } else if (heading.length > HEADING_LIMIT) {
-    errors.push(prefix(`heading is ${heading.length} characters, limit ${HEADING_LIMIT}`));
+  } else if (heading.length > limit) {
+    errors.push(prefix(`heading is ${heading.length} characters, limit ${limit} ${because}`));
   }
-  const sub = scene && scene.sub;
   if (sub && sub.length > SUB_LIMIT) {
     errors.push(prefix(`sub is ${sub.length} characters, limit ${SUB_LIMIT}`));
   }

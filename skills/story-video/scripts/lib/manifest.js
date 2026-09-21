@@ -59,6 +59,19 @@ function slideInput(scene, storyboard, index, total) {
   );
 }
 
+// A custom slide is drawn by an agent from the scene's own words, so it depends
+// on everything the drawing brief carries plus the counter printed on the slide.
+function customInput(scene, index, total) {
+  const brief = {
+    heading: scene.heading,
+    sub: scene.sub,
+    visual: scene.visual,
+    planned: Boolean(scene.planned),
+    part: scene.part,
+  };
+  return hashOf(JSON.stringify(brief), `${index}/${total}`);
+}
+
 function audioInput(scene, storyboard, engine) {
   return hashOf(
     scene.narration,
@@ -84,6 +97,7 @@ module.exports = {
   record,
   inputs: {
     slide: slideInput,
+    custom: customInput,
     audio: audioInput,
     frame: frameInput,
     segment: segmentInput,

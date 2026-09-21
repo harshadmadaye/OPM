@@ -54,7 +54,7 @@ test('slot errors come through with the scene id', () => {
 });
 
 test('text rules', () => {
-  expectError((b) => { b.scenes[1].heading = 'h'.repeat(49); }, 'heading is 49 characters, limit 48');
+  expectError((b) => { b.scenes[1].heading = 'h'.repeat(39); }, 'heading is 39 characters, limit 38 when the scene has a sub line');
   expectError((b) => { b.scenes[1].sub = 's'.repeat(91); }, 'sub is 91 characters, limit 90');
   expectError((b) => { b.scenes[1].narration = ''; }, 'narration: required');
   expectError((b) => { b.scenes[1].narration = 'Too short.'; }, 'narration is 2 words, expected 25 to 110');
@@ -62,6 +62,18 @@ test('text rules', () => {
   expectError((b) => { delete b.scenes[1].source; }, 'source: required');
   const customIndex = example().scenes.findIndex((s) => s.layout === 'custom');
   expectError((b) => { b.scenes[customIndex].visual = ''; }, 'custom scenes need a visual description');
+});
+
+test('the heading limit is lower when the scene carries a sub line', () => {
+  const headingErrors = (len, keepSub) => errorsOf((b) => {
+    b.scenes[1].heading = 'h'.repeat(len);
+    if (!keepSub) delete b.scenes[1].sub;
+  }).filter((e) => e.includes('heading is'));
+
+  assert.deepEqual(headingErrors(38, true), [], 'a 38-character heading fits on one line above the sub');
+  assert.ok(headingErrors(39, true).some((e) => e.includes('heading is 39 characters, limit 38 when the scene has a sub line')));
+  assert.deepEqual(headingErrors(48, false), [], 'with no sub there is room for two heading lines');
+  assert.ok(headingErrors(49, false).some((e) => e.includes('heading is 49 characters, limit 48 when the scene has no sub line')));
 });
 
 test('a narration sentence copied onto the slide is an error', () => {

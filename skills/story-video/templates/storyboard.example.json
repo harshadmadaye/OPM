@@ -169,7 +169,7 @@
       "id": "09",
       "part": "after",
       "layout": "roadmap",
-      "heading": "Voice today, and one voice not yet built",
+      "heading": "Two voices today, one not yet built",
       "sub": "Azure AI Speech is named but not implemented",
       "slots": {
         "phases": [

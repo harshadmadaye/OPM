@@ -79,10 +79,39 @@ test('renderAll writes kit slides, css and .gitignore, lists custom scenes, and 
   assert.deepEqual(third.written, [target.id]);
 
   fs.writeFileSync(path.join(dir, 'slides', `scene-${customIds[0]}.html`), '<html></html>');
-  assert.deepEqual(renderAll(dir, { log: () => {} }).customMissing, []);
+  const drawn = renderAll(dir, { log: () => {} });
+  assert.deepEqual(drawn.customMissing, [], 'a drawn custom slide is no longer missing');
+  assert.deepEqual(drawn.customStale, [], 'and it is not stale either, since nothing changed under it');
   fs.writeFileSync(path.join(dir, '.gitignore'), 'mine\n');
   renderAll(dir, { log: () => {} });
   assert.equal(fs.readFileSync(path.join(dir, '.gitignore'), 'utf8'), 'mine\n', 'an existing .gitignore is left alone');
+});
+
+test('editing a custom scene puts it back on the list to draw', () => {
+  const dir = storyDir('story three');
+  const customId = board().scenes.find((s) => s.layout === 'custom').id;
+  const custom = (b) => b.scenes.find((s) => s.layout === 'custom');
+  const writeBoard = (b) => fs.writeFileSync(path.join(dir, 'storyboard.json'), JSON.stringify(b));
+
+  renderAll(dir, { log: () => {} });
+  fs.writeFileSync(path.join(dir, 'slides', `scene-${customId}.html`), '<html></html>');
+  assert.deepEqual(renderAll(dir, { log: () => {} }).customStale, []);
+
+  const revised = board();
+  custom(revised).visual = 'A different picture entirely: one badge, no thumbnail.';
+  writeBoard(revised);
+  const after = renderAll(dir, { log: () => {} });
+  assert.deepEqual(after.customMissing, []);
+  assert.deepEqual(after.customStale, [customId], 'an edited visual makes the drawn slide stale');
+  assert.deepEqual(renderAll(dir, { log: () => {} }).customStale, [], 'the new hash is recorded once');
+
+  const reheaded = board();
+  custom(reheaded).visual = revised.scenes.find((s) => s.layout === 'custom').visual;
+  custom(reheaded).heading = 'What every build leaves out';
+  writeBoard(reheaded);
+  const out = spawnSync(process.execPath, [CLI, dir], { encoding: 'utf8' });
+  assert.equal(out.status, 0, out.stderr);
+  assert.match(out.stdout, new RegExp(`custom scenes to draw: ${customId}`), 'the CLI lists stale ids, not just missing ones');
 });
 
 test('CLI refuses an invalid storyboard and reports custom scenes', () => {

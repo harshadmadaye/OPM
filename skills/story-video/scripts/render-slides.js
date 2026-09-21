@@ -80,13 +80,25 @@ function renderAll(storyDir, { log = console.log } = {}) {
   const skipped = [];
   const custom = [];
   const customMissing = [];
+  const customStale = [];
 
   board.scenes.forEach((scene, index) => {
     const file = sceneFile(paths.slides, scene.id, 'html');
 
     if (scene.layout === 'custom') {
       custom.push(scene.id);
-      if (!fs.existsSync(file)) customMissing.push(scene.id);
+      const customKey = `custom:${scene.id}`;
+      const customHash = inputs.custom(scene, index, total);
+      if (!fs.existsSync(file)) {
+        // Nothing drawn yet, so nothing to call fresh: leave the key unrecorded.
+        customMissing.push(scene.id);
+        return;
+      }
+      // A slide seen for the first time is taken as drawn from the brief in
+      // hand; only a recorded hash that no longer matches means "redraw this".
+      const recorded = manifest[customKey];
+      if (recorded !== undefined && recorded !== customHash) customStale.push(scene.id);
+      manifest = record(manifest, customKey, customHash);
       return;
     }
 
@@ -107,7 +119,7 @@ function renderAll(storyDir, { log = console.log } = {}) {
 
   saveManifest(paths.manifest, manifest);
 
-  return { written, skipped, custom, customMissing };
+  return { written, skipped, custom, customMissing, customStale };
 }
 
 function run(argv) {
@@ -127,8 +139,8 @@ function run(argv) {
     return;
   }
 
-  const ids = result.customMissing.length > 0 ? result.customMissing.join(', ') : 'none';
-  process.stdout.write(`custom scenes to draw: ${ids}\n`);
+  const toDraw = [...result.customMissing, ...result.customStale].sort();
+  process.stdout.write(`custom scenes to draw: ${toDraw.length > 0 ? toDraw.join(', ') : 'none'}\n`);
 }
 
 if (require.main === module) {
