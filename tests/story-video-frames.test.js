@@ -116,6 +116,33 @@ test('renderFrame fails on the wrong size and on a timeout, naming the file', as
   assert.equal(b.calls[0].child.killed, true);
 });
 
+test('a run before render-slides says which file is missing, not a raw ENOENT', () => {
+  const dir = path.join(tmpRoot, 'no-css');
+  fs.mkdirSync(path.join(dir, 'slides'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'storyboard.json'), JSON.stringify({ title: 'T', scenes: [{ id: '01' }] }));
+  const out = spawnSync(process.execPath, [path.join(SCRIPTS, 'render-frames.js'), dir], { encoding: 'utf8' });
+  assert.equal(out.status, 1);
+  assert.match(out.stderr, /slides\/slides\.css is missing; run render-slides\.js first/);
+  assert.ok(!out.stderr.includes('ENOENT'), 'no internal path in the message');
+});
+
+const canTestUnremovableDir = process.platform !== 'win32' && process.getuid && process.getuid() !== 0;
+test('a profile directory that cannot be removed warns; the render never hangs', { skip: canTestUnremovableDir ? false : 'needs POSIX permissions and a non-root user' }, async () => {
+  const parent = path.join(tmpRoot, 'locked');
+  const userDataDir = path.join(parent, 'ud');
+  fs.mkdirSync(userDataDir, { recursive: true });
+  fs.chmodSync(parent, 0o500);
+  try {
+    const { spawn } = fakeSpawn(() => {});
+    await assert.rejects(
+      frames.renderFrame({ browser: '/b', htmlPath: '/s/scene-04.html', pngPath: path.join(tmpRoot, 'nothing.png'), userDataDir, timeoutMs: 60, settleMs: 5, pollMs: 10, spawn }),
+      /scene-04.*no frame after/,
+    );
+  } finally {
+    fs.chmodSync(parent, 0o700);
+  }
+});
+
 test('CLI --dry-run prints one JSON line per storyboard slide, skipping orphans', () => {
   const dir = path.join(tmpRoot, 'story dir ');
   fs.mkdirSync(path.join(dir, 'slides'), { recursive: true });

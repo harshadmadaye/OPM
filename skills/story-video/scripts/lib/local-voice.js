@@ -3,11 +3,22 @@
 // always read from a file, never placed on a command line, and single quotes
 // inside a Windows path are doubled so PowerShell does not misparse them.
 
+const path = require('node:path');
+
+const DEFAULT_SYSTEM_ROOT = 'C:\\Windows';
+
 function psQuote(value) {
   return value.replace(/'/g, "''");
 }
 
-function localVoicePlan({ platform, textFile, rawFile }) {
+// Never "powershell" alone: the Windows search path checks the current
+// directory before System32, so the command is built from SystemRoot.
+function powershellPath(env) {
+  const systemRoot = env.SystemRoot || env.SYSTEMROOT || DEFAULT_SYSTEM_ROOT;
+  return path.win32.join(systemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+}
+
+function localVoicePlan({ platform, textFile, rawFile, env = process.env }) {
   if (platform === 'darwin') {
     return { cmd: 'say', args: ['-f', textFile, '-o', `${rawFile}.aiff`], rawExt: 'aiff' };
   }
@@ -23,7 +34,7 @@ function localVoicePlan({ platform, textFile, rawFile }) {
       `$s.SetOutputToWaveFile('${wavPath}'); ` +
       `$s.Speak([System.IO.File]::ReadAllText('${textPath}')); ` +
       `$s.Dispose()`;
-    return { cmd: 'powershell', args: ['-NoProfile', '-NonInteractive', '-Command', command], rawExt: 'wav' };
+    return { cmd: powershellPath(env), args: ['-NoProfile', '-NonInteractive', '-Command', command], rawExt: 'wav' };
   }
   return null;
 }

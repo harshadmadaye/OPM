@@ -111,7 +111,7 @@ async function neuralCommand(storyDir, { log, spawnFn = spawn } = {}) {
   if (freshCount > 0) log(`fresh: ${freshCount} scenes`);
 }
 
-function speakScene({ scene, board, paths, ffmpeg, plan, log }) {
+function speakScene({ scene, paths, ffmpeg, log }) {
   const textFile = path.join(paths.build, `narration-${scene.id}.txt`);
   const rawFile = path.join(paths.build, `narration-${scene.id}`);
   const scenePlan = localVoicePlan({ platform: process.platform, textFile, rawFile });
@@ -169,7 +169,7 @@ function localCommand(storyDir, { log } = {}) {
 
   let currentManifest = manifest;
   for (const scene of stale) {
-    speakScene({ scene, board, paths, ffmpeg, plan: probePlan, log });
+    speakScene({ scene, paths, ffmpeg, log });
     currentManifest = record(currentManifest, `audio:${scene.id}`, inputs.audio(scene, board, 'local'));
     saveManifest(paths.manifest, currentManifest);
   }

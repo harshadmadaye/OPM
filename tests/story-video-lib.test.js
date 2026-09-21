@@ -31,6 +31,11 @@ test('constants carry the measured values', () => {
 test('toolsDir defaults under the home directory and honours OPM_STORY_TOOLS', () => {
   assert.equal(paths.toolsDir({ env: {}, homedir: '/home/u' }), path.join('/home/u', '.opm', 'story-video-tools'));
   assert.equal(paths.toolsDir({ env: { OPM_STORY_TOOLS: '/x/tools' }, homedir: '/home/u' }), '/x/tools');
+  assert.throws(
+    () => paths.toolsDir({ env: { OPM_STORY_TOOLS: 'tools' }, homedir: '/home/u' }),
+    /OPM_STORY_TOOLS must be an absolute path/,
+    'a relative value would resolve against the current directory and is the base of a require()',
+  );
 });
 
 test('venvPython differs by platform', () => {

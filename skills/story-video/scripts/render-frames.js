@@ -83,13 +83,19 @@ function waitForExit(child, timeoutMs) {
 // Chrome is known not to release its profile directory the instant it exits,
 // especially on Windows, so give it a bounded wait plus a few short retries
 // before giving up on the remove.
+// A profile left behind is litter in the temp directory, not a failed render,
+// and cleanup runs on the path that reports the real error: warn, never throw,
+// so the render promise always settles.
 async function removeProfileDir(userDataDir) {
   for (let attempt = 1; attempt <= REMOVE_ATTEMPTS; attempt += 1) {
     try {
       fs.rmSync(userDataDir, { recursive: true, force: true });
       return;
     } catch (err) {
-      if (attempt === REMOVE_ATTEMPTS) throw err;
+      if (attempt === REMOVE_ATTEMPTS) {
+        process.stderr.write(`warning: could not remove the browser profile ${userDataDir}: ${err.message}\n`);
+        return;
+      }
       await sleep(REMOVE_RETRY_DELAY_MS);
     }
   }
@@ -180,13 +186,17 @@ function dryRun(storyDir, log) {
 
 async function renderAll(storyDir, { log = console.log } = {}) {
   const paths = storyPaths(storyDir);
+  const slides = slidesInStoryboard(paths);
+  if (!fs.existsSync(paths.css)) {
+    throw new Error('slides/slides.css is missing; run render-slides.js first');
+  }
+  const css = fs.readFileSync(paths.css, 'utf8');
+
   const browser = findBrowser({});
   if (!browser) {
     throw new Error('no Chromium-family browser found. Looked for Chrome, Chromium, Edge and Brave; set CHROME_PATH to override.');
   }
 
-  const slides = slidesInStoryboard(paths);
-  const css = fs.readFileSync(paths.css, 'utf8');
   fs.mkdirSync(paths.frames, { recursive: true });
 
   let manifest = loadManifest(paths.manifest);

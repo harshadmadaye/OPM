@@ -22,8 +22,10 @@ const board = () => JSON.parse(fs.readFileSync(EXAMPLE, 'utf8'));
 test('localVoicePlan per platform reads the text from a file', () => {
   assert.deepEqual(localVoice.localVoicePlan({ platform: 'darwin', textFile: '/t/01.txt', rawFile: '/t/01' }), { cmd: 'say', args: ['-f', '/t/01.txt', '-o', '/t/01.aiff'], rawExt: 'aiff' });
   assert.deepEqual(localVoice.localVoicePlan({ platform: 'linux', textFile: '/t/01.txt', rawFile: '/t/01' }), { cmd: 'espeak-ng', args: ['-f', '/t/01.txt', '-w', '/t/01.wav'], rawExt: 'wav' });
-  const win = localVoice.localVoicePlan({ platform: 'win32', textFile: "C:\\t\\it's.txt", rawFile: 'C:\\t\\01' });
-  assert.equal(win.cmd, 'powershell');
+  const win = localVoice.localVoicePlan({ platform: 'win32', textFile: "C:\\t\\it's.txt", rawFile: 'C:\\t\\01', env: { SystemRoot: 'D:\\Windows' } });
+  assert.equal(win.cmd, 'D:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', 'powershell is never resolved through the search path');
+  const noSystemRoot = localVoice.localVoicePlan({ platform: 'win32', textFile: 'C:\\t\\01.txt', rawFile: 'C:\\t\\01', env: {} });
+  assert.equal(noSystemRoot.cmd, 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe');
   assert.deepEqual(win.args.slice(0, 3), ['-NoProfile', '-NonInteractive', '-Command']);
   assert.ok(win.args[3].includes('System.Speech') && win.args[3].includes("SetOutputToWaveFile('C:\\t\\01.wav')"));
   assert.ok(win.args[3].includes("ReadAllText('C:\\t\\it''s.txt')"), 'single quotes are doubled for PowerShell');

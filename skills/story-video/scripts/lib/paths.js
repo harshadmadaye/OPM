@@ -10,7 +10,14 @@ const path = require('node:path');
 const SCENE_ID_PATTERN = /^\d\d$/;
 
 function toolsDir({ env = process.env, homedir = os.homedir() } = {}) {
-  if (env.OPM_STORY_TOOLS) return env.OPM_STORY_TOOLS;
+  // It is the base of a require(), so a relative value would resolve against
+  // whatever the current directory happens to be.
+  if (env.OPM_STORY_TOOLS) {
+    if (!path.isAbsolute(env.OPM_STORY_TOOLS)) {
+      throw new Error(`OPM_STORY_TOOLS must be an absolute path, got "${env.OPM_STORY_TOOLS}"`);
+    }
+    return env.OPM_STORY_TOOLS;
+  }
   return path.join(homedir, '.opm', 'story-video-tools');
 }
 

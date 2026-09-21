@@ -157,5 +157,5 @@ the voice used, and that an edit is rebuilt by rerunning Phase 4.
 
 - Narration text leaves the machine only after consent at G2, and only to Microsoft's speech endpoint.
 - Nothing is installed outside `~/.opm/story-video-tools/` (`OPM_STORY_TOOLS` overrides). No PATH changes, no global packages. Deleting that folder is a full uninstall.
-- The skill writes only under `docs/story/<slug>/` and commits only at Phase 6.
+- In the project, the skill writes only under `docs/story/<slug>/`, and commits only at Phase 6. Outside it, only the tools folder above and a temporary browser profile under the system temp directory, removed after each frame.
 - Real people are surfaced at G2. `note` must not describe a real person as made up.
