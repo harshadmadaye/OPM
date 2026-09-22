@@ -1,8 +1,8 @@
 {
   "name": "opm",
   "displayName": "OPM Engineering Workflow",
-  "version": "0.3.0",
-  "description": "An opinionated engineering workflow for Claude Code: brainstorm -> plan -> TDD execution with fresh-context subagents -> verification -> captured learnings. Lean reviewers, stack-specific patterns for TypeScript/React, Python and Flutter, and six light safety hooks.",
+  "version": "0.4.0",
+  "description": "An opinionated engineering workflow for Claude Code: brainstorm -> plan -> TDD execution with fresh-context subagents -> verification -> captured learnings. Lean reviewers, stack-specific patterns for TypeScript/React, Python and Flutter, six light safety hooks, and a skill that turns a spec into a narrated explainer video.",
   "author": {
     "name": "Harshad Madaye",
     "url": "https://github.com/harshadmadaye"

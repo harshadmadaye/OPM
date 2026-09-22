@@ -137,6 +137,7 @@ Tell the developer the next step:
 - `opm:milestone-planning` when the plan has several phases.
 - `opm:jump-start <name> <brief>` when the project does not exist yet; paste
   the vision and the add features into the brief.
+- Optional: `/opm:story-video <path>` turns this into a narrated explainer.
 
 ## Errors
 

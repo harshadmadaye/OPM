@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 - 2026-09-21
+
+- New skill `opm:story-video <path>`: a spec or document becomes a narrated explainer video (1920x1080 MP4 plus `.srt`). A narrated slideshow with fades, not animation. The main thread writes `storyboard.json`; scripts do the rest: nine script-rendered slide layouts and 24 pictograms, headless-browser frames, edge-tts or local-voice narration, ffmpeg encoding, a contact sheet for one-look review, and a per-scene hash manifest so edits rebuild only what changed. Works on macOS, Linux and Windows; tools install into `~/.opm/story-video-tools/`.
+- Gates for length, storyboard plus audio consent, and the final video. Sourcing and planned-feature labelling are fields the validator checks.
+- `brew-idea`, `jump-start`, `milestone-planning` and `using-opm` carry a one-line pointer to it. They hold none of its rules.
+- Tests: nine `story-video-*` test files covering the libraries, kit, layouts, validator, slide rendering, frame rendering, encoding arguments, narration planning and the skill documents. None needs a network, a browser, ffmpeg or audio.
+
 ## 0.3.0 - 2026-09-16
 
 - New skill `opm:brew-idea <brief>`: one Workflow launch where four angle agents (product, engineering, skeptic, market research with WebSearch) propose and rebut each other and an opus judge ranks features keep / improve / add / cut with a phased plan. The main thread writes `docs/specs/<date>-<slug>-brew.md`, one opus agent renders `docs/brew/<slug>.html`, and change requests rerun only the judge through workflow resume.

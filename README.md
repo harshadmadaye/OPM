@@ -97,7 +97,7 @@ SSH and that fails, set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1`.
 
 ## Skills
 
-All 14 skills, invoked as `/opm:<name>` or picked up automatically when their
+All 15 skills, invoked as `/opm:<name>` or picked up automatically when their
 description matches the task.
 
 **The loop**
@@ -118,6 +118,7 @@ description matches the task.
 |---|---|
 | `milestone-planning` | Multi-week or greenfield work: roadmap, short STATE digest, phased PLAN files with wave scheduling for parallel subagents, deviation rules. |
 | `jump-start` | A whole project from one prompt. See the next section. |
+| `story-video` | A spec or document becomes a narrated explainer video: illustrated still slides from a layout kit, a neural voice-over, MP4 plus `.srt`. A narrated slideshow, not animation. macOS, Linux and Windows. |
 
 **Engineering**
 
@@ -160,6 +161,21 @@ that marks every feature keep, improve, add or cut with the reason and who
 argued for it. You get a spec and a plain-language page to approve. Needs the
 Workflow tool.
 
+`/opm:story-video <path>` turns a spec, a brew-idea result or any document into a
+narrated explainer:
+
+```
+/opm:story-video docs/specs/2026-09-17-influencer-platform-brew.md
+```
+
+You pick a length (2, 4 or 6 minutes) and approve the storyboard. Slides are
+rendered by script from nine layouts, so a typical video costs under 20k tokens
+instead of the 190k a hand-drawn one took. Narration uses Microsoft's neural
+voices through edge-tts after you consent, or a local voice with nothing
+leaving the machine. ffmpeg and edge-tts are installed into
+`~/.opm/story-video-tools/`, never system-wide. Needs Node 18+, a
+Chromium-family browser, and Python 3 for the neural voice.
+
 ## Agents
 
 All 5 subagents. Claude dispatches them on its own when a task matches, or
@@ -196,7 +212,7 @@ Set `OPM_HOOKS_DISABLED=1` to turn all of them off. Per-hook switches are
 ```
 .claude-plugin/   plugin.json, marketplace.json
 agents/           5 subagents
-skills/           14 skills (SKILL.md plus templates/scripts where needed)
+skills/           15 skills (SKILL.md plus templates/scripts where needed)
 hooks/            hooks.json and 6 dependency-free Node scripts
 rules/            copied into <repo>/.claude/rules/opm/ by the installer
 bin/              the npx installer

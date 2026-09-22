@@ -245,6 +245,7 @@ the plan's `<objective>`.
    run `opm:compound-learnings` for anything non-obvious that happened. Close with the continuation block.
 5. **Close the milestone**: when the last phase closes, write a short retrospective at the top of
    ROADMAP.md and reset STATE.md for the next milestone.
+   Optional: `/opm:story-video <path>` turns this into a narrated explainer.
 
 ## Anti-patterns
 
