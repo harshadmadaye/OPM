@@ -5,7 +5,8 @@
 **Design it. Prove it. Ship it.**
 
 An engineering workflow for [Claude Code](https://claude.com/claude-code) that
-refuses to call anything done without evidence.
+refuses to call anything done without evidence, and keeps the bill down while
+it does.
 
 [![tests](https://github.com/harshadmadaye/OPM/actions/workflows/tests.yml/badge.svg)](https://github.com/harshadmadaye/OPM/actions/workflows/tests.yml)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
@@ -17,72 +18,169 @@ refuses to call anything done without evidence.
 npx opm-core@latest
 ```
 
-That installs the plugin and copies the coding rules into your repo. Two
-commands if you prefer the native route:
+---
 
-```bash
-claude plugin marketplace add harshadmadaye/OPM
-claude plugin install opm@opm
+## The problem, in plain terms
+
+You open Claude Code and describe what you want. It starts writing. For twenty
+minutes this feels like magic.
+
+Then it drifts. It says the tests pass, and it never ran them. It rewrites a
+file it already got right. It forgets a decision you made an hour ago, because
+that decision is now buried under forty thousand words of conversation.
+
+Here is the part nobody mentions. **Every message you send re-reads the whole
+conversation.** Hour one, that is cheap. Hour three, you are paying to re-read
+the same hour-one chat again on every single turn, and the model is getting
+worse at its job while the cost climbs.
+
+That is one long conversation doing everything. It is the default, and it is
+the expensive way.
+
+## What OPM does instead
+
+OPM splits the work. A small main thread holds the plan. Each task goes to a
+**fresh worker that sees only that one task** and then disappears. The main
+thread never balloons, so it does not get slower, dumber or pricier as the day
+goes on.
+
+Then it refuses to take anyone's word for anything. A reviewer reads every
+task's diff before the next one starts. Nothing is called done, fixed or
+passing without real command output. A ledger on disk survives the context
+being wiped, so if the session resets, the work does not restart.
+
+|  | One long chat | OPM |
+|---|---|---|
+| What the model re-reads each turn | Everything so far | The current task |
+| Cost as the day goes on | Climbs | Stays flat |
+| Quality as the day goes on | Drifts | Held by a reviewer gate |
+| "Tests pass" | Sometimes a guess | Pasted output, or it does not count |
+| If the session resets | Start over | The ledger picks up where it stopped |
+
+Carrying all of this costs about **2,300 tokens** in every session. That is the
+entire always-on price. Everything else loads only when it is actually used,
+and you can check the number yourself with `claude plugin details opm`.
+
+---
+
+## Three things worth trying first
+
+### 🧠 `/opm:brew-idea` — argue with your idea before you build it
+
+A single AI agrees with you. Ask it to build the wrong thing and it will build
+the wrong thing, enthusiastically, and you find out three weeks later.
+
+Brew-idea puts four agents in a room and makes them fight:
+
+- **Product** asks who this is for, and what nobody actually asked for
+- **Engineering** asks what is cheap, what is expensive, and what breaks
+- **Skeptic** is paid to attack it: how it fails, what makes it pointless
+- **Market** searches the web for who already built this, and says so plainly when it could not verify a claim
+
+Then every agent has to take a position on every other agent's idea. No
+fence-sitting. A judge reads the whole argument and marks each feature
+**keep, improve, add or cut**, with the reason and who argued for it. Anything
+the skeptic lands a serious hit on gets cut unless there is a real answer.
+
+```
+/opm:brew-idea A field-sales app for our reps: visit planning, GPS check-in,
+order capture synced to the ERP.
 ```
 
-## What it is
+You get a ranked feature list and a plain-language page to approve.
+**Why it matters: the cheapest feature is the one you talked yourself out of
+building.**
 
-A coding agent will tell you the tests pass. Sometimes it did not run them.
-It will tell you a feature is finished when one branch of it was never
-written. The failure is rarely in the code it produces; it is in the claims it
-makes about that code, and in what falls out of a context window that has been
-filling up for an hour.
+### 🚀 `/opm:jump-start` — a whole project from one prompt
 
-OPM is one opinionated loop that fixes both. Long work runs in fresh subagents
-so nothing important depends on a context window surviving. And nothing is
-called done, fixed or passing without command output to show for it. A
-reviewer reads every task's diff before the next one starts, a progress ledger
-on disk survives compaction, and hooks stop the shortcuts, starting with
-`git commit --no-verify`.
+You could paste that same brief straight into Claude Code. Here is what differs.
 
-Fourteen skills, five reviewer subagents, six hooks. The always-on cost is
-about two thousand tokens; everything else loads only when it is needed.
+| Pasting the brief directly | `/opm:jump-start` |
+|---|---|
+| Starts writing code in the first minute | Asks only about gaps that would change the architecture |
+| Picks your stack and data model silently | Shows you a design with flows, wireframes and the data model, then waits |
+| You see the result once it is built | You approve the shape before a line is written |
+| One context, filling up all day | One fresh subagent per plan, running in parallel waves |
+| Tests if you remember to ask | Every task is a failing test first, then code, then a commit |
+| "It's done" | Verified, reviewed, then actually started so you can open it |
 
-## How it works
+```
+/opm:jump-start my-app A field-sales app for our reps: visit planning, GPS
+check-in, order capture synced to our ERP, manager dashboard on web. Android
+first, offline capable.
+```
 
-1. **Brew** the idea, if it is not settled yet. Four agents argue it from the product, engineering, skeptic and market angles, and a judge ranks what to build.
-2. **Design** it. One question at a time, scaled to the size of the job. Nothing gets written until you agree the shape.
-3. **Plan** it. The spec becomes bite-sized tasks, each with a failing test, an implementation and a commit.
-4. **Execute** it. One fresh subagent per task, a reviewer gate after each, a ledger that survives compaction.
+It ends by handing you a running app and a URL, or launching it on a connected
+device. For the build to run unattended, switch Claude Code to auto mode with
+Shift+Tab when it asks. OPM never changes your permission mode itself.
+
+### 🎬 `/opm:story-video` — turn a spec into a narrated video
+
+Point it at a spec, a brew-idea result, or any document. You get a 1920x1080
+MP4 with a neural voice-over and subtitles, plus the editable storyboard and
+slides. It is a narrated slideshow with fades, not animation.
+
+```
+/opm:story-video docs/specs/2026-09-17-field-sales-brew.md
+```
+
+**Here is the interesting part.** The first version of this pipeline was run by
+hand, with an AI drawing every slide. Fourteen slides cost about **190,000
+tokens, 77 tool calls and 22 minutes.**
+
+So the AI was taken out of the drawing. Slides are now rendered by script from
+a kit of nine layouts and 24 icons, filled in from the storyboard like a form.
+**Drawing a slide now costs no AI tokens at all** — it is a script, and scripts
+are free. What is left is writing the storyboard, which is words and genuinely
+needs judgement, plus hand-drawing the occasional scene no layout can express.
+
+| | Hand-drawn by AI | Layout kit |
+|---|---|---|
+| Who draws the slides | An AI, one at a time | A script, all at once |
+| Tokens to draw them | ~190,000 | none |
+| Reviewing the result | 14 images, one by one | one contact sheet, looked at once |
+| Changing one word | redraw the slide | re-render; only that scene rebuilds |
+
+It asks before any audio leaves your machine, and offers a fully offline voice
+if you would rather nothing did. Every fact in the video has to trace back to
+the source document, and a validator enforces it.
+
+---
+
+## How the whole loop fits together
+
+1. **Brew** the idea, if it is not settled. Four agents argue, a judge ranks.
+2. **Design** it. One question at a time. Nothing is written until you agree the shape.
+3. **Plan** it. The spec becomes bite-sized tasks, each with a failing test and a commit.
+4. **Execute** it. One fresh subagent per task, a reviewer gate after each.
 5. **Verify** it. Build, types, lint, tests, secrets scan. Real output, or it did not happen.
 6. **Capture** what was non-obvious, so the next project starts from it.
 
-Each step is a skill you can invoke on its own. You do not have to run the
-whole loop to get value from any one of them.
+Every step is a skill you can use on its own. You do not have to run the whole
+loop to get value from any one of them.
 
-## Quickstart
+---
 
-Install, then open Claude Code in your project and say what you want.
+## Install
 
-```
-/opm:brainstorming add a CSV export to the reports page
-```
-
-It will ask what matters, propose an approach, and wait for your yes before
-writing anything.
-
-Two other good places to start:
-
-```
-/opm:brew-idea      an idea you have not settled yet: four agents argue it out
-/opm:jump-start     a whole new project from one prompt
+```bash
+npx opm-core@latest
 ```
 
-Nothing here phones home and nothing runs a model behind your back.
-
-## Install in detail
-
-`npx opm-core@latest` takes options if you want to skip a step:
+That installs the plugin and copies the coding rules into your repo. It takes
+options if you want to skip a step:
 
 ```bash
 npx opm-core@latest --rules typescript,react   # no questions
 npx opm-core@latest --plugin-only              # skip the rules
 npx opm-core@latest --rules-only ../other-repo # rules for another repo
+```
+
+Or the native route, two commands:
+
+```bash
+claude plugin marketplace add harshadmadaye/OPM
+claude plugin install opm@opm
 ```
 
 The rules are plain markdown that Claude Code loads from
@@ -95,119 +193,85 @@ you keep pulling from wherever it pointed before. If `/opm:` commands are not
 recognised afterwards, run `/reload-plugins`. If your git reaches GitHub over
 SSH and that fails, set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1`.
 
-## Skills
+Nothing here phones home and nothing runs a model behind your back.
 
-All 15 skills, invoked as `/opm:<name>` or picked up automatically when their
-description matches the task.
+---
+
+## Everything in the box
+
+<details>
+<summary><b>All 15 skills</b> — invoked as <code>/opm:&lt;name&gt;</code>, or picked up automatically when they match the task</summary>
 
 **The loop**
 
 | Skill | What it does |
 |---|---|
-| `using-opm` | Injected at session start. Tells Claude to check for an applicable skill before any other action and maps the workflow below. |
-| `brew-idea` | Before brainstorming, when the idea itself is not settled. Four agents argue from product, engineering, skeptic and market angles; one judge ranks features and writes a plan. Writes `docs/specs/` and a readable page in `docs/brew/`. |
-| `brainstorming` | No code before the design is agreed. One question at a time, scaled to spike, bounded or architectural work. Writes `docs/specs/`. |
-| `writing-plans` | Turns an approved spec into bite-sized tasks, each with a failing test, implementation and commit. Writes `docs/plans/`. |
-| `executing-plans` | Runs a plan with one fresh subagent per task and a reviewer gate after each. Progress ledger survives compaction. |
+| `using-opm` | Injected at session start. Tells Claude to check for an applicable skill before any other action. |
+| `brew-idea` | Four agents argue the idea from product, engineering, skeptic and market angles; a judge ranks features. |
+| `brainstorming` | No code before the design is agreed. One question at a time, scaled to the size of the job. |
+| `writing-plans` | Turns an approved spec into bite-sized tasks, each with a failing test, implementation and commit. |
+| `executing-plans` | Runs a plan with one fresh subagent per task and a reviewer gate after each. Ledger survives compaction. |
 | `verification-before-completion` | No "done", "fixed" or "passing" without fresh command output as evidence. |
-| `compound-learnings` | Captures non-obvious fixes as short docs in `docs/solutions/` with validated frontmatter, and reads them back before planning. |
+| `compound-learnings` | Captures non-obvious fixes as short docs, and reads them back before planning. |
 
 **Bigger scope**
 
 | Skill | What it does |
 |---|---|
-| `milestone-planning` | Multi-week or greenfield work: roadmap, short STATE digest, phased PLAN files with wave scheduling for parallel subagents, deviation rules. |
-| `jump-start` | A whole project from one prompt. See the next section. |
-| `story-video` | A spec or document becomes a narrated explainer video: illustrated still slides from a layout kit, a neural voice-over, MP4 plus `.srt`. A narrated slideshow, not animation. macOS, Linux and Windows. |
+| `milestone-planning` | Multi-week work: roadmap, short STATE digest, phased plans with wave scheduling for parallel subagents. |
+| `jump-start` | A whole project from one prompt. |
+| `story-video` | A spec becomes a narrated explainer video, rendered from a layout kit. macOS, Linux and Windows. |
 
 **Engineering**
 
 | Skill | What it does |
 |---|---|
-| `tdd-workflow` | Strict red, green, refactor with runner detection, a "fails for the right reason" gate, checkpoint commits and an evidence report. |
-| `verification-loop` | Build, types, lint, tests, secrets scan and diff review for Node, Python and Flutter projects, with a pass or fail report. |
+| `tdd-workflow` | Strict red, green, refactor with a "fails for the right reason" gate and an evidence report. |
+| `verification-loop` | Build, types, lint, tests, secrets scan and diff review, with a pass or fail report. |
 
 **Stack patterns**
 
 | Skill | What it does |
 |---|---|
-| `react-patterns` | React 18/19 and Next.js App Router: hooks discipline, composition, server and client boundaries, data fetching, measured performance work. |
-| `python-patterns` | Modern Python: typing, dataclasses and pydantic at boundaries, pathlib, context managers, async basics, uv, ruff and pytest layout. |
-| `flutter-patterns` | Flutter and Dart 3: widget composition, state management choice, immutability, async and streams, Firebase usage, widget and integration tests. |
+| `react-patterns` | React 18/19 and Next.js App Router: hooks discipline, server and client boundaries, measured performance work. |
+| `python-patterns` | Modern Python: typing, dataclasses and pydantic at boundaries, async basics, uv, ruff and pytest layout. |
+| `flutter-patterns` | Flutter and Dart 3: widget composition, state management choice, async and streams, Firebase, tests. |
 
-## Jump-start and brew-idea
+</details>
 
-```
-/opm:jump-start my-app A field-sales app for our reps: visit planning, GPS check-in, order capture synced to our ERP, manager dashboard on web. Android first, offline capable.
-```
-
-Jump-start parses the brief, brainstorms only the gaps that would change the
-architecture, and publishes a design artifact with flows, wireframes, the data
-model and the stack. After you approve it, it plans the milestone, builds it
-wave by wave with parallel subagents, runs the reviewers and the verification
-loop, then starts the app and hands you a URL or launches it on a device.
-
-For the build to run unattended, switch Claude Code to auto mode with
-Shift+Tab when it asks. OPM never changes your permission mode itself.
-
-```
-/opm:brew-idea A field-sales app for our reps: visit planning, GPS check-in, order capture synced to the ERP.
-```
-
-Brew-idea is the step before that, when you have an idea but not a design. Run
-it inside the project and it reads the code if there is any. One workflow runs
-a scout, four angle agents that propose and then rebut each other, and a judge
-that marks every feature keep, improve, add or cut with the reason and who
-argued for it. You get a spec and a plain-language page to approve. Needs the
-Workflow tool.
-
-`/opm:story-video <path>` turns a spec, a brew-idea result or any document into a
-narrated explainer:
-
-```
-/opm:story-video docs/specs/2026-09-17-influencer-platform-brew.md
-```
-
-You pick a length (2, 4 or 6 minutes) and approve the storyboard. Slides are
-rendered by script from nine layouts, so a typical video costs under 20k tokens
-instead of the 190k a hand-drawn one took. Narration uses Microsoft's neural
-voices through edge-tts after you consent, or a local voice with nothing
-leaving the machine. ffmpeg and edge-tts are installed into
-`~/.opm/story-video-tools/`, never system-wide. Needs Node 18+, a
-Chromium-family browser, and Python 3 for the neural voice.
-
-## Agents
-
-All 5 subagents. Claude dispatches them on its own when a task matches, or
-you can ask for one by name.
+<details>
+<summary><b>5 reviewer subagents</b> — dispatched automatically when a task matches, or ask for one by name</summary>
 
 | Agent | Model | Use it for |
 |---|---|---|
-| `planner` | opus | Turning an agreed spec into an implementation plan, then handing off to `writing-plans` |
-| `code-reviewer` | sonnet | Diff review with a confidence gate, reviewer lenses chosen by risk, and an explicit false-positive list |
-| `typescript-reviewer` | sonnet | TypeScript and Node specifics: types, async pitfalls, tsconfig selection, merge readiness |
-| `security-reviewer` | sonnet | OWASP checks, dependency audits for npm, Python and Dart, Firebase rules review |
-| `silent-failure-hunter` | sonnet | Swallowed errors, empty catches, misleading fallbacks, with per-language grep patterns |
+| `planner` | opus | Turning an agreed spec into an implementation plan |
+| `code-reviewer` | sonnet | Diff review with a confidence gate and an explicit false-positive list |
+| `typescript-reviewer` | sonnet | TypeScript and Node specifics: types, async pitfalls, merge readiness |
+| `security-reviewer` | sonnet | OWASP checks, dependency audits for npm, Python and Dart, Firebase rules |
+| `silent-failure-hunter` | sonnet | Swallowed errors, empty catches, misleading fallbacks |
 
-## Hooks
+</details>
 
-All 6 hooks. Dependency-free Node scripts that never call a model or the
-network, never throw, and exit silently on internal error.
+<details>
+<summary><b>6 safety hooks</b> — dependency-free scripts that never call a model or the network</summary>
 
-| Event | Script | Effect |
-|---|---|---|
-| SessionStart | `session-start.js` | Injects the `using-opm` skill as context on startup, `/clear` and compaction |
-| PreToolUse on Bash | `block-no-verify.js` | Denies `git commit --no-verify`, `HUSKY=0` and other hook bypasses |
-| PreToolUse on Edit/Write | `config-protection.js` | Asks before editing lint, format, typecheck or `.husky` config files |
-| PostToolUse on Edit/Write | `post-edit-accumulator.js` | Records edited files per session for the Stop hooks |
-| Stop | `stop-format-typecheck.js` | Formats edited files, runs tsc, ruff or dart on their project, blocks on type errors |
-| Stop | `check-console-log.js` | Warns about leftover `console.log`, `print` or `debugPrint` in edited files |
+| Event | Effect |
+|---|---|
+| SessionStart | Injects the workflow map on startup, `/clear` and compaction |
+| PreToolUse on Bash | Denies `git commit --no-verify` and other hook bypasses |
+| PreToolUse on Edit/Write | Asks before editing lint, format, typecheck or `.husky` config |
+| PostToolUse on Edit/Write | Records edited files for the Stop hooks |
+| Stop | Formats edited files, runs tsc, ruff or dart, blocks on type errors |
+| Stop | Warns about leftover `console.log`, `print` or `debugPrint` |
 
-Set `OPM_HOOKS_DISABLED=1` to turn all of them off. Per-hook switches are
+Set `OPM_HOOKS_DISABLED=1` to turn them all off. Per-hook switches are
 `OPM_ALLOW_CONFIG_EDITS`, `OPM_SKIP_FORMAT` and `OPM_SKIP_TYPECHECK`; see
-`hooks/README.md`.
+[hooks/README.md](hooks/README.md).
 
-## Layout
+</details>
+
+<details>
+<summary><b>Repository layout</b></summary>
 
 ```
 .claude-plugin/   plugin.json, marketplace.json
@@ -218,14 +282,19 @@ rules/            copied into <repo>/.claude/rules/opm/ by the installer
 bin/              the npx installer
 scripts/          install-rules.sh, dev-server.sh
 tests/            node --test tests/*.test.js
-docs/             design notes and the source review
+docs/             specs, plans and design notes
 ```
+
+</details>
+
+---
 
 ## Contributing
 
-- Skills: `name` equals the directory, description in third person with "Use when" triggers, body under 400 lines, no first person.
-- Agents: frontmatter `name`, `description`, `tools`, `model`; under 250 lines.
-- Hooks: builtin Node only, never throw, exit 0 on internal error, add a test.
-- Run `node --test tests/*.test.js` and `claude plugin validate .` before opening a PR.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, the rules the tests enforce,
+and how to open a pull request. By taking part you agree to the
+[Code of Conduct](CODE_OF_CONDUCT.md).
 
-Adapted material is credited in `THIRD_PARTY_NOTICES.md`.
+## Licence
+
+MIT. See [LICENSE](LICENSE).
