@@ -1,0 +1,19 @@
+#!/bin/sh
+# Refuse a commit authored with a work email in this public repository.
+# Enable once per clone with: git config core.hooksPath .githooks
+
+blocked='firsteconomy\|@company\.'
+email=$(git config user.email)
+name=$(git config user.name)
+
+if printf '%s' "$email" | grep -qi "$blocked"; then
+  echo "commit blocked: $email is a work address and this repository is public." >&2
+  echo "Set the right identity for this repo:" >&2
+  echo "  git config user.email 17513909+harshadmadaye@users.noreply.github.com" >&2
+  exit 1
+fi
+
+if [ -z "$email" ] || [ -z "$name" ]; then
+  echo "commit blocked: git user.name or user.email is not set." >&2
+  exit 1
+fi

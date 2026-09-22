@@ -52,6 +52,16 @@ These are not style preferences; the tests enforce most of them.
   exceptions, no stack traces shown to a user, no leftover debug output.
 - **Files**: under 400 lines, one responsibility each.
 
+## One-time setup for this clone
+
+This repository ships a hook that refuses a commit made with a work email
+address, because the repository is public and those addresses do not belong in
+it. Turn it on once per clone:
+
+```
+git config core.hooksPath .githooks
+```
+
 ## Tests
 
 Every test runs offline. No test may reach the network, launch a browser, run
