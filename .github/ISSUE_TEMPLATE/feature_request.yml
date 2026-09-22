@@ -1,0 +1,22 @@
+name: Idea
+description: Suggest a skill, an agent, or a change to how the loop works
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What goes wrong today, in a situation you have actually hit. Concrete beats hypothetical.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you would like instead
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you have tried or considered
+      description: Including whether an existing skill nearly covers it. OPM prefers extending one owner over adding a second.

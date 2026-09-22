@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in a skill, agent, hook or script does not work
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for the report. The more precisely you can say what happened, the faster it gets fixed.
+  - type: input
+    id: part
+    attributes:
+      label: Which part
+      description: The skill, agent, hook or script involved.
+      placeholder: skills/story-video/scripts/render-frames.js
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead. Paste the real output rather than describing it.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run /opm:...
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Plugin version
+      description: From .claude-plugin/plugin.json, or /plugin in Claude Code.
+      placeholder: 0.4.0
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Operating system and Node version
+      placeholder: macOS 15, Node 22.3
+    validations:
+      required: true
