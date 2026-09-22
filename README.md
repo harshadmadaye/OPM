@@ -1,6 +1,6 @@
 # OPM
 
-First Economy's private Claude Code plugin. One opinionated engineering loop, a
+An opinionated Claude Code plugin. One engineering loop, a
 handful of sharp reviewers, stack patterns for the things we actually build,
 and five light safety hooks. Nothing phones home, nothing runs a model behind
 your back, and the always-on context cost is under ten kilobytes, roughly two thousand tokens.

@@ -1,11 +1,11 @@
 {
   "name": "opm",
   "owner": {
-    "name": "First Economy",
-    "email": "developer@firsteconomy.com"
+    "name": "Harshad Madaye",
+    "url": "https://github.com/harshadmadaye"
   },
   "metadata": {
-    "description": "Private marketplace for the OPM engineering workflow plugin"
+    "description": "Marketplace for the OPM engineering workflow plugin for Claude Code"
   },
   "plugins": [
     {
@@ -14,8 +14,8 @@
       "description": "OPM engineering workflow: planning, TDD execution, verification, reviewers, stack patterns and safety hooks",
       "version": "0.3.0",
       "author": {
-        "name": "First Economy",
-        "email": "developer@firsteconomy.com"
+        "name": "Harshad Madaye",
+        "url": "https://github.com/harshadmadaye"
       }
     }
   ]
