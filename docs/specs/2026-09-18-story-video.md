@@ -126,7 +126,7 @@ rebuild after an edit.
   "targetMinutes": 4,
   "voice": "en-IN-NeerjaExpressiveNeural",
   "rate": "+6%",
-  "protagonist": { "name": "Prajakta", "role": "campaign executive", "color": "teal" },
+  "protagonist": { "name": "Alice", "role": "campaign executive", "color": "teal" },
   "parts": { "today": { "label": "TODAY", "tone": "amber" }, "after": { "label": "AFTER", "tone": "teal" } },
   "scenes": [
     {
@@ -137,7 +137,7 @@ rebuild after an edit.
       "sub": "Discovery takes 20% of all campaign effort",
       "slots": { "steps": [ { "icon": "phone", "label": "Hashtag search" }, { "icon": "sheet", "label": "Copy to a spreadsheet" }, { "icon": "chat", "label": "Message each creator" } ] },
       "visual": "",
-      "narration": "Next, Prajakta has to find creators...",
+      "narration": "Next, Alice has to find creators...",
       "source": "Questionnaire, section 2: discovery",
       "planned": false
     }

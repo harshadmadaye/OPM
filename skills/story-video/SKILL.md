@@ -60,7 +60,11 @@ Rules for the author:
 - Anything the source describes as not built yet gets `planned: true`.
 - Narration is never repeated on the slide. The voice carries the words; the slide carries the picture.
 - Write "AI", not "A.I.".
-- Declare one `protagonist` at the top level and use that name in every scene that shows a person.
+- Declare one `protagonist` at the top level and use that name in every scene that
+  shows a person. Never use a real person's name, even a colleague's first name,
+  and never carry a name across from the source document. Use a placeholder such
+  as Alice, Bob or Asha, or ask the developer which name to use. A video outlives
+  the conversation it came from and the person in it did not agree to appear.
 - Pick a kit layout for every scene you can. Use `custom` only when no layout can carry the point, and say why in `visual`.
 - `voice` and `rate` are optional. Suggest a voice that fits the source's language and locale; write the narration in that language. Do not translate the source.
 
@@ -149,6 +153,7 @@ the voice used, and that an edit is rebuilt by rerunning Phase 4.
 | "It's planned but basically decided" | Planned is labelled planned. |
 | "They agreed to the neural voice last time" | Consent is per run. Ask at G2. |
 | "The name is obviously fictional" | List the names and let the developer say. Keep `note` truthful. |
+| "I'll reuse the name from the source document" | That is usually a real colleague. Use a placeholder or ask. |
 | "ffmpeg is missing, I'll install it with the system package manager" | Tools go in the tools folder through `setup.js`. Never touch the system. |
 | "I'll put the narration on the slide so it's clear" | The validator rejects it, and it reads badly on video. |
 | "Small edit, I'll work out which files to rebuild" | Rerun the same commands. The manifest rebuilds only what changed. |
