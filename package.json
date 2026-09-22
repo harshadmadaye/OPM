@@ -1,0 +1,40 @@
+{
+  "name": "opm-core",
+  "version": "0.3.0",
+  "description": "An opinionated engineering workflow for Claude Code: brainstorm, plan, TDD execution with fresh-context subagents, verification, captured learnings.",
+  "bin": {
+    "opm-core": "bin/install.js"
+  },
+  "files": [
+    "bin/",
+    "rules/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "claude-code",
+    "claude-code-plugin",
+    "ai-agents",
+    "agentic-workflow",
+    "tdd",
+    "code-review",
+    "developer-tools",
+    "anthropic"
+  ],
+  "author": "Harshad Madaye (https://github.com/harshadmadaye)",
+  "license": "MIT",
+  "homepage": "https://github.com/harshadmadaye/OPM#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harshadmadaye/OPM.git"
+  },
+  "bugs": {
+    "url": "https://github.com/harshadmadaye/OPM/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
