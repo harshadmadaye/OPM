@@ -8,7 +8,7 @@ An engineering workflow for [Claude Code](https://claude.com/claude-code) that
 refuses to call anything done without evidence, and keeps the bill down while
 it does.
 
-[![tests](https://github.com/harshadmadaye/OPM/actions/workflows/tests.yml/badge.svg)](https://github.com/harshadmadaye/OPM/actions/workflows/tests.yml)
+[![npm](https://img.shields.io/npm/v/opm-core.svg)](https://www.npmjs.com/package/opm-core)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-d97757.svg)](https://docs.claude.com/en/docs/claude-code/plugins)
 
