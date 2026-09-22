@@ -11,7 +11,7 @@
     {
       "name": "opm",
       "source": "./",
-      "description": "OPM engineering workflow: planning, TDD execution, verification, reviewers, stack patterns and safety hooks",
+      "description": "An opinionated engineering workflow: brainstorm, plan, TDD execution with fresh-context subagents, verification, captured learnings. Lean reviewers, stack patterns and six light safety hooks.",
       "version": "0.3.0",
       "author": {
         "name": "Harshad Madaye",

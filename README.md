@@ -7,25 +7,26 @@ your back, and the always-on context cost is under ten kilobytes, roughly two th
 
 ## Install
 
-In Claude Code:
+From your terminal, which works everywhere:
+
+```
+claude plugin marketplace add harshadmadaye/OPM
+claude plugin install opm@opm
+```
+
+Or inside a Claude Code session, where `/plugin` is available. Some hosts, such
+as the editor extensions, do not offer it; use the terminal form there.
 
 ```
 /plugin marketplace add harshadmadaye/OPM
 /plugin install opm@opm
 ```
 
-On Claude Code 2.1.275 and later one command does both:
+On Claude Code 2.1.275 and later, `/plugin install opm --marketplace harshadmadaye/OPM`
+does both in one step.
 
-```
-/plugin install opm --marketplace harshadmadaye/OPM
-```
-
-Or from a shell, without starting a session:
-
-```
-claude plugin marketplace add harshadmadaye/OPM
-claude plugin install opm@opm
-```
+Upgrading from an older install? Run `claude plugin marketplace remove opm`
+first, otherwise you keep pulling from wherever it pointed before.
 
 This repository is public, so no GitHub credentials are needed. If your git is
 set up to reach GitHub over SSH and that fails, set
