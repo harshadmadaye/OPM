@@ -2,24 +2,41 @@
 
 An opinionated Claude Code plugin. One engineering loop, a
 handful of sharp reviewers, stack patterns for the things we actually build,
-and five light safety hooks. Nothing phones home, nothing runs a model behind
+and six light safety hooks. Nothing phones home, nothing runs a model behind
 your back, and the always-on context cost is under ten kilobytes, roughly two thousand tokens.
 
 ## Install
+
+In Claude Code:
 
 ```
 /plugin marketplace add harshadmadaye/OPM
 /plugin install opm@opm
 ```
 
-Claude Code clones the marketplace with your git credentials, so make sure git
-can authenticate to GitHub on your machine (for example `gh auth login`).
+On Claude Code 2.1.275 and later one command does both:
+
+```
+/plugin install opm --marketplace harshadmadaye/OPM
+```
+
+Or from a shell, without starting a session:
+
+```
+claude plugin marketplace add harshadmadaye/OPM
+claude plugin install opm@opm
+```
+
+This repository is public, so no GitHub credentials are needed. If your git is
+set up to reach GitHub over SSH and that fails, set
+`CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` and try again. If `/opm:` commands are not
+recognised afterwards, run `/reload-plugins`.
 
 Then, once per repository, copy the rules you want into the repo so they load
 automatically (plugins cannot ship rules themselves):
 
 ```
-sh ~/.claude/plugins/cache/opm/opm/<version>/scripts/install-rules.sh --langs typescript,react <path-to-repo>
+sh ~/.claude/plugins/cache/opm/opm/*/scripts/install-rules.sh --langs typescript,react <path-to-repo>
 ```
 
 Or clone this repo and run `scripts/install-rules.sh` from it. Rules land in
