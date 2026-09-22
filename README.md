@@ -8,15 +8,12 @@ your back, and the always-on context cost is under ten kilobytes, roughly two th
 ## Install
 
 ```
-/plugin marketplace add fe-techTeam/OPM
+/plugin marketplace add harshadmadaye/OPM
 /plugin install opm@opm
 ```
 
-The repository is private inside the `fe-techTeam` GitHub organisation. Before
-installing, make sure you are a member of the organisation with read access to
-this repo, and that git can authenticate to GitHub on your machine (for example
-`gh auth login`), because Claude Code clones the marketplace with your git
-credentials.
+Claude Code clones the marketplace with your git credentials, so make sure git
+can authenticate to GitHub on your machine (for example `gh auth login`).
 
 Then, once per repository, copy the rules you want into the repo so they load
 automatically (plugins cannot ship rules themselves):
