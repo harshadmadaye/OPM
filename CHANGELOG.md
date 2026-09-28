@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Installer: the rules step is a checkbox list instead of a typed comma-separated list. Arrow keys or j/k move, enter or space ticks, `a` or the Select all row toggles everything, enter on Submit finishes, Esc cancels. Languages guessed from the repo start ticked. Piped input still gets the typed prompt, and `--rules` still skips the question.
+- Installer: the Next list names `/opm:story-video`.
+
 ## 0.5.0 - 2026-09-28
 
 - `brew-idea` now ends with a design, not a debate report. A fifth workflow phase, Design, has an opus designer turn the judge's verdict into personas and flows, surfaces with low-fidelity wireframe layouts, navigation, data model, architecture and stack. The page follows jump-start's design outline; the debate is one collapsed "Why these choices" section. The chat summary is three lines and the link. Change requests rerun the judge and the designer.

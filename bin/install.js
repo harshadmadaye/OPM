@@ -7,6 +7,7 @@ const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const readline = require('node:readline');
+const { pick } = require('./multiselect');
 
 const MARKETPLACE = 'harshadmadaye/OPM';
 const MARKETPLACE_NAME = 'opm';
@@ -156,6 +157,14 @@ async function chooseLanguages(target) {
   if (has('pyproject.toml') || has('requirements.txt')) guess.push('python');
   if (has('pubspec.yaml')) guess.push('dart');
 
+  if (process.stdin.isTTY) {
+    console.log(`  Which rules for this repo? ${dim('Ticked ones are a guess from the files here.')}`);
+    const chosen = await pick(LANGUAGES, guess);
+    if (chosen === null) { console.log(yellow('  Cancelled, no rules copied.')); return []; }
+    return chosen;
+  }
+
+  // Piped input cannot drive the picker, so fall back to a typed list.
   const suggestion = guess.length ? guess.join(',') : 'none';
   const answer = await ask(`  Which rules for this repo? ${dim(`[${LANGUAGES.join(', ')}]`)}\n  Enter to accept ${bold(suggestion)}, or type a comma-separated list: `);
   if (!answer) return guess;
@@ -197,6 +206,7 @@ async function main(argv) {
   log(dim('  /opm:brainstorming   design it before writing code'));
   log(dim('  /opm:brew-idea       four agents argue the idea out first'));
   log(dim('  /opm:jump-start      a whole new project from one prompt'));
+  log(dim('  /opm:story-video     turn a spec into a narrated explainer video'));
   log('');
   log(dim('  Docs: https://github.com/harshadmadaye/OPM'));
   log('');
