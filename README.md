@@ -1,12 +1,13 @@
 <div align="center">
 
-# OPM
+# OPM: a Claude Code plugin for spec-driven, test-first development
 
 **Design it. Prove it. Ship it.**
 
-An engineering workflow for [Claude Code](https://claude.com/claude-code) that
-refuses to call anything done without evidence, and keeps the bill down while
-it does.
+OPM is a [Claude Code](https://claude.com/claude-code) plugin that adds a full
+engineering workflow: brainstorm a design, write a plan, build it test-first
+with fresh-context subagents, review it, and verify it before anything is
+called done. It keeps token costs down while it does.
 
 [![npm](https://img.shields.io/npm/v/opm-core.svg)](https://www.npmjs.com/package/opm-core)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
