@@ -87,7 +87,10 @@ the skeptic lands a serious hit on gets cut unless there is a real answer.
 order capture synced to the ERP.
 ```
 
-You get a ranked feature list and a plain-language page to approve.
+A designer then turns the verdict into a design page, the same kind jump-start
+shows: who uses it, a wireframe per screen, how screens connect, data,
+architecture and a phased plan. The argument itself stays folded away at the
+bottom, and the chat gets three lines and a link.
 **Why it matters: the cheapest feature is the one you talked yourself out of
 building.**
 

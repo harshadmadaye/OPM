@@ -1,11 +1,12 @@
 export const meta = {
   name: 'opm-brew-idea',
-  description: 'OPM brew-idea: scout the project, four angles propose, each angle rebuts the others, one judge ranks features and writes a phased plan',
+  description: 'OPM brew-idea: scout the project, four angles propose, each angle rebuts the others, one judge ranks features and writes a phased plan, one designer turns the verdict into a design',
   phases: [
     { title: 'Scout', detail: 'one agent maps the brief and the code' },
     { title: 'Propose', detail: 'product, engineering, skeptic and market angles in parallel' },
     { title: 'Debate', detail: 'each angle endorses or attacks every other idea' },
     { title: 'Judge', detail: 'one judge ranks keep / improve / add / cut and writes the plan', model: 'opus' },
+    { title: 'Design', detail: 'one designer turns the verdict into flows, screens, data and architecture', model: 'opus' },
   ],
 }
 
@@ -108,6 +109,55 @@ const VERDICT_SCHEMA = {
   required: ['vision', 'features', 'plan', 'cut', 'openQuestions', 'assumptions'],
 }
 
+const NAMED_LIST = { type: 'array', items: { type: 'string' } }
+
+const DESIGN_SCHEMA = {
+  type: 'object',
+  properties: {
+    pitch: { type: 'string' },
+    goals: NAMED_LIST,
+    nonGoals: NAMED_LIST,
+    successSignal: { type: 'string' },
+    personas: {
+      type: 'array',
+      items: { type: 'object', properties: { name: { type: 'string' }, need: { type: 'string' }, flow: NAMED_LIST }, required: ['name', 'need', 'flow'] },
+    },
+    surfaces: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          kind: { type: 'string', enum: ['screen', 'page', 'command', 'endpoint', 'other'] },
+          purpose: { type: 'string' },
+          delivers: NAMED_LIST,
+          layout: NAMED_LIST,
+          states: { type: 'string' },
+        },
+        required: ['name', 'kind', 'purpose', 'delivers', 'layout', 'states'],
+      },
+    },
+    navigation: {
+      type: 'array',
+      items: { type: 'object', properties: { from: { type: 'string' }, to: { type: 'string' }, via: { type: 'string' } }, required: ['from', 'to', 'via'] },
+    },
+    dataModel: {
+      type: 'array',
+      items: { type: 'object', properties: { entity: { type: 'string' }, fields: NAMED_LIST, relations: NAMED_LIST }, required: ['entity', 'fields', 'relations'] },
+    },
+    architecture: {
+      type: 'array',
+      items: { type: 'object', properties: { part: { type: 'string' }, runsOn: { type: 'string' }, role: { type: 'string' } }, required: ['part', 'runsOn', 'role'] },
+    },
+    stack: {
+      type: 'array',
+      items: { type: 'object', properties: { choice: { type: 'string' }, reason: { type: 'string' } }, required: ['choice', 'reason'] },
+    },
+    assumptions: NAMED_LIST,
+  },
+  required: ['pitch', 'goals', 'nonGoals', 'successSignal', 'personas', 'surfaces', 'navigation', 'dataModel', 'architecture', 'stack', 'assumptions'],
+}
+
 const readOnly = 'Read-only: do not modify, create or delete files, do not run git commands that change state, do not dispatch subagents. You may not ask the developer anything.'
 
 function scoutPrompt() {
@@ -183,6 +233,34 @@ ${missing}${quiet}${feedback}
 ${readOnly}`
 }
 
+function designPrompt(facts, verdict) {
+  const feedback = args.feedback ? `\n## Developer feedback on the previous result, apply it\n${args.feedback}\n` : ''
+  const existing = args.hasCode
+    ? 'The project has code. The stack, data and architecture start from the fact sheet; change them only where a feature needs it, and say so.'
+    : 'The project has no code. Choose the stack from the brief; when it names none, pick the simplest stack that fits the platform and give the reason.'
+  return `You are the designer of an OPM brew-idea run. A judge has decided what to build. Turn that decision into a design the developer can look at and approve, like a product design review, not a debate summary.
+Brief:
+"""
+${args.brief}
+"""
+Fact sheet:
+${JSON.stringify(facts, null, 2)}
+
+Verdict:
+${JSON.stringify({ vision: verdict.vision, features: verdict.features, plan: verdict.plan }, null, 2)}
+${feedback}
+## Rules
+- Design only features with decision keep, improve or add. A feature with decision cut does not appear anywhere in the design.
+- pitch: one line. goals: two to four outcomes. nonGoals: what this deliberately does not do, including the cut features by title. successSignal: one observable sign it worked.
+- personas: two or three, each with a need and one end-to-end flow as short steps.
+- surfaces: every screen, page, CLI command or API endpoint a user touches, with kind set to match. delivers lists the feature titles it serves. layout is its low-fidelity wireframe: regions from top to bottom, one short line each (for example "header: title and back button", "list: visits for today, newest first"). states names the empty, loading and error behaviour in one line.
+- navigation: how surfaces connect (from, to, via which action). dataModel: entities, the fields that matter, relations. architecture: each part, where it runs, its role. stack: each choice with one reason.
+- ${existing}
+- Keep it small enough to read in five minutes: at most eight surfaces, eight entities, eight architecture parts.
+- Every detail the brief, fact sheet or verdict does not state is an assumption and goes in assumptions.
+${readOnly}`
+}
+
 phase('Scout')
 const facts = await agent(scoutPrompt(), { label: 'scout', phase: 'Scout', schema: FACTS_SCHEMA, model: 'sonnet' })
 if (!facts) return { completed: false, reason: 'scout returned nothing', missingAngles: [] }
@@ -212,4 +290,10 @@ const verdict = await agent(judgePrompt(facts, proposals, rebuttals, missingAngl
 if (!verdict) return { completed: false, reason: 'judge returned nothing', facts, proposals, rebuttals, missingAngles, silentAngles }
 
 log(`verdict: ${verdict.features.length} features, ${verdict.cut.length} cut, ${verdict.plan.length} plan phases`)
-return { completed: true, facts, proposals, rebuttals, verdict, missingAngles, silentAngles }
+
+phase('Design')
+const design = await agent(designPrompt(facts, verdict), { label: 'designer', phase: 'Design', schema: DESIGN_SCHEMA, model: 'opus', effort: 'high' })
+if (!design) return { completed: false, reason: 'designer returned nothing', facts, proposals, rebuttals, verdict, missingAngles, silentAngles }
+
+log(`design: ${design.surfaces.length} surfaces, ${design.dataModel.length} entities`)
+return { completed: true, facts, proposals, rebuttals, verdict, design, missingAngles, silentAngles }

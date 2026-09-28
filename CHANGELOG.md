@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0 - 2026-09-28
+
+- `brew-idea` now ends with a design, not a debate report. A fifth workflow phase, Design, has an opus designer turn the judge's verdict into personas and flows, surfaces with low-fidelity wireframe layouts, navigation, data model, architecture and stack. The page follows jump-start's design outline; the debate is one collapsed "Why these choices" section. The chat summary is three lines and the link. Change requests rerun the judge and the designer.
+- Tests: the Design phase, its schema, feedback reaching the designer, the spec template's order and the skill's render and summary rules.
+
 ## 0.4.0 - 2026-09-21
 
 - New skill `opm:story-video <path>`: a spec or document becomes a narrated explainer video (1920x1080 MP4 plus `.srt`). A narrated slideshow with fades, not animation. The main thread writes `storyboard.json`; scripts do the rest: nine script-rendered slide layouts and 24 pictograms, headless-browser frames, edge-tts or local-voice narration, ffmpeg encoding, a contact sheet for one-look review, and a per-scene hash manifest so edits rebuild only what changed. Works on macOS, Linux and Windows; tools install into `~/.opm/story-video-tools/`.

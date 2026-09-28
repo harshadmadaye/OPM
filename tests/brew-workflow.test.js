@@ -90,7 +90,55 @@ test('SKILL.md frontmatter follows the contributing rules', () => {
 
 test('spec template has every section the skill fills', () => {
   const text = fs.readFileSync(TEMPLATE, 'utf8');
-  for (const heading of ['## Vision', '## Features', '## Plan', '## Cut', '## Open questions', '## Assumptions', '## Angles', '## Run']) {
+  for (const heading of ['## Vision', '## Features', '## Plan', '## Cut', '## Open questions', '## Assumptions', '## Why these choices', '## Run']) {
     assert.ok(text.includes(heading), `template missing ${heading}`);
   }
+});
+
+test('a Design phase runs after Judge on opus and returns the design', () => {
+  const meta = vm.runInNewContext(`(${metaLiteral()})`);
+  const titles = meta.phases.map((p) => p.title);
+  assert.equal(titles.slice(-2).join(','), 'Judge,Design');
+  const designer = agentCalls().find((call) => call.includes("phase: 'Design'"));
+  assert.ok(designer, 'no agent() call in the Design phase');
+  assert.match(designer, /model:\s*'opus'/);
+  assert.match(designer, /schema:\s*DESIGN_SCHEMA/);
+  assert.match(source, /return \{ completed: true,[^}]*\bdesign\b/);
+});
+
+test('design schema covers the jump-start design outline', () => {
+  const match = source.match(/const DESIGN_SCHEMA = \{[\s\S]*?\n\}\n/);
+  assert.ok(match, 'DESIGN_SCHEMA not found');
+  const required = match[0].match(/required: \[([^\]]*)\],\n\}\n$/);
+  assert.ok(required, 'DESIGN_SCHEMA has no top-level required list');
+  for (const key of ['pitch', 'goals', 'nonGoals', 'personas', 'surfaces', 'navigation', 'dataModel', 'architecture', 'stack', 'assumptions']) {
+    assert.ok(required[1].includes(`'${key}'`), `DESIGN_SCHEMA does not require ${key}`);
+  }
+});
+
+test('the designer sees developer feedback so revisions reach the design', () => {
+  const fn = source.match(/function designPrompt\([\s\S]*?\n\}\n/);
+  assert.ok(fn, 'designPrompt not found');
+  assert.match(fn[0], /args\.feedback/);
+  assert.match(fn[0], /cut/, 'designer must be told to leave cut features out');
+});
+
+test('spec template leads with the design and keeps the debate short', () => {
+  const text = fs.readFileSync(TEMPLATE, 'utf8');
+  const order = ['## Vision', '## Design', '## Plan', '## Features', '## Why these choices'];
+  const positions = order.map((h) => text.indexOf(h));
+  positions.forEach((pos, i) => assert.ok(pos >= 0, `template missing ${order[i]}`));
+  assert.deepEqual([...positions].sort((a, b) => a - b), positions, `template sections out of order: ${order.join(', ')}`);
+  for (const sub of ['### Who uses it', '### Screens', '### How screens connect', '### Data', '### Architecture', '### Stack']) {
+    assert.ok(text.includes(sub), `template missing ${sub}`);
+  }
+});
+
+test('skill renders a design page and keeps the chat summary to three lines', () => {
+  const text = fs.readFileSync(SKILL, 'utf8');
+  assert.ok(text.includes('design-outline.md'), 'renderer should follow the jump-start design outline');
+  assert.match(text, /wireframe/i);
+  assert.match(text, /<details>/, 'the debate should be collapsed on the page');
+  assert.match(text, /three lines/i);
+  assert.doesNotMatch(text, /top three features/, 'the old five-line chat summary is still there');
 });
