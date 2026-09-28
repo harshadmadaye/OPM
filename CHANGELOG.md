@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 - 2026-09-28
 
 - Installer: the rules step is a checkbox list instead of a typed comma-separated list. Arrow keys or j/k move, enter or space ticks, `a` or the Select all row toggles everything, enter on Submit finishes, Esc cancels. Languages guessed from the repo start ticked. Piped input still gets the typed prompt, and `--rules` still skips the question.
 - Installer: the Next list names `/opm:explainer-video`.
