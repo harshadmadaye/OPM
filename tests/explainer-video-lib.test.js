@@ -1,12 +1,12 @@
 'use strict';
-// Unit tests for the story-video library modules. Run with: node --test tests/story-video-lib.test.js
+// Unit tests for the explainer-video library modules. Run with: node --test tests/explainer-video-lib.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const LIB = path.resolve(__dirname, '..', 'skills', 'story-video', 'scripts', 'lib');
+const LIB = path.resolve(__dirname, '..', 'skills', 'explainer-video', 'scripts', 'lib');
 const constants = require(path.join(LIB, 'constants.js'));
 const paths = require(path.join(LIB, 'paths.js'));
 const { readPngSize } = require(path.join(LIB, 'png.js'));
@@ -28,14 +28,30 @@ test('constants carry the measured values', () => {
   assert.equal(constants.DEFAULT_RATE, '+6%');
 });
 
-test('toolsDir defaults under the home directory and honours OPM_STORY_TOOLS', () => {
-  assert.equal(paths.toolsDir({ env: {}, homedir: '/home/u' }), path.join('/home/u', '.opm', 'story-video-tools'));
-  assert.equal(paths.toolsDir({ env: { OPM_STORY_TOOLS: '/x/tools' }, homedir: '/home/u' }), '/x/tools');
+test('toolsDir defaults under the home directory and honours OPM_EXPLAINER_TOOLS', () => {
+  const none = () => false;
+  assert.equal(paths.toolsDir({ env: {}, homedir: '/home/u', exists: none }), path.join('/home/u', '.opm', 'explainer-video-tools'));
+  assert.equal(paths.toolsDir({ env: { OPM_EXPLAINER_TOOLS: '/x/tools' }, homedir: '/home/u' }), '/x/tools');
   assert.throws(
-    () => paths.toolsDir({ env: { OPM_STORY_TOOLS: 'tools' }, homedir: '/home/u' }),
-    /OPM_STORY_TOOLS must be an absolute path/,
+    () => paths.toolsDir({ env: { OPM_EXPLAINER_TOOLS: 'tools' }, homedir: '/home/u' }),
+    /OPM_EXPLAINER_TOOLS must be an absolute path/,
     'a relative value would resolve against the current directory and is the base of a require()',
   );
+});
+
+test('toolsDir keeps working for installs made under the story-video name', () => {
+  assert.equal(paths.toolsDir({ env: { OPM_STORY_TOOLS: '/old/tools' }, homedir: '/home/u' }), '/old/tools');
+  assert.throws(() => paths.toolsDir({ env: { OPM_STORY_TOOLS: 'rel' }, homedir: '/home/u' }), /OPM_STORY_TOOLS must be an absolute path/);
+  assert.equal(
+    paths.toolsDir({ env: { OPM_EXPLAINER_TOOLS: '/new', OPM_STORY_TOOLS: '/old' }, homedir: '/home/u' }),
+    '/new',
+    'the new variable wins when both are set',
+  );
+  const legacy = path.join('/home/u', '.opm', 'story-video-tools');
+  const onlyLegacy = (p) => p === legacy;
+  assert.equal(paths.toolsDir({ env: {}, homedir: '/home/u', exists: onlyLegacy }), legacy, 'reuse the old folder instead of downloading again');
+  const both = () => true;
+  assert.equal(paths.toolsDir({ env: {}, homedir: '/home/u', exists: both }), path.join('/home/u', '.opm', 'explainer-video-tools'));
 });
 
 test('venvPython differs by platform', () => {

@@ -1,5 +1,5 @@
 'use strict';
-// Storyboard validation tests. Run with: node --test tests/story-video-storyboard.test.js
+// Storyboard validation tests. Run with: node --test tests/explainer-video-storyboard.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const SKILL = path.resolve(__dirname, '..', 'skills', 'story-video');
+const SKILL = path.resolve(__dirname, '..', 'skills', 'explainer-video');
 const { validateStoryboard, loadStoryboard, countWords } = require(path.join(SKILL, 'scripts', 'lib', 'storyboard.js'));
 const { LAYOUTS } = require(path.join(SKILL, 'scripts', 'layouts', 'index.js'));
 const CLI = path.join(SKILL, 'scripts', 'validate-storyboard.js');

@@ -1,5 +1,5 @@
 'use strict';
-// Loads and validates a story-video storyboard.json against the layout kit's
+// Loads and validates a explainer-video storyboard.json against the layout kit's
 // slot schemas and the narration/structure rules described in the plan.
 const fs = require('node:fs');
 const { getLayout } = require('../layouts/index');

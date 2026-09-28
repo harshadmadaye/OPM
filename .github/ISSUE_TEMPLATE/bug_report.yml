@@ -10,7 +10,7 @@ body:
     attributes:
       label: Which part
       description: The skill, agent, hook or script involved.
-      placeholder: skills/story-video/scripts/render-frames.js
+      placeholder: skills/explainer-video/scripts/render-frames.js
     validations:
       required: true
   - type: textarea

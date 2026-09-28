@@ -115,9 +115,9 @@ test('package.json ships the installer and the rules, and matches the plugin ver
   assert.ok(!pkg.dependencies, 'the installer stays dependency-free');
 });
 
-test('the Next list names every user-facing command, story-video included', () => {
+test('the Next list names every user-facing command, explainer-video included', () => {
   const source = require('node:fs').readFileSync(BIN, 'utf8');
-  for (const command of ['/opm:brainstorming', '/opm:brew-idea', '/opm:jump-start', '/opm:story-video']) {
+  for (const command of ['/opm:brainstorming', '/opm:brew-idea', '/opm:jump-start', '/opm:explainer-video']) {
     assert.ok(source.includes(command), `Next list is missing ${command}`);
   }
 });

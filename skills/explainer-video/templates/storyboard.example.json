@@ -1,6 +1,6 @@
 {
-  "title": "How story-video turns a spec into a video",
-  "note": "Asha is an illustrative composite developer, not a real person. Everything shown is drawn from the story-video design spec itself.",
+  "title": "How explainer-video turns a spec into a video",
+  "note": "Asha is an illustrative composite developer, not a real person. Everything shown is drawn from the explainer-video design spec itself.",
   "source": "docs/specs/2026-09-18-story-video.md",
   "targetMinutes": 4,
   "voice": "en-IN-NeerjaExpressiveNeural",
@@ -41,7 +41,7 @@
             "check"
           ]
         },
-        "footer": "This walkthrough is about the story-video skill itself."
+        "footer": "This walkthrough is about the explainer-video skill itself."
       },
       "visual": "",
       "narration": "Meet Asha, a developer who needs a narrated video from a design document, with nobody free to animate it by hand. The first run of this pipeline was done by hand, and drawing and reviewing fourteen slides cost about 190,000 tokens, seventy seven tool calls, and twenty two minutes. This is the scripted kit built to make that cheap and repeatable.",
@@ -184,7 +184,7 @@
       "slots": {
         "windows": [
           {
-            "app": "story-video",
+            "app": "explainer-video",
             "messages": [
               {
                 "from": "Skill",

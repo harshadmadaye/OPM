@@ -4,7 +4,7 @@ Usage: narrate.py <storyboard.json> <audio_dir> --only 01,03 [--dry-run]
 
 This sends the narration text to Microsoft's speech service through an unofficial
 route. The skill asks for consent before it runs this script. Run it with the
-Python from the story-video tools venv.
+Python from the explainer-video tools venv.
 """
 import argparse
 import asyncio

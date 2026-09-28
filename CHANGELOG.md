@@ -3,7 +3,8 @@
 ## Unreleased
 
 - Installer: the rules step is a checkbox list instead of a typed comma-separated list. Arrow keys or j/k move, enter or space ticks, `a` or the Select all row toggles everything, enter on Submit finishes, Esc cancels. Languages guessed from the repo start ticked. Piped input still gets the typed prompt, and `--rules` still skips the question.
-- Installer: the Next list names `/opm:story-video`.
+- Installer: the Next list names `/opm:explainer-video`.
+- `story-video` is renamed `explainer-video` (`/opm:explainer-video <path>`), a name that says what you get. `/opm:story-video` stays for this release as an alias that forwards to it. Tools now install into `~/.opm/explainer-video-tools/` with `OPM_EXPLAINER_TOOLS` as the override; an existing `~/.opm/story-video-tools/` and `OPM_STORY_TOOLS` are still honoured, so nothing is downloaded again. Videos still land in `docs/story/<slug>/`.
 
 ## 0.5.0 - 2026-09-28
 

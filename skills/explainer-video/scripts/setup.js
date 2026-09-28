@@ -7,7 +7,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { toolsDir, venvPython, toolBinary, findBrowser } = require('./lib/paths');
 
-const PACKAGE_JSON = '{"private":true,"name":"opm-story-video-tools"}\n';
+const PACKAGE_JSON = '{"private":true,"name":"opm-explainer-video-tools"}\n';
 // Pinned exactly: setup.js runs unattended mid-flow and ffmpeg-static's
 // postinstall downloads a binary, so nobody would see a surprise version land.
 const FFMPEG_SPEC = 'ffmpeg-static@5.3.0';

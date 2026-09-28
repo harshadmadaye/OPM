@@ -1,10 +1,10 @@
 'use strict';
-// Generic tests that every registered layout must pass. Run with: node --test tests/story-video-layouts.test.js
+// Generic tests that every registered layout must pass. Run with: node --test tests/explainer-video-layouts.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 
-const SCRIPTS = path.resolve(__dirname, '..', 'skills', 'story-video', 'scripts');
+const SCRIPTS = path.resolve(__dirname, '..', 'skills', 'explainer-video', 'scripts');
 const { LAYOUTS, getLayout } = require(path.join(SCRIPTS, 'layouts', 'index.js'));
 const { checkSlots } = require(path.join(SCRIPTS, 'layouts', 'schema.js'));
 const { TONES } = require(path.join(SCRIPTS, 'layouts', 'svg.js'));

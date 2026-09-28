@@ -203,10 +203,10 @@ async function main(argv) {
 
   log(bold('Next'));
   log('  Start Claude Code and describe what you want to build.');
-  log(dim('  /opm:brainstorming   design it before writing code'));
-  log(dim('  /opm:brew-idea       four agents argue the idea out first'));
-  log(dim('  /opm:jump-start      a whole new project from one prompt'));
-  log(dim('  /opm:story-video     turn a spec into a narrated explainer video'));
+  log(dim('  /opm:brainstorming     design it before writing code'));
+  log(dim('  /opm:brew-idea         four agents argue the idea out first'));
+  log(dim('  /opm:jump-start        a whole new project from one prompt'));
+  log(dim('  /opm:explainer-video   turn a spec into a narrated explainer video'));
   log('');
   log(dim('  Docs: https://github.com/harshadmadaye/OPM'));
   log('');

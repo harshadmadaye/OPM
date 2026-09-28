@@ -1,5 +1,5 @@
 'use strict';
-// CLI: validate a story-video storyboard.json before it is built.
+// CLI: validate a explainer-video storyboard.json before it is built.
 // Usage: node validate-storyboard.js <storyDir or storyboard.json>
 const fs = require('node:fs');
 const { loadStoryboard, validateStoryboard } = require('./lib/storyboard');

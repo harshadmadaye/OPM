@@ -1,5 +1,5 @@
 'use strict';
-// Tests for slide rendering. Run with: node --test tests/story-video-slides.test.js
+// Tests for slide rendering. Run with: node --test tests/explainer-video-slides.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const SKILL = path.resolve(__dirname, '..', 'skills', 'story-video');
+const SKILL = path.resolve(__dirname, '..', 'skills', 'explainer-video');
 const { renderSlideHtml, renderAll } = require(path.join(SKILL, 'scripts', 'render-slides.js'));
 const { customRecord, parseCustomRecord, hashOf } = require(path.join(SKILL, 'scripts', 'lib', 'manifest.js'));
 const CLI = path.join(SKILL, 'scripts', 'render-slides.js');

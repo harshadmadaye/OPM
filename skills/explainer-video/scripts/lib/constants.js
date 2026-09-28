@@ -1,5 +1,5 @@
 'use strict';
-// Measured layout, timing and default values shared across the story-video pipeline.
+// Measured layout, timing and default values shared across the explainer-video pipeline.
 
 module.exports = Object.freeze({
   WIDTH: 1920,

@@ -1,5 +1,5 @@
 'use strict';
-// Tests for tool setup and frame rendering, without a browser. Run with: node --test tests/story-video-frames.test.js
+// Tests for tool setup and frame rendering, without a browser. Run with: node --test tests/explainer-video-frames.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
@@ -8,7 +8,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const SCRIPTS = path.resolve(__dirname, '..', 'skills', 'story-video', 'scripts');
+const SCRIPTS = path.resolve(__dirname, '..', 'skills', 'explainer-video', 'scripts');
 const setup = require(path.join(SCRIPTS, 'setup.js'));
 const frames = require(path.join(SCRIPTS, 'render-frames.js'));
 const { toolBinary } = require(path.join(SCRIPTS, 'lib', 'paths.js'));
@@ -48,7 +48,7 @@ test('installPlan: npm into the tools folder, venv and edge-tts only with Python
 
 test('setup --check reports a fresh tools folder as not ready', () => {
   const tools = path.join(tmpRoot, 'tools');
-  const out = spawnSync(process.execPath, [path.join(SCRIPTS, 'setup.js'), '--check'], { encoding: 'utf8', env: { ...process.env, OPM_STORY_TOOLS: tools } });
+  const out = spawnSync(process.execPath, [path.join(SCRIPTS, 'setup.js'), '--check'], { encoding: 'utf8', env: { ...process.env, OPM_EXPLAINER_TOOLS: tools } });
   assert.equal(out.status, 0, out.stderr);
   const report = JSON.parse(out.stdout);
   assert.deepEqual(Object.keys(report).sort(), ['browser', 'edgeTts', 'ffmpeg', 'ffprobe', 'node', 'python', 'toolsDir']);
@@ -64,7 +64,7 @@ test('toolBinary returns null (not a throw) for a half-installed package, and se
   const tools = path.join(tmpRoot, 'half-tools');
   fs.mkdirSync(path.join(tools, 'node_modules', 'ffmpeg-static'), { recursive: true });
   assert.equal(toolBinary(tools, 'ffmpeg'), null);
-  const report = setup.check({ env: { OPM_STORY_TOOLS: tools }, platform: process.platform });
+  const report = setup.check({ env: { OPM_EXPLAINER_TOOLS: tools }, platform: process.platform });
   assert.equal(report.ffmpeg, false);
 });
 

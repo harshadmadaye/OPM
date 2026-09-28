@@ -1,5 +1,5 @@
 'use strict';
-// Path derivation for the story-video pipeline: tool install locations, browser
+// Path derivation for the explainer-video pipeline: tool install locations, browser
 // discovery and the per-story directory layout. OS differences are taken as a
 // `platform` parameter (default process.platform), never read deep inside.
 
@@ -9,16 +9,25 @@ const path = require('node:path');
 
 const SCENE_ID_PATTERN = /^\d\d$/;
 
-function toolsDir({ env = process.env, homedir = os.homedir() } = {}) {
+const TOOLS_ENV = 'OPM_EXPLAINER_TOOLS';
+// Names used before the skill was renamed from story-video; still honoured so
+// an existing install is reused instead of downloaded again.
+const LEGACY_TOOLS_ENV = 'OPM_STORY_TOOLS';
+const LEGACY_TOOLS_DIR = 'story-video-tools';
+
+function toolsDir({ env = process.env, homedir = os.homedir(), exists = fs.existsSync } = {}) {
   // It is the base of a require(), so a relative value would resolve against
   // whatever the current directory happens to be.
-  if (env.OPM_STORY_TOOLS) {
-    if (!path.isAbsolute(env.OPM_STORY_TOOLS)) {
-      throw new Error(`OPM_STORY_TOOLS must be an absolute path, got "${env.OPM_STORY_TOOLS}"`);
+  const name = env[TOOLS_ENV] ? TOOLS_ENV : env[LEGACY_TOOLS_ENV] ? LEGACY_TOOLS_ENV : null;
+  if (name) {
+    if (!path.isAbsolute(env[name])) {
+      throw new Error(`${name} must be an absolute path, got "${env[name]}"`);
     }
-    return env.OPM_STORY_TOOLS;
+    return env[name];
   }
-  return path.join(homedir, '.opm', 'story-video-tools');
+  const current = path.join(homedir, '.opm', 'explainer-video-tools');
+  const legacy = path.join(homedir, '.opm', LEGACY_TOOLS_DIR);
+  return !exists(current) && exists(legacy) ? legacy : current;
 }
 
 function venvPython(tools, platform = process.platform) {

@@ -1,10 +1,10 @@
 'use strict';
-// Tests for the slide kit primitives. Run with: node --test tests/story-video-kit.test.js
+// Tests for the slide kit primitives. Run with: node --test tests/explainer-video-kit.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 
-const SCRIPTS = path.resolve(__dirname, '..', 'skills', 'story-video', 'scripts');
+const SCRIPTS = path.resolve(__dirname, '..', 'skills', 'explainer-video', 'scripts');
 const pictograms = require(path.join(SCRIPTS, 'pictograms.js'));
 const svg = require(path.join(SCRIPTS, 'layouts', 'svg.js'));
 const { checkSlots } = require(path.join(SCRIPTS, 'layouts', 'schema.js'));

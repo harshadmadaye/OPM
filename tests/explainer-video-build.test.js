@@ -1,5 +1,5 @@
 'use strict';
-// Tests for the encoder's argument building and pre-flight checks. Run with: node --test tests/story-video-build.test.js
+// Tests for the encoder's argument building and pre-flight checks. Run with: node --test tests/explainer-video-build.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const SKILL = path.resolve(__dirname, '..', 'skills', 'story-video');
+const SKILL = path.resolve(__dirname, '..', 'skills', 'explainer-video');
 const build = require(path.join(SKILL, 'scripts', 'build-video.js'));
 const CLI = path.join(SKILL, 'scripts', 'build-video.js');
 const EXAMPLE = path.join(SKILL, 'templates', 'storyboard.example.json');

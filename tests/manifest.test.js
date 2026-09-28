@@ -28,13 +28,13 @@ test('every skill directory is listed in the README and using-opm names brew-ide
   assert.ok(usingOpm.includes('opm:brew-idea'), 'using-opm workflow map does not mention brew-idea');
 });
 
-test('story-video is pointed to, never copied, by the skills that can feed it', () => {
-  const pointer = 'Optional: `/opm:story-video <path>` turns this into a narrated explainer.';
+test('explainer-video is pointed to, never copied, by the skills that can feed it', () => {
+  const pointer = 'Optional: `/opm:explainer-video <path>` turns this into a narrated explainer.';
   for (const skill of ['brew-idea', 'jump-start', 'milestone-planning']) {
     const text = fs.readFileSync(path.join(ROOT, 'skills', skill, 'SKILL.md'), 'utf8');
     assert.ok(text.includes(pointer), `${skill} does not carry the pointer line`);
-    assert.equal(text.split('story-video').length - 1, 1, `${skill} must mention story-video exactly once`);
+    assert.equal(text.split('explainer-video').length - 1, 1, `${skill} must mention explainer-video exactly once`);
   }
   const usingOpm = fs.readFileSync(path.join(ROOT, 'skills', 'using-opm', 'SKILL.md'), 'utf8');
-  assert.ok(usingOpm.includes('opm:story-video'));
+  assert.ok(usingOpm.includes('opm:explainer-video'));
 });

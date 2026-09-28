@@ -1,5 +1,5 @@
 'use strict';
-// Narration tests: planning only, nothing is spoken or sent. Run with: node --test tests/story-video-narrate.test.js
+// Narration tests: planning only, nothing is spoken or sent. Run with: node --test tests/explainer-video-narrate.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const SKILL = path.resolve(__dirname, '..', 'skills', 'story-video');
+const SKILL = path.resolve(__dirname, '..', 'skills', 'explainer-video');
 const SCRIPTS = path.join(SKILL, 'scripts');
 const localVoice = require(path.join(SCRIPTS, 'lib', 'local-voice.js'));
 const narrate = require(path.join(SCRIPTS, 'narrate.js'));

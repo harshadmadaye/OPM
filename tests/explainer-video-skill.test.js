@@ -1,11 +1,11 @@
 'use strict';
-// Checks on the story-video skill documents. Run with: node --test tests/story-video-skill.test.js
+// Checks on the explainer-video skill documents. Run with: node --test tests/explainer-video-skill.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const SKILL_DIR = path.resolve(__dirname, '..', 'skills', 'story-video');
+const SKILL_DIR = path.resolve(__dirname, '..', 'skills', 'explainer-video');
 const { LAYOUTS } = require(path.join(SKILL_DIR, 'scripts', 'layouts', 'index.js'));
 const pictograms = require(path.join(SKILL_DIR, 'scripts', 'pictograms.js'));
 
@@ -13,7 +13,7 @@ test('SKILL.md follows the contributing rules and states what the video is', () 
   const text = fs.readFileSync(path.join(SKILL_DIR, 'SKILL.md'), 'utf8');
   const front = text.match(/^---\n([\s\S]*?)\n---\n/);
   assert.ok(front, 'frontmatter missing');
-  assert.match(front[1], /^name: story-video$/m);
+  assert.match(front[1], /^name: explainer-video$/m);
   assert.match(front[1], /^description: .*Use when/m);
   assert.match(front[1], /^description: .*narrated slideshow/m);
   assert.match(front[1], /^description: .*not animation/m);
