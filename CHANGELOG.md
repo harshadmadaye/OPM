@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.1 - 2026-09-29
 
 - `explainer-video` can no longer ship a silent video. Before encoding, `build-video.js` measures every scene's narration and stops, naming the scene, when it is silent (loudest moment under -50 dB) or too short to hold its words. After encoding it confirms the MP4 has an audio track. The done line ends `narration checked`, and the skill forbids covering a failed narration with silent audio.
 
