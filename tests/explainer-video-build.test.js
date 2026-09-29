@@ -88,3 +88,62 @@ test('usage errors exit 1 with a usage line', () => {
   assert.equal(out.status, 1);
   assert.match(out.stderr, /usage: build-video\.js <build\|contact-sheet> <storyDir>/);
 });
+
+test('parseMaxVolume reads volumedetect output, including silence', () => {
+  assert.equal(build.parseMaxVolume('[Parsed_volumedetect_0 @ 0x1] mean_volume: -22.9 dB\n[Parsed_volumedetect_0 @ 0x1] max_volume: -4.0 dB\n'), -4);
+  assert.equal(build.parseMaxVolume('[Parsed_volumedetect_0 @ 0x1] max_volume: -inf dB\n'), -Infinity);
+  assert.equal(build.parseMaxVolume('no stats here'), null);
+});
+
+test('narrationProblem flags silent or impossibly short narration and passes real speech', () => {
+  assert.equal(build.narrationProblem({ maxVolume: -4, duration: 12, words: 30 }), null);
+  assert.match(build.narrationProblem({ maxVolume: -Infinity, duration: 12, words: 30 }), /silent/);
+  assert.match(build.narrationProblem({ maxVolume: -80, duration: 12, words: 30 }), /silent \(loudest -80 dB\)/);
+  assert.match(build.narrationProblem({ maxVolume: null, duration: 12, words: 30 }), /silent/);
+  assert.match(build.narrationProblem({ maxVolume: -4, duration: 0.2, words: 30 }), /0\.2s for 30 words/);
+});
+
+// A fake ffmpeg/ffprobe: `loudest` is what volumedetect reports for every MP3,
+// `finalStreams` is what ffprobe reports for the finished MP4.
+function fakeTools({ loudest = '-4.0', finalStreams = 'audio\n' } = {}) {
+  const calls = [];
+  const spawn = (cmd, args) => {
+    calls.push([cmd, ...args]);
+    if (cmd === 'ffprobe' && args.includes('format=duration')) return { status: 0, stdout: '12.0\n', stderr: '' };
+    if (cmd === 'ffprobe' && args.includes('stream=codec_type')) return { status: 0, stdout: finalStreams, stderr: '' };
+    if (cmd === 'ffmpeg' && args.includes('volumedetect')) return { status: 0, stdout: '', stderr: `[Parsed_volumedetect_0 @ 0x1] max_volume: ${loudest} dB\n` };
+    return { status: 0, stdout: '', stderr: '' };
+  };
+  const tools = path.join(tmpRoot, 'fake-tools');
+  for (const name of ['ffmpeg', 'ffprobe']) {
+    const pkg = path.join(tools, 'node_modules', `${name}-static`);
+    fs.mkdirSync(pkg, { recursive: true });
+    fs.writeFileSync(path.join(pkg, 'package.json'), '{"main":"index.js"}');
+    fs.writeFileSync(path.join(pkg, 'index.js'), name === 'ffprobe' ? `module.exports = { path: '${name}' };` : `module.exports = '${name}';`);
+  }
+  return { spawn, calls, tools };
+}
+
+test('build refuses silent narration before encoding, naming the scene and the fix', () => {
+  const dir = storyDir('silent narration');
+  const { spawn, calls, tools } = fakeTools({ loudest: '-inf' });
+  assert.throws(
+    () => build.buildCommand(dir, { spawn, tools, log: () => {} }),
+    /scene 01: narration is silent[\s\S]*delete audio[\/\\]scene-01\.mp3 and rerun narrate\.js/,
+  );
+  assert.ok(!calls.some((c) => c.includes('libx264')), 'no segment is encoded from silent audio');
+});
+
+test('build fails when the finished video has no audio track', () => {
+  const dir = storyDir('no track');
+  const { spawn, tools } = fakeTools({ finalStreams: '' });
+  assert.throws(() => build.buildCommand(dir, { spawn, tools, log: () => {} }), /finished video has no audio track/);
+});
+
+test('build with real narration reports that it was checked', () => {
+  const dir = storyDir('good narration');
+  const { spawn, tools } = fakeTools();
+  const lines = [];
+  build.buildCommand(dir, { spawn, tools, log: (l) => lines.push(l) });
+  assert.match(lines.at(-1), /^done: .*narration checked/);
+});

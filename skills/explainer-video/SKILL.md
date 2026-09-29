@@ -111,7 +111,7 @@ prompt: |
 4. `node S/render-frames.js <storyDir>` writes one 1920x1080 PNG per slide.
 5. `node S/build-video.js contact-sheet <storyDir>` writes `.build/contact-sheet.png`. Read that one image. Open a full frame from `frames/` only when a tile looks wrong. Fix the storyboard slot or the custom slide, then rerun from step 2.
 6. `node S/narrate.js <storyDir> --engine neural` or `--engine local`, as chosen at G2.
-7. `node S/build-video.js build <storyDir>` writes `<slug>.mp4` and `<slug>.srt`.
+7. `node S/build-video.js build <storyDir>` measures every scene's narration, refuses silent or truncated audio, then writes `<slug>.mp4` and `<slug>.srt` and confirms the MP4 has an audio track. Its last line ends `narration checked`.
 
 ## Phase 5: approve the video (G3)
 
@@ -140,6 +140,7 @@ the voice used, and that an edit is rebuilt by rerunning Phase 4.
 | `narrate.js` fails after 3 attempts on a scene | Finished scenes are kept. Offer a retry or the local voice |
 | No local voice (`espeak-ng` missing on Linux) | Say so; do not install it |
 | A frame is not 1920x1080 or never appears | Stop naming the scene; the slide file stays for inspection |
+| Build says a scene's narration is silent or too short | Delete that `audio/scene-<id>.mp3`, rerun `narrate.js`. If it is silent again with the local voice, say so and offer the neural voice |
 | Missing frame or audio at build | `build-video.js` names the scene before encoding; rerun the step that makes it |
 | Custom-slide agent fails | Kit scenes are still built. Offer a retry or switch that scene to a kit layout |
 
@@ -154,6 +155,7 @@ the voice used, and that an edit is rebuilt by rerunning Phase 4.
 | "They agreed to the neural voice last time" | Consent is per run. Ask at G2. |
 | "The name is obviously fictional" | List the names and let the developer say. Keep `note` truthful. |
 | "I'll reuse the name from the source document" | That is usually a real colleague. Use a placeholder or ask. |
+| "Narration failed, I'll drop in silent audio so the build finishes" | A video without its voice is the bug users report. Fix the narration or stop and say so. |
 | "ffmpeg is missing, I'll install it with the system package manager" | Tools go in the tools folder through `setup.js`. Never touch the system. |
 | "I'll put the narration on the slide so it's clear" | The validator rejects it, and it reads badly on video. |
 | "Small edit, I'll work out which files to rebuild" | Rerun the same commands. The manifest rebuilds only what changed. |

@@ -34,3 +34,9 @@ test('layouts.md documents every layout and every pictogram', () => {
   assert.ok(text.includes('## custom'));
   for (const icon of pictograms.names()) assert.ok(text.includes(`\`${icon}\``), `layouts.md does not list the ${icon} pictogram`);
 });
+
+test('the skill forbids covering failed narration with silent audio', () => {
+  const text = fs.readFileSync(path.join(SKILL_DIR, 'SKILL.md'), 'utf8');
+  assert.match(text, /narration checked/);
+  assert.match(text, /silent audio/);
+});

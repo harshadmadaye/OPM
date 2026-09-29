@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `explainer-video` can no longer ship a silent video. Before encoding, `build-video.js` measures every scene's narration and stops, naming the scene, when it is silent (loudest moment under -50 dB) or too short to hold its words. After encoding it confirms the MP4 has an audio track. The done line ends `narration checked`, and the skill forbids covering a failed narration with silent audio.
+
 ## 0.6.0 - 2026-09-28
 
 - Installer: the rules step is a checkbox list instead of a typed comma-separated list. Arrow keys or j/k move, enter or space ticks, `a` or the Select all row toggles everything, enter on Submit finishes, Esc cancels. Languages guessed from the repo start ticked. Piped input still gets the typed prompt, and `--rules` still skips the question.

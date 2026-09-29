@@ -4,6 +4,7 @@
 // build the review contact sheet.
 // Usage: node build-video.js <build|contact-sheet> <storyDir> [--dry-run] [--assume-duration <seconds>]
 const fs = require('node:fs');
+const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { loadStoryboard } = require('./lib/storyboard');
 const { storyPaths, sceneFile, toolsDir, toolBinary } = require('./lib/paths');
@@ -16,6 +17,12 @@ const DEFAULT_ASSUME_DURATION = 10;
 const CONTACT_SHEET_COLUMNS = 4;
 const CONTACT_SHEET_TILE_WIDTH = 480;
 const CONTACT_SHEET_TILE_HEIGHT = 270;
+// Speech peaks well above -20 dB; anything whose loudest moment is below this
+// is silence, whatever produced it.
+const SILENT_BELOW_DB = -50;
+// Fast speech is about 3 words a second; audio shorter than 6 per second
+// cannot hold the narration.
+const MAX_WORDS_PER_SECOND = 6;
 
 function round3(n) {
   return Math.round(n * 1000) / 1000;
@@ -87,6 +94,53 @@ function probeArgs(mp3) {
   return ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', mp3];
 }
 
+function volumeArgs(mp3) {
+  return ['-hide_banner', '-nostats', '-i', mp3, '-af', 'volumedetect', '-vn', '-f', 'null', '-'];
+}
+
+function audioStreamArgs(mp4) {
+  return ['-v', 'error', '-select_streams', 'a', '-show_entries', 'stream=codec_type', '-of', 'csv=p=0', mp4];
+}
+
+// The loudest sample in dB from ffmpeg's volumedetect log, -Infinity for
+// digital silence, or null when the log has no measurement.
+function parseMaxVolume(stderr) {
+  const match = /max_volume: (-?inf|-?[\d.]+) dB/.exec(stderr || '');
+  if (!match) return null;
+  return match[1].endsWith('inf') ? -Infinity : parseFloat(match[1]);
+}
+
+function narrationProblem({ maxVolume, duration, words }) {
+  if (maxVolume === null || maxVolume < SILENT_BELOW_DB) {
+    const loudest = maxVolume === null || maxVolume === -Infinity ? 'no sound at all' : `loudest ${maxVolume} dB`;
+    return `narration is silent (${loudest})`;
+  }
+  if (duration * MAX_WORDS_PER_SECOND < words) {
+    return `narration is ${round3(duration)}s for ${words} words, too short to hold them`;
+  }
+  return null;
+}
+
+function checkNarration({ ffmpeg, mp3Path, scene, duration, paths, spawn }) {
+  const result = spawn(ffmpeg, volumeArgs(mp3Path), { encoding: 'utf8' });
+  const words = scene.narration.trim().split(/\s+/).length;
+  const problem = narrationProblem({ maxVolume: parseMaxVolume(result.stderr), duration, words });
+  if (!problem) return;
+  const relative = path.relative(paths.root, mp3Path);
+  throw new Error(
+    `scene ${scene.id}: ${problem}. Nothing was encoded. ` +
+      `delete ${relative} and rerun narrate.js; if the local voice made it, ` +
+      'check the system voice in the OS speech settings or use the neural voice.',
+  );
+}
+
+function checkFinalAudio({ ffprobe, mp4, spawn }) {
+  const result = spawn(ffprobe, audioStreamArgs(mp4), { encoding: 'utf8' });
+  if (result.status !== 0 || !/audio/.test(result.stdout || '')) {
+    throw new Error(`the finished video has no audio track: ${mp4}`);
+  }
+}
+
 function contactSheetArgs({ frames, out }) {
   const n = frames.length;
   const rows = Math.ceil(n / CONTACT_SHEET_COLUMNS);
@@ -148,10 +202,18 @@ function probeDuration(ffprobe, mp3Path, sceneId, spawn) {
 
 function runBuildEncode({ scenes, paths, ffmpeg, ffprobe, exists, spawn, log }) {
   let manifest = loadManifest(paths.manifest);
-  const durations = [];
   const segmentPaths = [];
 
-  for (const scene of scenes) {
+  // Every scene's narration is measured before any segment is encoded, so a
+  // silent scene late in the video fails the build before minutes of encoding.
+  const durations = scenes.map((scene) => {
+    const mp3Path = sceneFile(paths.audio, scene.id, 'mp3');
+    const duration = probeDuration(ffprobe, mp3Path, scene.id, spawn);
+    checkNarration({ ffmpeg, mp3Path, scene, duration, paths, spawn });
+    return duration;
+  });
+
+  scenes.forEach((scene, index) => {
     const pngPath = sceneFile(paths.frames, scene.id, 'png');
     const mp3Path = sceneFile(paths.audio, scene.id, 'mp3');
     const outPath = sceneFile(paths.segments, scene.id, 'mp4');
@@ -160,13 +222,12 @@ function runBuildEncode({ scenes, paths, ffmpeg, ffprobe, exists, spawn, log }) 
     const hash = inputs.segment(pngBuffer, mp3Buffer);
     const key = `segment:${scene.id}`;
 
-    const duration = probeDuration(ffprobe, mp3Path, scene.id, spawn);
-    durations.push(duration);
+    const duration = durations[index];
     segmentPaths.push(outPath);
 
     if (isFresh(manifest, key, hash, outPath, exists)) {
       log(`fresh scene-${scene.id}.mp4`);
-      continue;
+      return;
     }
 
     const args = segmentArgs({ png: pngPath, mp3: mp3Path, out: outPath, duration });
@@ -179,7 +240,7 @@ function runBuildEncode({ scenes, paths, ffmpeg, ffprobe, exists, spawn, log }) 
     manifest = record(manifest, key, hash);
     saveManifest(paths.manifest, manifest);
     log(`encoded scene-${scene.id}.mp4`);
-  }
+  });
 
   return { durations, segmentPaths };
 }
@@ -219,12 +280,13 @@ function buildCommand(storyDir, { dryRun = false, assumeDuration = DEFAULT_ASSUM
     const detail = concatResult.stderr ? `\n${concatResult.stderr}` : '';
     throw new Error(`concat failed${detail}`);
   }
+  checkFinalAudio({ ffprobe, mp4: paths.mp4, spawn });
 
   const srtScenes = scenes.map((scene, index) => ({ narration: scene.narration, duration: durations[index] }));
   fs.writeFileSync(paths.srt, buildSrt(srtScenes, { lead: LEAD, tail: TAIL }));
 
   const total = round3(durations.reduce((sum, duration) => sum + LEAD + duration + TAIL, 0));
-  log(`done: ${paths.mp4} (${total}s, ${scenes.length} scenes)`);
+  log(`done: ${paths.mp4} (${total}s, ${scenes.length} scenes, narration checked)`);
 }
 
 function contactSheetCommand(storyDir, { dryRun = false, log = console.log, spawn = spawnSync, exists = fs.existsSync, tools = toolsDir() } = {}) {
@@ -299,6 +361,10 @@ module.exports = {
   concatArgs,
   concatList,
   probeArgs,
+  volumeArgs,
+  audioStreamArgs,
+  parseMaxVolume,
+  narrationProblem,
   contactSheetArgs,
   missingInputs,
   buildCommand,
