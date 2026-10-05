@@ -6,8 +6,8 @@
 ## Position
 
 Phase: 3 of 4 (First mod)
-Plan: 0 of ? in this phase
-Status: Ready to plan
+Plan: 0 of 6 in this phase
+Status: Ready to execute
 Last activity: 2026-10-05 - Phase 2 complete (0.7.1 on feat/0.7.1-trim-the-core)
 Progress: 11 / 11 planned plans done (phases 1-2)
 
@@ -34,6 +34,6 @@ Progress: 11 / 11 planned plans done (phases 1-2)
 
 Last session: 2026-10-05
 Stopped at: Phase 2 closed
-Next: plan Phase 3
+Next: execute Phase 3 wave 1 (03-01, 03-05)
 
 Notes for executors: subagents cannot write SUMMARY files (harness guard); the orchestrator writes them from the subagent's report. Until 0.7.1 is installed, the session's live block-no-verify hook is the 0.6.1 copy, which blocks Bash text that mentions git commit hook-skip flags or husky env assignments even in heredocs; use Write/Edit for such content.

@@ -34,7 +34,7 @@ Goal: status, safety and measured tokens with no model turns, as text that works
 
 Features: `/opm:status` mod command plus `npx opm-core status` fallback and a SessionStart resume line; destructive-command guard as a `tool.call` mod; opt-in local token meter plus `/opm:report`; declared tested Claude Code range plus a scheduled latest-CLI CI job.
 
-Status: Not planned
+Status: Planned (6 plans, 4 waves: 03-01 + 03-05, then 03-02, then 03-03 + 03-04, then 03-06)
 
 ## Phase 4: Evidence-driven growth (0.9.0)
 
