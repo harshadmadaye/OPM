@@ -8,6 +8,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const { STAMP_FILE, PACKAGE_VERSION } = require('./install');
+const { opm: { claudeCode: DECLARED_CLAUDE_CODE } } = require('../package.json');
 
 const MIN_NODE_MAJOR = 18;
 const PLUGIN_ID = 'opm@opm';
@@ -18,6 +19,11 @@ const IS_WINDOWS = process.platform === 'win32';
 const RULES_FIX = 'npx opm-core --rules-only';
 const CLAUDE_VERSION_SUFFIX = /\s*\(Claude Code\)$/;
 const HOOK_SCRIPT = /node\s+"([^"]+)"/;
+const SEMVER = /^(\d+)\.(\d+)\.(\d+)/;
+const RANGE_SEPARATOR = ' - ';
+const MODS_OFF = 'settings-hook fallback only; update Claude Code for /opm:status, the destructive-command hold and the meter';
+const UPDATE_CLAUDE_FIX = 'claude update';
+const PLUGIN_UPDATE_FIX = `claude plugin update ${PLUGIN_ID}`;
 const STACKS = [
   { id: 'typescript', markers: ['tsconfig.json'], tool: 'tsc', localBin: true },
   { id: 'python', markers: ['pyproject.toml', 'requirements.txt'], tool: 'ruff' },
@@ -48,6 +54,7 @@ function defaultEnv(target) {
     target,
     nodeVersion: process.versions.node,
     packageVersion: PACKAGE_VERSION,
+    claudeCode: DECLARED_CLAUDE_CODE,
     packageRoot: path.resolve(__dirname, '..'),
     execPath: process.execPath,
     processEnv: process.env,
@@ -84,6 +91,53 @@ function installedPlugin(env) {
     const text = env.run('claude', ['plugin', 'list']);
     return text.status === 0 && text.out.includes(PLUGIN_ID) ? { version: null, installPath: null } : null;
   });
+}
+
+// Numeric major.minor.patch, or null for anything else (no prerelease handling needed).
+function parseVersion(text) {
+  const match = SEMVER.exec(String(text || ''));
+  return match ? match.slice(1, 4).map(Number) : null;
+}
+
+// Negative, zero or positive like a sort comparator; both inputs must already parse.
+function compareVersions(a, b) {
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] - b[i];
+  return 0;
+}
+
+function checkClaudeRange(env) {
+  const raw = claudeVersion(env);
+  if (!raw) return [];
+  const { tested } = env.claudeCode;
+  const [low, high] = tested.split(RANGE_SEPARATOR).map(parseVersion);
+  const version = parseVersion(raw);
+  if (version && compareVersions(version, low) >= 0 && compareVersions(version, high) <= 0) {
+    return row('claude-range', 'pass', `Claude Code ${raw} is in the tested range ${tested}`);
+  }
+  return row('claude-range', 'warn', `Claude Code ${raw} is untested; OPM is tested with ${tested}`,
+    'expect rough edges, or move to a tested version');
+}
+
+function checkMods(env) {
+  const raw = claudeVersion(env);
+  if (!raw) return [];
+  const version = parseVersion(raw);
+  if (version && compareVersions(version, parseVersion(env.claudeCode.modsMin)) >= 0) {
+    return row('mods', 'pass', 'mod features on');
+  }
+  return row('mods', 'warn', MODS_OFF, `${UPDATE_CLAUDE_FIX} (mods need Claude Code ${env.claudeCode.modsMin}+)`);
+}
+
+function checkPluginVersion(env) {
+  if (!claudeVersion(env)) return [];
+  const plugin = installedPlugin(env);
+  const installed = parseVersion(plugin && plugin.version);
+  const packaged = parseVersion(env.packageVersion);
+  if (!installed || !packaged) return [];
+  if (compareVersions(installed, packaged) >= 0) {
+    return row('plugin-version', 'pass', `installed plugin ${plugin.version} is current with OPM ${env.packageVersion}`);
+  }
+  return row('plugin-version', 'warn', `installed plugin ${plugin.version} is older than OPM ${env.packageVersion}`, PLUGIN_UPDATE_FIX);
 }
 
 function checkNode(env) {
@@ -222,7 +276,9 @@ function checkHooks(env) {
   return rows;
 }
 
-const CHECKS = [checkNode, checkClaude, checkPlugin, checkRules, checkTools, checkHooks];
+const CHECKS = [
+  checkNode, checkClaude, checkClaudeRange, checkMods, checkPlugin, checkPluginVersion, checkRules, checkTools, checkHooks,
+];
 
 function runChecks(env) {
   return CHECKS.flatMap((check) => {

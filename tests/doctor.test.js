@@ -18,6 +18,7 @@ const PLUGIN_ROOT = path.resolve('/plugins/opm/0.7.0');
 const PACKAGE_ROOT = path.resolve('/pkg');
 const RULES_DIR = path.join(TARGET, '.claude', 'rules', 'opm');
 const VERSION = '0.7.0';
+const CLAUDE_CODE = { tested: '2.1.273 - 2.1.289', modsMin: '2.1.287' };
 const sha = (text) => crypto.createHash('sha256').update(text).digest('hex');
 
 const HOOKS_JSON = JSON.stringify({
@@ -56,7 +57,7 @@ function fakeRun(overrides = {}) {
     calls.push({ cmd, args, options });
     const key = [path.basename(cmd), ...args.map((a) => path.basename(a))].join(' ');
     if (key in overrides) return overrides[key];
-    if (key === 'claude --version') return { status: 0, out: '2.1.300 (Claude Code)' };
+    if (key === 'claude --version') return { status: 0, out: '2.1.289 (Claude Code)' };
     if (key === 'claude plugin list --json') {
       return { status: 0, out: JSON.stringify([{ id: 'opm@opm', version: VERSION, installPath: PLUGIN_ROOT }]) };
     }
@@ -69,7 +70,7 @@ function fakeRun(overrides = {}) {
 
 function makeEnv({ files = healthyFiles(), run = fakeRun(), nodeVersion = '22.1.0' } = {}) {
   return {
-    target: TARGET, nodeVersion, packageVersion: VERSION, packageRoot: PACKAGE_ROOT,
+    target: TARGET, nodeVersion, packageVersion: VERSION, packageRoot: PACKAGE_ROOT, claudeCode: CLAUDE_CODE,
     execPath: 'node-bin', processEnv: { OPM_HOOKS_DISABLED: '1', PATH: '/bin' }, run, fs: fakeFs(files),
   };
 }
@@ -239,7 +240,7 @@ test('main prints the report and returns the exit code', async () => {
   } finally {
     console.log = original;
   }
-  assert.match(printed.join('\n'), /Claude Code 2\.1\.300$/m, 'the CLI name suffix is dropped');
+  assert.match(printed.join('\n'), /Claude Code 2\.1\.289$/m, 'the CLI name suffix is dropped');
 });
 
 test('the CLI rejects an unknown doctor option in one line', () => {
@@ -247,4 +248,67 @@ test('the CLI rejects an unknown doctor option in one line', () => {
   assert.equal(out.status, 1);
   assert.match(out.stderr, /^error: unknown doctor option: --nope$/m);
   assert.ok(!out.stderr.includes('    at '), 'no stack trace');
+});
+
+const withCli = (version) => fakeRun({ 'claude --version': { status: 0, out: `${version} (Claude Code)` } });
+
+test('a Claude Code version inside the tested range passes, outside it warns naming the range', () => {
+  assert.equal(byId(runChecks(makeEnv({ run: withCli('2.1.273') })), 'claude-range').status, 'pass');
+  assert.equal(byId(runChecks(makeEnv({ run: withCli('2.1.289') })), 'claude-range').status, 'pass');
+  for (const version of ['2.1.272', '2.1.300', '2.10.0']) {
+    const range = byId(runChecks(makeEnv({ run: withCli(version) })), 'claude-range');
+    assert.equal(range.status, 'warn', version);
+    assert.match(range.message, /tested with 2\.1\.273 - 2\.1\.289/);
+  }
+});
+
+test('mod features are on from modsMin, and older versions warn about the settings-hook fallback', () => {
+  const on = byId(runChecks(makeEnv({ run: withCli('2.1.287') })), 'mods');
+  assert.equal(on.status, 'pass');
+  assert.equal(on.message, 'mod features on');
+  const off = byId(runChecks(makeEnv({ run: withCli('2.1.273') })), 'mods');
+  assert.equal(off.status, 'warn');
+  assert.match(off.message, /^settings-hook fallback only; update Claude Code for \/opm:status, the destructive-command hold and the meter$/);
+  assert.ok(off.fix);
+});
+
+test('an unparseable Claude Code version warns instead of guessing', () => {
+  const rows = runChecks(makeEnv({ run: withCli('nightly') }));
+  assert.equal(byId(rows, 'claude-range').status, 'warn');
+  assert.equal(byId(rows, 'mods').status, 'warn');
+  assert.equal(exitCode(rows), 0);
+});
+
+test('without the claude CLI there are no range or mods rows', () => {
+  const files = { ...healthyFiles(), [path.join(PACKAGE_ROOT, 'hooks', 'hooks.json')]: HOOKS_JSON };
+  const rows = runChecks(makeEnv({ files, run: fakeRun({ 'claude --version': { status: null, out: '' } }) }));
+  assert.equal(byId(rows, 'claude-range'), undefined);
+  assert.equal(byId(rows, 'mods'), undefined);
+});
+
+test('an installed plugin older than the package warns with the update fix (ISS-006)', () => {
+  const plugin = (version) => fakeRun({
+    'claude plugin list --json': { status: 0, out: JSON.stringify([{ id: 'opm@opm', version, installPath: PLUGIN_ROOT }]) },
+  });
+  const behind = byId(runChecks(makeEnv({ run: plugin('0.6.1') })), 'plugin-version');
+  assert.equal(behind.status, 'warn');
+  assert.match(behind.message, /0\.6\.1.*0\.7\.0/);
+  assert.equal(behind.fix, 'claude plugin update opm@opm');
+  assert.equal(byId(runChecks(makeEnv({ run: plugin('0.7.0') })), 'plugin-version').status, 'pass');
+  assert.equal(byId(runChecks(makeEnv({ run: plugin('0.10.0') })), 'plugin-version').status, 'pass', 'numeric, not string, compare');
+});
+
+test('an unknown installed plugin version adds no plugin-version row', () => {
+  const run = fakeRun({
+    'claude plugin list --json': { status: 1, out: 'unknown option --json' },
+    'claude plugin list': { status: 0, out: 'opm@opm' },
+  });
+  const files = { ...healthyFiles(), [path.join(PACKAGE_ROOT, 'hooks', 'hooks.json')]: HOOKS_JSON };
+  assert.equal(byId(runChecks(makeEnv({ run, files })), 'plugin-version'), undefined);
+});
+
+test('defaultEnv reads the declared Claude Code range from package.json', () => {
+  const { defaultEnv } = require(DOCTOR);
+  const pkg = require('../package.json');
+  assert.deepEqual(defaultEnv(TARGET).claudeCode, pkg.opm.claudeCode);
 });
