@@ -48,6 +48,29 @@ and similar), or open a `$(...)` or backtick substitution. These pass:
 - Read-only `git config core.hooksPath` and `git config --get core.hooksPath`.
 - `echo HUSKY=0 && git commit ...`, where HUSKY=0 is only printed.
 
+## Destructive-command hold (mod)
+
+`hooks/mod/guard.mjs`, a `tool.call` hook on Bash in OPM's hooks module
+(Claude Code 2.1.287 or later; older versions run only the settings hooks).
+It holds, before they run:
+
+- `rm -rf` (any spelling of recursive plus force) on `/`, `~`, `$HOME`,
+  `..`, `*` at the repo root, the repo root itself, or a path outside it.
+- A force-push (`-f`, `--force`, `--force-with-lease`, a `+` refspec) to
+  `main` or `master`, or one that names no branch.
+- `git reset --hard`.
+
+A held command asks the user "Run it" or "Cancel"; it never approves on its
+own, and "Run it" still goes through the normal permission check. Cancel, a
+dismissed question, `claude -p` or any place the question cannot show means
+a deny whose reason tells Claude to ask the user. If the guard itself fails,
+it denies. The same look-alikes pass as above (`echo`, heredoc bodies), as do
+`rm -rf ./dist` inside the repo, pushes to feature branches and
+`git reset --soft`. Set `OPM_GUARD=off` in the environment to turn it off.
+
+Like the settings hooks, it is a drift guard, not a security boundary: a
+command run through a script, an alias or a variable is not seen.
+
 ## Out of scope
 
 - A determined user. Anyone can set `OPM_HOOKS_DISABLED=1`, edit
