@@ -98,6 +98,55 @@ test('a skill over the soft cap is a warning, never a failure', () => {
   assert.match(result.warnings[0], /big/);
 });
 
+const ENFORCED_SKILL = 'executing-plans';
+const GROWN_SKILL_BYTES = 4800;
+const CORE_SKILL_BYTES = 4000;
+const REFERENCE_BYTES = 3000;
+
+function writeSkillOfSize(root, name, totalBytes) {
+  const empty = skillText(name, 'Split skill.', '');
+  writeFile(root, `skills/${name}/SKILL.md`, skillText(name, 'Split skill.', 'e'.repeat(totalBytes - Buffer.byteLength(empty))));
+}
+
+test('the soft cap is 1,200 tokens and is enforced for the four split skills', () => {
+  assert.equal(budget.SKILL_SOFT_CAP_TOKENS, 1200);
+  assert.deepEqual(budget.ENFORCED_SOFT_CAP_SKILLS,
+    ['executing-plans', 'react-patterns', 'python-patterns', 'flutter-patterns']);
+});
+
+test('an enforced skill grown past 4,800 bytes fails check(), naming the skill', () => {
+  const root = makeFixture();
+  writeSkillOfSize(root, ENFORCED_SKILL, GROWN_SKILL_BYTES + 1);
+  const result = budget.check(budget.measure(root), { plugin: Infinity, rulesCommon: Infinity });
+  assert.equal(result.isOk, false);
+  assert.equal(result.failures.length, 1);
+  assert.match(result.failures[0], /executing-plans.*soft cap of 1200/);
+  assert.ok(!result.warnings.some((w) => w.includes(ENFORCED_SKILL)));
+});
+
+test('an enforced skill within the cap passes even with large references', () => {
+  const root = makeFixture();
+  writeSkillOfSize(root, ENFORCED_SKILL, CORE_SKILL_BYTES);
+  writeFile(root, `skills/${ENFORCED_SKILL}/references/brief.md`, 'r'.repeat(REFERENCE_BYTES));
+  writeFile(root, `skills/${ENFORCED_SKILL}/references/review.md`, 'q'.repeat(REFERENCE_BYTES));
+  const report = budget.measure(root);
+  const skill = report.skills.find((s) => s.name === ENFORCED_SKILL);
+  assert.equal(skill.bytes, CORE_SKILL_BYTES);
+  assert.equal(skill.referenceBytes, 2 * REFERENCE_BYTES);
+  assert.equal(skill.isOverSoftCap, false);
+  assert.equal(budget.check(report, { plugin: Infinity, rulesCommon: Infinity }).isOk, true);
+  assert.equal(report.skills.find((s) => s.name === 'alpha').referenceBytes, 0);
+});
+
+test('the text report lists on-demand reference bytes per skill', () => {
+  const root = makeFixture();
+  writeSkillOfSize(root, ENFORCED_SKILL, CORE_SKILL_BYTES);
+  writeFile(root, `skills/${ENFORCED_SKILL}/references/brief.md`, 'r'.repeat(REFERENCE_BYTES));
+  const run = spawnSync('node', [SCRIPT, '--root', root]);
+  assert.match(run.stdout.toString(), /executing-plans: 3000 bytes on demand in references\//);
+  assert.ok(!run.stdout.toString().includes('alpha: 0 bytes'));
+});
+
 test('renderTable carries the method note, both totals and the largest skills', () => {
   const report = budget.measure(makeFixture());
   const table = budget.renderTable(report);
