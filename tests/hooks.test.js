@@ -94,6 +94,78 @@ test('block-no-verify: allows normal git commands silently', () => {
   }
 });
 
+function denyReason(command) {
+  const { status, stdout } = runHook('block-no-verify.js', bashInput(command));
+  assert.equal(status, 0, command);
+  assert.notEqual(stdout, '', `expected a deny for: ${command}`);
+  const out = parseOutput(stdout).hookSpecificOutput;
+  assert.equal(out.permissionDecision, 'deny', command);
+  return out.permissionDecisionReason;
+}
+
+test('block-no-verify: blocks each known evasion with the rule and the safe alternative', () => {
+  const evasions = [
+    'git commit -n -m "msg"',
+    'git commit -m "msg" --no-verify',
+    'git commit --amend --no-edit --no-verify',
+    'HUSKY=0 git commit -m "msg"',
+    'export HUSKY=0 && git commit -m "msg"',
+    'HUSKY_SKIP_HOOKS=1 git commit -m "msg"',
+    'git -c core.hooksPath=/dev/null commit -m "msg"',
+    'git -c core.hooksPath=.nohooks push',
+    'git config core.hooksPath /dev/null',
+    'git config --local core.hooksPath .nohooks',
+    'git config --unset core.hooksPath',
+    'git config set core.hooksPath /tmp/none',
+    'if git commit -n -m "x"; then echo ok; fi',
+    'git add . && git commit --no-verify -F - <<\'EOF\'\nmessage body\nEOF',
+  ];
+  for (const command of evasions) {
+    const reason = denyReason(command);
+    assert.match(reason, /no-hook-bypass/, command);
+    assert.match(reason, /fix the failing hook instead/i, command);
+  }
+  assert.match(denyReason('HUSKY=0 git commit -m "msg"'), /HUSKY=0/);
+});
+
+test('block-no-verify: look-alikes that only mention the words pass', () => {
+  const heredocPlan = [
+    "mkdir -p docs/plans && cat > docs/plans/PLAN-02-05.md <<'EOF'",
+    '# Plan',
+    'Known evasions: the short -n flag on git commit, git commit --no-verify anywhere,',
+    'HUSKY=0 git commit -m x, git -c core.hooksPath=/dev/null commit, git config core.hooksPath x.',
+    'EOF',
+    'git status',
+  ].join('\n');
+  const lookAlikes = [
+    heredocPlan,
+    'cat <<-EOF > notes.md\n\tgit commit --no-verify\n\tEOF',
+    'git commit -F - <<\'EOF\'\nfix: explain why --no-verify and HUSKY=0 are blocked\nEOF',
+    'echo git commit --no-verify',
+    "printf '%s\\n' 'git commit -n -m x'",
+    'git commit -m "HUSKY=0 is now blocked; so is --no-verify"',
+    'echo HUSKY=0 && git commit -m "msg"',
+    'git config --get core.hooksPath',
+    'git config core.hooksPath',
+    'grep -rn "git commit --no-verify" docs/',
+  ];
+  for (const command of lookAlikes) {
+    const { status, stdout } = runHook('block-no-verify.js', bashInput(command));
+    assert.equal(status, 0, command);
+    assert.equal(stdout, '', command);
+  }
+});
+
+test('config-protection: core.hooksPath change in .git/config -> ask, other git config edits silent', () => {
+  const gitConfig = writeFixture('repo/.git/config', '[core]\n\tbare = false\n');
+  const hooksEdit = editInput(gitConfig, { old_string: '\tbare = false\n', new_string: '\tbare = false\n\thooksPath = /dev/null\n' });
+  const out = parseOutput(runHook('config-protection.js', hooksEdit).stdout).hookSpecificOutput;
+  assert.equal(out.permissionDecision, 'ask');
+  assert.match(out.permissionDecisionReason, /hooksPath/);
+  const otherEdit = editInput(gitConfig, { old_string: 'bare = false', new_string: 'bare = true' });
+  assert.equal(runHook('config-protection.js', otherEdit).stdout, '');
+});
+
 test('config-protection: existing tsconfig edit -> ask', () => {
   const tsconfig = writeFixture('proj/tsconfig.json', '{"compilerOptions":{"strict":true}}');
   const { status, stdout } = runHook('config-protection.js', editInput(tsconfig));
