@@ -184,6 +184,42 @@ and Windows, and CI tests all three. `scripts/dev-server.sh` and
 `scripts/install-rules.sh` are shell scripts, so they run on macOS, Linux and
 WSL only.
 
+OPM is tested with Claude Code 2.1.273 - 2.1.289. The mod features below need
+2.1.287 or later; `npx opm-core doctor` tells you whether yours has them.
+
+---
+
+## Mod features (Claude Code 2.1.287 or later)
+
+OPM ships a small hooks module (a "mod") beside its settings hooks. It answers
+some things from code, so they cost no Claude turn and no tokens. Older Claude
+Code ignores the module and keeps running every settings hook, so nothing
+breaks; you just do not get the extras. These features are tested with the
+Claude Code test kit (`claude plugin test`); they have not yet been run in a
+live session.
+
+| Feature | What it does | On older Claude Code |
+|---|---|---|
+| `/opm-status` | Prints the open plan ledger (tasks done, current task, last ruling), the milestone position and the git branch. Code answers it; Claude never sees it. | Run `npx opm-core status` in a terminal. It prints the same thing on any version. |
+| Resume line | When a plan ledger is open, session start adds one line naming it and the next task. Nothing is added when no ledger is open. | Works on every version: it comes from the SessionStart settings hook. |
+| Destructive-command hold | Before Claude runs `rm -rf` on a root-like or out-of-repo path, a force-push to `main` or `master`, or `git reset --hard`, you are asked. Anything but "Run it" denies, and so does a session where nobody can answer, or a failure of the guard itself. Set `OPM_GUARD=off` to turn it off. | Not available. The settings hooks still block hook bypasses. |
+| `/opm-report` | An opt-in token meter. Off by default; `/opm-report --enable` starts it and `--disable` stops it. It records each turn's token use and the skills that ran, keeps 14 days in one local store key capped at 256 KiB, and prints a summary. Nothing is sent anywhere. | Not available. |
+
+Commands are typed with a hyphen (`/opm-status`, not `/opm:status`). All output
+is plain text, so it also works in the VS Code chat panel.
+
+What the mod declares, from
+`claude plugin validate --strict .claude-plugin/plugin.json` (Claude Code
+2.1.289). Review it before you install, as the mods docs recommend:
+
+| | Declared |
+|---|---|
+| Events | `session.start`, `command.run` (`opm-status`, `opm-report`), `tool.call` (Bash), `skill.prompt`, `turn.complete` |
+| Calls | `$.clock.now`, `$.command.register`, `$.env.get`, `$.fs.exists`, `$.fs.list`, `$.fs.read`, `$.fs.stat`, `$.process.run` (only `git branch --show-current`), `$.session.cwd`, `$.session.id`, `$.session.root`, `$.store.get`, `$.store.set`, `$.ui.ask`, `$.ui.log` |
+| Environment | reads `OPM_GUARD`; writes nothing |
+
+No network calls and no model calls.
+
 ---
 
 ## Optional plugins
@@ -319,7 +355,7 @@ let through on purpose, and what is out of scope.
 agents/           5 subagents
 skills/           13 skills (SKILL.md plus templates/scripts where needed)
 plugins/          opm-video, the optional explainer-video plugin
-hooks/            hooks.json and 6 dependency-free Node scripts
+hooks/            hooks.json, 6 dependency-free Node scripts and mod/ (the hooks module)
 rules/            copied into <repo>/.claude/rules/opm/ by the installer
 bin/              the npx installer
 scripts/          install-rules.sh, dev-server.sh
