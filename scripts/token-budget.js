@@ -12,7 +12,10 @@ const BYTES_PER_TOKEN = 4;
 // Ceilings = measured baseline on 2026-10-05 plus 10%, rounded up to the next 50.
 const PLUGIN_ALWAYS_ON_CEILING_TOKENS = 2850; // measured 2,579
 const RULES_COMMON_CEILING_TOKENS = 1550; // measured 1,401
-const SKILL_SOFT_CAP_TOKENS = 1000;
+const SKILL_SOFT_CAP_TOKENS = 1200; // fits a 4.5 KB SKILL.md core
+// Split skills keep their core under the soft cap as a hard limit; others only warn.
+const ENFORCED_SOFT_CAP_SKILLS = ['executing-plans', 'react-patterns', 'python-patterns', 'flutter-patterns'];
+const REFERENCES_DIR = 'references';
 const LARGEST_SKILLS_SHOWN = 10;
 
 const DOC_RELATIVE_PATH = path.join('docs', 'why-opm.md');
@@ -55,7 +58,7 @@ function descriptionBytes(text) {
 function listSkillFiles(root) {
   const dir = path.join(root, 'skills');
   return fs.readdirSync(dir)
-    .map((name) => ({ name, file: path.join(dir, name, 'SKILL.md') }))
+    .map((name) => ({ name, file: path.join(dir, name, 'SKILL.md'), dir: path.join(dir, name) }))
     .filter((skill) => fs.existsSync(skill.file));
 }
 
@@ -83,18 +86,25 @@ function measureRulesCommon(root) {
   return { files, totalBytes, totalTokens: toTokens(totalBytes) };
 }
 
+// references/ files load only when a step says to read them, so they are
+// reported as on-demand bytes and never counted toward the SKILL.md size.
+function referenceBytes(skillDir) {
+  return listMarkdown(path.join(skillDir, REFERENCES_DIR))
+    .reduce((sum, file) => sum + byteLength(readText(file)), 0);
+}
+
 function measureSkills(skillTexts) {
   return skillTexts
-    .map(({ name, text }) => {
+    .map(({ name, text, dir }) => {
       const bytes = byteLength(text);
       const tokens = toTokens(bytes);
-      return { name, bytes, tokens, isOverSoftCap: tokens > SKILL_SOFT_CAP_TOKENS };
+      return { name, bytes, tokens, referenceBytes: referenceBytes(dir), isOverSoftCap: tokens > SKILL_SOFT_CAP_TOKENS };
     })
     .sort((a, b) => b.bytes - a.bytes);
 }
 
 function measure(root) {
-  const skillTexts = listSkillFiles(root).map((s) => ({ name: s.name, text: readText(s.file) }));
+  const skillTexts = listSkillFiles(root).map((s) => ({ name: s.name, dir: s.dir, text: readText(s.file) }));
   return {
     plugin: measurePlugin(root, skillTexts),
     rulesCommon: measureRulesCommon(root),
@@ -112,9 +122,11 @@ function check(report, ceilings = DEFAULT_CEILINGS) {
   if (report.rulesCommon.totalTokens > ceilings.rulesCommon) {
     failures.push(`rules/common is ${report.rulesCommon.totalTokens} tokens, over the rules/common ceiling of ${ceilings.rulesCommon}`);
   }
-  const warnings = report.skills
-    .filter((s) => s.isOverSoftCap)
-    .map((s) => `skill ${s.name} is ${s.tokens} tokens, over the soft cap of ${SKILL_SOFT_CAP_TOKENS}`);
+  const overCap = report.skills.filter((s) => s.isOverSoftCap);
+  const capMessage = (s) => `skill ${s.name} is ${s.tokens} tokens, over the soft cap of ${SKILL_SOFT_CAP_TOKENS}`;
+  const isEnforced = (s) => ENFORCED_SOFT_CAP_SKILLS.includes(s.name);
+  failures.push(...overCap.filter(isEnforced).map((s) => `${capMessage(s)} (enforced for split skills)`));
+  const warnings = overCap.filter((s) => !isEnforced(s)).map(capMessage);
   return { isOk: failures.length === 0, failures, warnings };
 }
 
@@ -154,6 +166,9 @@ function formatReport(report, result) {
   const lines = [
     `plugin always-on: ${report.plugin.totalTokens} tokens (ceiling ${PLUGIN_ALWAYS_ON_CEILING_TOKENS})`,
     `rules/common:     ${report.rulesCommon.totalTokens} tokens (ceiling ${RULES_COMMON_CEILING_TOKENS})`,
+    ...report.skills
+      .filter((s) => s.referenceBytes > 0)
+      .map((s) => `${s.name}: ${s.referenceBytes} bytes on demand in ${REFERENCES_DIR}/`),
     ...result.warnings.map((w) => `warning: ${w}`),
     ...result.failures.map((f) => `FAIL: ${f}`),
   ];
@@ -197,6 +212,7 @@ module.exports = {
   PLUGIN_ALWAYS_ON_CEILING_TOKENS,
   RULES_COMMON_CEILING_TOKENS,
   SKILL_SOFT_CAP_TOKENS,
+  ENFORCED_SOFT_CAP_SKILLS,
   START_MARKER,
   END_MARKER,
   stripFrontmatter,
