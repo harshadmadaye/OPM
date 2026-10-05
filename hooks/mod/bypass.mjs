@@ -1,8 +1,8 @@
 // Hook-bypass and config-protection checks, in process: the mod twin of
 // hooks/scripts/block-no-verify.js and config-protection.js, sharing their
-// rules from hooks/lib/bypass-rules.mjs. register.mjs sets OPM_MOD_ACTIVE=1
-// at session start, which makes those scripts step aside, so each check runs
-// once. A Bash command that bypasses git hooks is denied; an edit to an
+// rules from hooks/lib/bypass-rules.mjs. register.mjs sets OPM_MOD_ACTIVE to the
+// session id at session start, which makes those scripts step aside for this
+// session only, so each check runs once. A Bash command that bypasses git hooks is denied; an edit to an
 // existing linter/formatter/typecheck/hook config asks first, and nobody to
 // answer means a deny. A failure of either check denies too.
 // OPM_HOOKS_DISABLED=1 turns both off; OPM_ALLOW_CONFIG_EDITS=1 the second.
