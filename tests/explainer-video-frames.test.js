@@ -7,6 +7,7 @@ const { EventEmitter } = require('node:events');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 
 const SCRIPTS = path.resolve(__dirname, '..', 'plugins', 'opm-video', 'skills', 'explainer-video', 'scripts');
 const setup = require(path.join(SCRIPTS, 'setup.js'));
@@ -73,7 +74,8 @@ test('chromeArgs: fixed flags, no network, own user-data-dir, encoded file URL',
   assert.deepEqual(args.slice(0, 9), ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=1', '--window-size=1920,1080', '--no-first-run', '--no-default-browser-check', '--host-resolver-rules=MAP * ~NOTFOUND', '--disable-background-networking']);
   assert.ok(args.includes('--user-data-dir=/tmp/ud-03'));
   assert.ok(args.includes('--screenshot=/p/My Project /frames/scene-03.png'));
-  assert.equal(args[args.length - 1], 'file:///p/My%20Project%20/slides/scene-03.html');
+  assert.equal(args[args.length - 1], pathToFileURL('/p/My Project /slides/scene-03.html').href);
+  assert.ok(args[args.length - 1].endsWith('/p/My%20Project%20/slides/scene-03.html'));
 });
 
 test('listSlides returns scene files in id order and ignores everything else', () => {
