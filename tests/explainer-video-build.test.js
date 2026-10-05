@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const SKILL = path.resolve(__dirname, '..', 'skills', 'explainer-video');
+const SKILL = path.resolve(__dirname, '..', 'plugins', 'opm-video', 'skills', 'explainer-video');
 const build = require(path.join(SKILL, 'scripts', 'build-video.js'));
 const CLI = path.join(SKILL, 'scripts', 'build-video.js');
 const EXAMPLE = path.join(SKILL, 'templates', 'storyboard.example.json');

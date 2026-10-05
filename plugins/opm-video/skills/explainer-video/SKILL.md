@@ -1,6 +1,6 @@
 ---
 name: explainer-video
-description: Turns a spec or document into a narrated explainer video. Produces a 1920x1080 MP4 of illustrated still slides with a neural voice-over and a sidecar .srt; it is a narrated slideshow with fades, not animation. Slides come from a script-rendered layout kit so the run is cheap and repeatable on macOS, Linux and Windows. Use when the developer runs /opm:explainer-video <path>, asks for an explainer or walkthrough video of a spec, brew-idea result, milestone summary or other document, or wants to rebuild such a video after an edit.
+description: Turns a spec or document into a narrated explainer video. Produces a 1920x1080 MP4 of illustrated still slides with a neural voice-over and a sidecar .srt; it is a narrated slideshow with fades, not animation. Slides come from a script-rendered layout kit so the run is cheap and repeatable on macOS, Linux and Windows. Use when the developer runs /opm-video:explainer-video <path>, asks for an explainer or walkthrough video of a spec, brew-idea result, milestone summary or other document, or wants to rebuild such a video after an edit.
 argument-hint: <path to spec or document>
 disable-model-invocation: true
 ---
@@ -11,7 +11,7 @@ One document in, a narrated explainer out. The developer is involved at three
 points: the length, the storyboard with audio consent, and the finished video.
 Everything between is scripts.
 
-**Announce at start:** "Using opm:explainer-video; this makes a narrated slideshow, not animation."
+**Announce at start:** "Using opm-video:explainer-video; this makes a narrated slideshow, not animation."
 
 Invocation text is in `$ARGUMENTS`. Scripts live next to this file in
 `${CLAUDE_PLUGIN_ROOT}/skills/explainer-video/scripts/` (written `S/` below). Every
@@ -88,7 +88,7 @@ neural option only when Python was found in Phase 0.
 
 Run in order. Every step is incremental: unchanged scenes are skipped.
 
-1. `node S/setup.js` installs ffmpeg, ffprobe and edge-tts into the tools folder. First run takes about a minute.
+1. `node S/setup.js` installs ffmpeg, ffprobe and edge-tts into the tools folder. First run takes about a minute. edge-tts sends the narration text to Microsoft's cloud speech service; it is used only when the developer chose the neural voice at G2, and the local OS voice sends nothing.
 2. `node S/render-slides.js <storyDir>` writes `slides/`. It ends with `custom scenes to draw: <ids>`. Above that it prints `orphan slides, not in the storyboard: <ids>` when slide files are left over from scenes that have since been deleted; it never removes one. Delete those files yourself before Phase 6, which commits `slides/` wholesale.
 3. If that list is not `none`, dispatch one agent for all of them:
 

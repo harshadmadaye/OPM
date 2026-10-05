@@ -11,11 +11,22 @@ const read = (p) => JSON.parse(fs.readFileSync(path.join(ROOT, p), 'utf8'));
 test('plugin.json and marketplace.json carry the same version and it heads the changelog', () => {
   const plugin = read('.claude-plugin/plugin.json');
   const marketplace = read('.claude-plugin/marketplace.json');
-  assert.equal(marketplace.plugins[0].version, plugin.version);
+  for (const entry of marketplace.plugins) assert.equal(entry.version, plugin.version, `${entry.name} is not on the core version`);
   const changelog = fs.readFileSync(path.join(ROOT, 'CHANGELOG.md'), 'utf8');
   const first = changelog.match(/^## (\S+) - \d{4}-\d{2}-\d{2}$/m);
   assert.ok(first, 'changelog has no version heading');
   assert.equal(first[1], plugin.version);
+});
+
+test('the marketplace lists core and the optional opm-video plugin, and only opm-video ships explainer-video', () => {
+  const marketplace = read('.claude-plugin/marketplace.json');
+  assert.deepEqual(marketplace.plugins.map((p) => [p.name, p.source]), [['opm', './'], ['opm-video', './plugins/opm-video']]);
+  const video = read('plugins/opm-video/.claude-plugin/plugin.json');
+  assert.equal(video.name, 'opm-video');
+  assert.equal(video.version, read('.claude-plugin/plugin.json').version);
+  assert.match(video.description, /Microsoft cloud/, 'opm-video must disclose the cloud text-to-speech route');
+  assert.ok(fs.existsSync(path.join(ROOT, 'plugins', 'opm-video', 'skills', 'explainer-video', 'SKILL.md')));
+  assert.ok(!fs.existsSync(path.join(ROOT, 'skills', 'explainer-video')), 'core must not register explainer-video');
 });
 
 test('every skill directory is listed in the README and using-opm names brew-idea', () => {

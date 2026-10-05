@@ -216,7 +216,7 @@ WSL only.
 ## Everything in the box
 
 <details>
-<summary><b>All 14 skills</b> — invoked as <code>/opm:&lt;name&gt;</code>, or picked up automatically when they match the task</summary>
+<summary><b>All 13 skills</b> — invoked as <code>/opm:&lt;name&gt;</code>, or picked up automatically when they match the task</summary>
 
 **The loop**
 
@@ -291,7 +291,7 @@ Set `OPM_HOOKS_DISABLED=1` to turn them all off. Per-hook switches are
 ```
 .claude-plugin/   plugin.json, marketplace.json
 agents/           5 subagents
-skills/           14 skills (SKILL.md plus templates/scripts where needed)
+skills/           13 skills (SKILL.md plus templates/scripts where needed)
 hooks/            hooks.json and 6 dependency-free Node scripts
 rules/            copied into <repo>/.claude/rules/opm/ by the installer
 bin/              the npx installer

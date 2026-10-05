@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const SKILL_DIR = path.resolve(__dirname, '..', 'skills', 'explainer-video');
+const SKILL_DIR = path.resolve(__dirname, '..', 'plugins', 'opm-video', 'skills', 'explainer-video');
 const { LAYOUTS } = require(path.join(SKILL_DIR, 'scripts', 'layouts', 'index.js'));
 const pictograms = require(path.join(SKILL_DIR, 'scripts', 'pictograms.js'));
 

@@ -8,7 +8,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const SCRIPTS = path.resolve(__dirname, '..', 'skills', 'explainer-video', 'scripts');
+const SCRIPTS = path.resolve(__dirname, '..', 'plugins', 'opm-video', 'skills', 'explainer-video', 'scripts');
 const setup = require(path.join(SCRIPTS, 'setup.js'));
 const frames = require(path.join(SCRIPTS, 'render-frames.js'));
 const { toolBinary } = require(path.join(SCRIPTS, 'lib', 'paths.js'));

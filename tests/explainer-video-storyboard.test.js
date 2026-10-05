@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const SKILL = path.resolve(__dirname, '..', 'skills', 'explainer-video');
+const SKILL = path.resolve(__dirname, '..', 'plugins', 'opm-video', 'skills', 'explainer-video');
 const { validateStoryboard, loadStoryboard, countWords } = require(path.join(SKILL, 'scripts', 'lib', 'storyboard.js'));
 const { LAYOUTS } = require(path.join(SKILL, 'scripts', 'layouts', 'index.js'));
 const CLI = path.join(SKILL, 'scripts', 'validate-storyboard.js');
