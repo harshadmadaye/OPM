@@ -131,7 +131,7 @@ the four stop conditions in `opm:executing-plans`.
 
 ## Phase 7: verify
 
-1. Run `opm:verification-loop` on the whole project.
+1. Run `opm:verification-before-completion` (full gate) on the whole project.
 2. Dispatch `code-reviewer`, `security-reviewer` and `silent-failure-hunter` in parallel on the full tree.
 3. Fix every CRITICAL and HIGH finding, then rerun the loop.
 4. Run `opm:verification-before-completion`. G4 needs real output, not a summary.
@@ -157,7 +157,7 @@ If the app cannot start, treat it as a failing verification: fix, then retry.
 1. Run `opm:compound-learnings` if anything non-obvious was learned.
 2. Commit everything.
 3. Report using `templates/final-report.md`: what was built, the URL or device, how to stop, test and review numbers, known gaps and assumptions, next steps.
-4. Optional: `/opm:explainer-video <path>` turns this into a narrated explainer.
+4. Optional: `/opm-video:explainer-video <path>` turns this into a narrated explainer (install the opm-video plugin first).
 
 ## Resuming
 

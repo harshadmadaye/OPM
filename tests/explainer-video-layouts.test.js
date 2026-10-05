@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 
-const SCRIPTS = path.resolve(__dirname, '..', 'skills', 'explainer-video', 'scripts');
+const SCRIPTS = path.resolve(__dirname, '..', 'plugins', 'opm-video', 'skills', 'explainer-video', 'scripts');
 const { LAYOUTS, getLayout } = require(path.join(SCRIPTS, 'layouts', 'index.js'));
 const { checkSlots } = require(path.join(SCRIPTS, 'layouts', 'schema.js'));
 const { TONES } = require(path.join(SCRIPTS, 'layouts', 'svg.js'));

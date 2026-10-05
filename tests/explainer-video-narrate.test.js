@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const SKILL = path.resolve(__dirname, '..', 'skills', 'explainer-video');
+const SKILL = path.resolve(__dirname, '..', 'plugins', 'opm-video', 'skills', 'explainer-video');
 const SCRIPTS = path.join(SKILL, 'scripts');
 const localVoice = require(path.join(SCRIPTS, 'lib', 'local-voice.js'));
 const narrate = require(path.join(SCRIPTS, 'narrate.js'));

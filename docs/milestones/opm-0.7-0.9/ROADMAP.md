@@ -26,7 +26,7 @@ Goal: cut per-run tokens, make routing obvious, make install and hook failures v
 
 Features: routing table in using-opm plus a 30-prompt fixture; split large skills into SKILL.md plus references/; merge verification-loop into verification-before-completion; `npx opm-core doctor` and the installer's next-step line; Stop hook skips unchanged languages and warns visibly; hook threat model and evasion tests; brew-idea user-invoked only; spin explainer-video out into an optional plugin; dedupe stack pattern skills against rules.
 
-Status: Planned (7 plans, 4 waves)
+Status: Complete (2026-10-05), released as 0.7.1 on the branch. Plans 02-01..02-07 done; see SUMMARY files.
 
 ## Phase 3: First mod (0.8.0)
 

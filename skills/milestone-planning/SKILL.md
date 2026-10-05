@@ -160,7 +160,7 @@ It waits for the wave to finish, confirms each SUMMARY exists, then starts the n
 Each subagent receives the plan path and STATE.md, and executes the plan using the task discipline
 of `opm:executing-plans`: read the task, do exactly it, run `verify`, confirm `done`, commit that
 task's files individually (`feat(02-01): task name`), move on. TDD-shaped tasks use
-`opm:tdd-workflow`. At the end the subagent runs `opm:verification-loop`, writes the SUMMARY,
+`opm:tdd-workflow`. At the end the subagent runs `opm:verification-before-completion` (full gate), writes the SUMMARY,
 and updates STATE.md. When it hits a checkpoint, it stops and returns the checkpoint content plus
 a table of completed tasks; after the human responds, a fresh subagent continues from the next
 task. Agents are not resumed; state lives in files and commits, not in context.
@@ -245,7 +245,7 @@ the plan's `<objective>`.
    run `opm:compound-learnings` for anything non-obvious that happened. Close with the continuation block.
 5. **Close the milestone**: when the last phase closes, write a short retrospective at the top of
    ROADMAP.md and reset STATE.md for the next milestone.
-   Optional: `/opm:explainer-video <path>` turns this into a narrated explainer.
+   Optional: `/opm-video:explainer-video <path>` turns this into a narrated explainer (install the opm-video plugin first).
 
 ## Anti-patterns
 

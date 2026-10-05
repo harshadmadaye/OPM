@@ -3,7 +3,8 @@
 // Asks for confirmation before an agent edits a linter/formatter/typecheck
 // config, so checks get satisfied by fixing code rather than weakening rules.
 // Set OPM_ALLOW_CONFIG_EDITS=1 to allow such edits without asking.
-// Creating a config that does not exist yet is always allowed.
+// Creating a config that does not exist yet is always allowed. A .git/config
+// edit asks only when it changes core.hooksPath (see docs/threat-model.md).
 
 if (process.env.OPM_HOOKS_DISABLED === '1' || process.env.OPM_ALLOW_CONFIG_EDITS === '1') process.exit(0);
 process.on('uncaughtException', () => process.exit(0));
@@ -28,6 +29,8 @@ const HUSKY_DIR = /(^|[\\/])\.husky[\\/]/;
 const PYPROJECT = /^pyproject\.toml$/i;
 const LINT_SECTION_HEADER = /^\s*\[tool\.(ruff|mypy)(\.|\])/;
 const ANY_SECTION_HEADER = /^\s*\[/;
+const GIT_CONFIG_FILE = /(^|[\\/])\.git[\\/]config$/;
+const HOOKS_PATH_LINE = /^\s*hookspath\s*=.*$/gim;
 
 function readStdin(cb) {
   let data = '';
@@ -83,10 +86,24 @@ function pyprojectTouchesLintConfig(toolName, toolInput, filePath) {
   return lintSections(existing) !== lintSections(proposed);
 }
 
+function hooksPathLines(gitConfig) {
+  return (gitConfig.match(HOOKS_PATH_LINE) || []).map((line) => line.trim()).join('\n');
+}
+
+// Pointing core.hooksPath elsewhere (or removing it) silently disables git hooks.
+function gitConfigTouchesHooksPath(toolName, toolInput, filePath) {
+  const existing = readFileOrNull(filePath) || '';
+  const proposed = simulateEdit(toolName, toolInput, existing);
+  return hooksPathLines(existing) !== hooksPathLines(proposed);
+}
+
 function classify(toolName, toolInput) {
   const filePath = toolInput.file_path;
   if (typeof filePath !== 'string' || !filePath) return null;
   const basename = path.basename(filePath);
+  if (GIT_CONFIG_FILE.test(filePath)) {
+    return gitConfigTouchesHooksPath(toolName, toolInput, filePath) ? 'git config core.hooksPath setting' : null;
+  }
   if (HUSKY_DIR.test(filePath)) return fileExists(filePath) ? 'git hook script' : null;
   if (PYPROJECT.test(basename)) {
     return pyprojectTouchesLintConfig(toolName, toolInput, filePath) ? '[tool.ruff]/[tool.mypy] config' : null;

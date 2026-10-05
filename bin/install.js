@@ -4,6 +4,7 @@
 // the rules into a repository. Dependency-free, like everything else here.
 
 const { spawnSync } = require('node:child_process');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const readline = require('node:readline');
@@ -13,6 +14,8 @@ const MARKETPLACE = 'harshadmadaye/OPM';
 const MARKETPLACE_NAME = 'opm';
 const PLUGIN_ID = 'opm@opm';
 const LANGUAGES = ['typescript', 'react', 'python', 'dart'];
+const STAMP_FILE = '.opm-version';
+const PACKAGE_VERSION = require('../package.json').version;
 
 const bold = (s) => `\u001b[1m${s}\u001b[0m`;
 const dim = (s) => `\u001b[2m${s}\u001b[0m`;
@@ -122,16 +125,45 @@ function copyDir(from, to) {
   return count;
 }
 
+function hashFile(filePath) {
+  return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+}
+
+// Every file under dir, as forward-slash paths relative to base.
+function listFiles(dir, base) {
+  const found = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) found.push(...listFiles(full, base));
+    else found.push(path.relative(base, full).split(path.sep).join('/'));
+  }
+  return found;
+}
+
+// Records which plugin version copied which rule files, so doctor can spot stale or edited rules.
+function writeStamp(dest, ruleSets) {
+  const files = {};
+  for (const name of ruleSets) {
+    for (const rel of listFiles(path.join(dest, name), dest)) files[rel] = hashFile(path.join(dest, rel));
+  }
+  const stamp = { version: PACKAGE_VERSION, ruleSets, installedAt: new Date().toISOString(), files };
+  fs.writeFileSync(path.join(dest, STAMP_FILE), JSON.stringify(stamp, null, 2) + '\n');
+  return stamp;
+}
+
 function installRules(target, languages, rulesRoot, log) {
   if (!fs.existsSync(target)) throw new Error(`target is not a directory: ${target}`);
   const dest = path.join(target, '.claude', 'rules', 'opm');
   const wanted = ['common', ...languages];
+  const copied = [];
   let files = 0;
   for (const name of wanted) {
     const from = path.join(rulesRoot, name);
     if (!fs.existsSync(from)) { log(yellow(`  No rules for ${name}, skipped.`)); continue; }
     files += copyDir(from, path.join(dest, name));
+    copied.push(name);
   }
+  if (copied.length) writeStamp(dest, copied);
   const relative = path.relative(process.cwd(), dest);
   const shown = !relative || relative.startsWith('..') ? dest : relative;
   log(green(`  ${files} rule files copied to ${shown}`));
@@ -173,6 +205,7 @@ async function chooseLanguages(target) {
 }
 
 async function main(argv) {
+  if (argv[0] === 'doctor') return require('./doctor').main(argv.slice(1));
   const options = parseArgs(argv);
   const log = console.log;
   if (options.help) { log(USAGE); return 0; }
@@ -201,19 +234,21 @@ async function main(argv) {
     log('');
   }
 
-  log(bold('Next'));
-  log('  Start Claude Code and describe what you want to build.');
+  log(bold('Next: run npx opm-core doctor, then ask Claude Code for your first task.'));
   log(dim('  /opm:brainstorming     design it before writing code'));
   log(dim('  /opm:brew-idea         four agents argue the idea out first'));
   log(dim('  /opm:jump-start        a whole new project from one prompt'));
-  log(dim('  /opm:explainer-video   turn a spec into a narrated explainer video'));
+  log(dim('  Optional: /opm-video:explainer-video turns a spec into a narrated video;'));
+  log(dim('  install it with claude plugin install opm-video@opm'));
   log('');
   log(dim('  Docs: https://github.com/harshadmadaye/OPM'));
   log('');
   return 0;
 }
 
-module.exports = { parseArgs, currentMarketplaceSource, installRules, copyDir, LANGUAGES, USAGE };
+module.exports = {
+  parseArgs, currentMarketplaceSource, installRules, copyDir, hashFile, LANGUAGES, USAGE, STAMP_FILE, PACKAGE_VERSION,
+};
 
 if (require.main === module) {
   main(process.argv.slice(2))

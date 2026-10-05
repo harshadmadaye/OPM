@@ -1,4 +1,4 @@
-/* Frame for opm:explainer-video slides. Exactly 1920 x 1080 with a 90px safe margin. */
+/* Frame for opm-video:explainer-video slides. Exactly 1920 x 1080 with a 90px safe margin. */
 :root {
   --ground: #f2f5f4;
   --surface: #ffffff;

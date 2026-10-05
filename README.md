@@ -59,7 +59,7 @@ being wiped, so if the session resets, the work does not restart.
 | "Tests pass" | Sometimes a guess | Pasted output, or it does not count |
 | If the session resets | Start over | The ledger picks up where it stopped |
 
-Carrying all of this costs about **2,541 tokens** in every session. That is the
+Carrying all of this costs about **2,379 tokens** in every session. That is the
 entire always-on price. The rules add about **1,401 tokens** when the rules are
 installed. Everything else loads only when it is actually used.
 
@@ -69,7 +69,7 @@ You can also check the plugin with `claude plugin details opm`.
 
 ---
 
-## Three things worth trying first
+## Two things worth trying first
 
 ### 🧠 `/opm:brew-idea` — argue with your idea before you build it
 
@@ -123,37 +123,6 @@ It ends by handing you a running app and a URL, or launching it on a connected
 device. For the build to run unattended, switch Claude Code to auto mode with
 Shift+Tab when it asks. OPM never changes your permission mode itself.
 
-### 🎬 `/opm:explainer-video` — turn a spec into a narrated video
-
-Point it at a spec, a brew-idea result, or any document. You get a 1920x1080
-MP4 with a neural voice-over and subtitles, plus the editable storyboard and
-slides. It is a narrated slideshow with fades, not animation.
-
-```
-/opm:explainer-video docs/specs/2026-09-17-field-sales-brew.md
-```
-
-**Here is the interesting part.** The first version of this pipeline was run by
-hand, with an AI drawing every slide. Fourteen slides cost about **190,000
-tokens, 77 tool calls and 22 minutes.**
-
-So the AI was taken out of the drawing. Slides are now rendered by script from
-a kit of nine layouts and 24 icons, filled in from the storyboard like a form.
-**Drawing a slide now costs no AI tokens at all** — it is a script, and scripts
-are free. What is left is writing the storyboard, which is words and genuinely
-needs judgement, plus hand-drawing the occasional scene no layout can express.
-
-| | Hand-drawn by AI | Layout kit |
-|---|---|---|
-| Who draws the slides | An AI, one at a time | A script, all at once |
-| Tokens to draw them | ~190,000 | none |
-| Reviewing the result | 14 images, one by one | one contact sheet, looked at once |
-| Changing one word | redraw the slide | re-render; only that scene rebuilds |
-
-It asks before any audio leaves your machine, and offers a fully offline voice
-if you would rather nothing did. Every fact in the video has to trace back to
-the source document, and a validator enforces it.
-
 ---
 
 ## How the whole loop fits together
@@ -204,6 +173,10 @@ SSH and that fails, set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1`.
 
 Nothing here phones home and nothing runs a model behind your back.
 
+To check an install, run `npx opm-core doctor`. It checks Node, Claude Code,
+the plugin, whether the copied rules are current, the tools the hooks call, and
+replays each hook offline. It exits 1 only when a check fails.
+
 ### Platforms
 
 You need Node 18 or later. The installer, hooks and tests run on macOS, Linux
@@ -213,21 +186,71 @@ WSL only.
 
 ---
 
+## Optional plugins
+
+The marketplace carries one optional plugin beside the core. It is kept out of
+`opm` so the core stays small and ships no video toolchain.
+
+### 🎬 `opm-video` — turn a spec into a narrated video
+
+Point it at a spec, a brew-idea result, or any document. You get a 1920x1080
+MP4 with a neural voice-over and subtitles, plus the editable storyboard and
+slides. It is a narrated slideshow with fades, not animation.
+
+```
+/opm-video:explainer-video docs/specs/2026-09-17-field-sales-brew.md
+```
+
+**Here is the interesting part.** The first version of this pipeline was run by
+hand, with an AI drawing every slide. Fourteen slides cost about **190,000
+tokens, 77 tool calls and 22 minutes.**
+
+So the AI was taken out of the drawing. Slides are now rendered by script from
+a kit of nine layouts and 24 icons, filled in from the storyboard like a form.
+**Drawing a slide now costs no AI tokens at all** — it is a script, and scripts
+are free. What is left is writing the storyboard, which is words and genuinely
+needs judgement, plus hand-drawing the occasional scene no layout can express.
+
+| | Hand-drawn by AI | Layout kit |
+|---|---|---|
+| Who draws the slides | An AI, one at a time | A script, all at once |
+| Tokens to draw them | ~190,000 | none |
+| Reviewing the result | 14 images, one by one | one contact sheet, looked at once |
+| Changing one word | redraw the slide | re-render; only that scene rebuilds |
+
+It asks before any audio leaves your machine, and offers a fully offline voice
+if you would rather nothing did. Every fact in the video has to trace back to
+the source document, and a validator enforces it.
+
+Install it after the core:
+
+```bash
+claude plugin install opm-video@opm
+```
+
+It needs a headless browser (Chrome, Chromium, Edge or Brave, or `CHROME_PATH`),
+and on first build it installs pinned ffmpeg, ffprobe and edge-tts into
+`~/.opm/explainer-video-tools`. Python is needed for the neural voice.
+**The neural voice sends the narration text to Microsoft's cloud speech service
+through edge-tts**; pick the local OS voice and nothing leaves your machine.
+
+---
+
 ## Everything in the box
 
 <details>
-<summary><b>All 15 skills</b> — invoked as <code>/opm:&lt;name&gt;</code>, or picked up automatically when they match the task</summary>
+<summary><b>All 13 skills</b> — invoked as <code>/opm:&lt;name&gt;</code>, or picked up automatically when they match the task</summary>
 
 **The loop**
 
 | Skill | What it does |
 |---|---|
-| `using-opm` | Injected at session start. Tells Claude to check for an applicable skill before any other action. |
+| `using-opm` | Injected at session start. Tells Claude to check for an applicable skill before any other action. Its routing table picks the skill by job size: a small fix goes straight to `tdd-workflow`, multi-week work to `milestone-planning`. |
 | `brew-idea` | Four agents argue the idea from product, engineering, skeptic and market angles; a judge ranks features. |
 | `brainstorming` | No code before the design is agreed. One question at a time, scaled to the size of the job. |
 | `writing-plans` | Turns an approved spec into bite-sized tasks, each with a failing test, implementation and commit. |
 | `executing-plans` | Runs a plan with one fresh subagent per task and a reviewer gate after each. Ledger survives compaction. |
-| `verification-before-completion` | No "done", "fixed" or "passing" without fresh command output as evidence. |
+| `verification-before-completion` | No "done", "fixed" or "passing" without fresh command output as evidence. A full gate (build, types, lint, tests, secrets scan, diff review) runs before a PR or release. |
 | `compound-learnings` | Captures non-obvious fixes as short docs, and reads them back before planning. |
 
 **Bigger scope**
@@ -236,14 +259,12 @@ WSL only.
 |---|---|
 | `milestone-planning` | Multi-week work: roadmap, short STATE digest, phased plans with wave scheduling for parallel subagents. |
 | `jump-start` | A whole project from one prompt. |
-| `explainer-video` | A spec becomes a narrated explainer video, rendered from a layout kit. macOS, Linux and Windows. |
 
 **Engineering**
 
 | Skill | What it does |
 |---|---|
 | `tdd-workflow` | Strict red, green, refactor with a "fails for the right reason" gate and an evidence report. |
-| `verification-loop` | Build, types, lint, tests, secrets scan and diff review, with a pass or fail report. |
 
 **Stack patterns**
 
@@ -284,6 +305,10 @@ Set `OPM_HOOKS_DISABLED=1` to turn them all off. Per-hook switches are
 `OPM_ALLOW_CONFIG_EDITS`, `OPM_SKIP_FORMAT` and `OPM_SKIP_TYPECHECK`; see
 [hooks/README.md](hooks/README.md).
 
+The hooks are guard rails, not a security boundary.
+[docs/threat-model.md](docs/threat-model.md) lists what they block, what they
+let through on purpose, and what is out of scope.
+
 </details>
 
 <details>
@@ -292,7 +317,8 @@ Set `OPM_HOOKS_DISABLED=1` to turn them all off. Per-hook switches are
 ```
 .claude-plugin/   plugin.json, marketplace.json
 agents/           5 subagents
-skills/           15 skills (SKILL.md plus templates/scripts where needed)
+skills/           13 skills (SKILL.md plus templates/scripts where needed)
+plugins/          opm-video, the optional explainer-video plugin
 hooks/            hooks.json and 6 dependency-free Node scripts
 rules/            copied into <repo>/.claude/rules/opm/ by the installer
 bin/              the npx installer

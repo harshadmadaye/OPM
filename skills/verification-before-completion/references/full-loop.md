@@ -1,9 +1,4 @@
----
-name: verification-loop
-description: Runs the full quality gate loop (build, types, lint, tests, secrets scan, diff review) for Node, Python, and Flutter projects and produces a pass/fail report. Use after finishing a feature or refactor, before opening a PR, or whenever a session is about to claim that code is complete.
----
-
-# Verification Loop
+# Full Verification Loop (full gate)
 
 Six gates, run in order, each one blocking the next. The output is a report with real numbers,
 not a feeling that things are probably fine. `opm:verification-before-completion` decides *whether*

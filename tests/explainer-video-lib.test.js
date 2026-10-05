@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const LIB = path.resolve(__dirname, '..', 'skills', 'explainer-video', 'scripts', 'lib');
+const LIB = path.resolve(__dirname, '..', 'plugins', 'opm-video', 'skills', 'explainer-video', 'scripts', 'lib');
 const constants = require(path.join(LIB, 'constants.js'));
 const paths = require(path.join(LIB, 'paths.js'));
 const { readPngSize } = require(path.join(LIB, 'png.js'));

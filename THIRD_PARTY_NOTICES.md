@@ -6,7 +6,7 @@ copyright notices are reproduced here as the MIT license requires.
 
 | Project | Copyright | What OPM adapted |
 |---|---|---|
-| [affaan-m/ecc](https://github.com/affaan-m/ecc) | (c) 2026 Affaan Mustafa | code-reviewer, typescript-reviewer, planner, silent-failure-hunter and security-reviewer agents; tdd-workflow, verification-loop and language pattern skills; coding-style, security and git rules; block-no-verify, config-protection, format/typecheck and console-log hooks |
+| [affaan-m/ecc](https://github.com/affaan-m/ecc) | (c) 2026 Affaan Mustafa | code-reviewer, typescript-reviewer, planner, silent-failure-hunter and security-reviewer agents; tdd-workflow skill, the full-gate loop in verification-before-completion, and language pattern skills; coding-style, security and git rules; block-no-verify, config-protection, format/typecheck and console-log hooks |
 | [obra/superpowers](https://github.com/obra/superpowers) | (c) 2025 Jesse Vincent | using-opm, brainstorming, writing-plans, executing-plans and verification-before-completion skills; SessionStart injection pattern |
 | [EveryInc/compound-engineering-plugin](https://github.com/EveryInc/compound-engineering-plugin) | (c) 2025 Every | compound-learnings skill, resolution template and frontmatter schema; reviewer lens idea |
 | [gsd-build/get-shit-done](https://github.com/gsd-build/get-shit-done) | (c) 2025 the get-shit-done authors | milestone-planning skill: plan XML schema, wave scheduling, STATE and SUMMARY templates, deviation rules |

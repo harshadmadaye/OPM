@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.7.1 - 2026-10-05
+
+- Always-on cost drops from about 2,541 tokens per session to about 2,379, and the CI ceiling drops from 2,850 to 2,650. `rules/common` is unchanged at about 1,401 (ceiling 1,550). `docs/why-opm.md` carries the regenerated table.
+- Breaking: `verification-loop` is merged into `verification-before-completion`. Use `/opm:verification-before-completion` and ask for the full gate; the six-gate loop (build, types, lint, tests, secrets scan, diff review) now loads on demand from its `references/full-loop.md`.
+- Breaking: `explainer-video` moves out of the core into the optional `opm-video` plugin, so core sessions no longer carry its description. Install it with `claude plugin install opm-video@opm`, then run `/opm-video:explainer-video <path>`. The marketplace lists it beside `opm`, on the same version.
+- `using-opm` routes by job size: a routing table sends spikes to `tdd-workflow`, bounded features to `brainstorming` and `writing-plans`, multi-week work to `milestone-planning`, unattended projects to `jump-start` and contested ideas to `brew-idea`. A 30-prompt fixture test pins the table.
+- `executing-plans`, `react-patterns`, `python-patterns` and `flutter-patterns` are split into short cores with on-demand `references/` files (executing-plans goes from about 5,000 tokens to about 1,056 per run). Conventions the rules already state are no longer repeated in the stack skills. `npm run tokens` fails if any of the four cores grows past 1,200 tokens.
+- New `npx opm-core doctor`: checks Node, Claude Code, the plugin, whether the copied rules are current, the tools the hooks call, and replays each hook offline. It exits 1 only on a failed check. The installer now writes a hashed `.claude/rules/opm/.opm-version` stamp and points at doctor when it finishes.
+- The Stop hook reports what it did: one "OPM checks:" line per language saying what ran, what was skipped and why, or which tool is missing. It stops starting new tools at 75% of its 60-second budget and says so; type errors still block.
+- The hook-bypass guard inspects only real git invocations. It blocks the short and long hook-skip flags, husky-disabling environment assignments, `git -c core.hooksPath` and `git config core.hooksPath` writes, and no longer blocks heredocs, commit messages or `echo` text that only mention them. Editing `core.hooksPath` in `.git/config` now asks first.
+- New `docs/threat-model.md`: what each hook is for, the evasions tested, the look-alikes allowed and what is out of scope. The hooks are guard rails, not a security boundary.
+- `brew-idea` is unchanged: it was already user-invoked only.
+
 ## 0.7.0 - 2026-10-05
 
 - CI: every pull request runs the suite on macOS, Linux and Windows with Node 18, 20 and 22. A gate job then checks the token budget, the npm package contents and both manifests with `claude plugin validate --strict`.

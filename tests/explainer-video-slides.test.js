@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const SKILL = path.resolve(__dirname, '..', 'skills', 'explainer-video');
+const SKILL = path.resolve(__dirname, '..', 'plugins', 'opm-video', 'skills', 'explainer-video');
 const { renderSlideHtml, renderAll } = require(path.join(SKILL, 'scripts', 'render-slides.js'));
 const { customRecord, parseCustomRecord, hashOf } = require(path.join(SKILL, 'scripts', 'lib', 'manifest.js'));
 const CLI = path.join(SKILL, 'scripts', 'render-slides.js');
