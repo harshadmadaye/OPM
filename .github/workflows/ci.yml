@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pinned Claude Code CLI for manifest validation. Phase 3 adds a scheduled
+  # job that runs the same checks against the latest CLI.
+  CLAUDE_CODE_VERSION: 2.1.289
+
+jobs:
+  test:
+    name: test (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      # Zero dependencies, so no npm install and no cache.
+      # bash expands tests/*.test.js on every OS; cmd.exe would pass the glob
+      # through literally, and Node 18/20 do not expand it themselves.
+      - run: npm test --script-shell=bash
+
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Token budget
+        run: npm run tokens
+      - name: npm package contents
+        run: node --test tests/package-contents.test.js
+      - name: Install Claude Code CLI
+        run: npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+      - run: claude --version
+      - name: Validate marketplace manifest
+        run: claude plugin validate --strict .
+      - name: Validate plugin manifest
+        run: claude plugin validate --strict .claude-plugin/plugin.json
