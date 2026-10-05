@@ -20,3 +20,5 @@ Deferred enhancements and known gaps found during execution, numbered ISS-NNN. R
 - ISS-016: the first full 30-prompt eval run must confirm --max-turns 2 reaches the real pick after a using-opm reload (found in 04-03).
 - ISS-017: haiku reloads using-opm although SessionStart already injected it, costing a turn; a wording tweak in using-opm may stop it (found in 04-03).
 - ISS-018: brew-idea and jump-start are user-invoked only, so a model that routes to them gets a refusal and should tell the user to run the command; check the wording real sessions show (found in 04-03).
+- ISS-019: when the guard throws behind the bypass hook in the Bash tool.call chain, the engine reports the guard hook as skipped and the outer bypass .catch answers; still fail-closed, but check why the guard's own .catch does not answer (found in 04-04 CI).
+- ISS-020: docs/why-opm.md "What we looked at" table carries competitor counts from the 2026-09-12 review; decide whether to keep unverified third-party numbers (found in 04-04).
