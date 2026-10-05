@@ -9,6 +9,7 @@
 // stop the others.
 
 import { statusCommands, installStatus } from './status.mjs';
+import { installBypass } from './bypass.mjs';
 import { installGuard } from './guard.mjs';
 import { meterCommands, installMeter } from './meter.mjs';
 
@@ -35,6 +36,7 @@ export const register = (on) => {
     return next(e);
   });
   installStatus(on);
+  installBypass(on);
   installGuard(on);
   installMeter(on);
 };

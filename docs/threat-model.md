@@ -48,6 +48,20 @@ and similar), or open a `$(...)` or backtick substitution. These pass:
 - Read-only `git config core.hooksPath` and `git config --get core.hooksPath`.
 - `echo HUSKY=0 && git commit ...`, where HUSKY=0 is only printed.
 
+## Which side runs the bypass and config checks
+
+The rules above live once, in `hooks/lib/bypass-rules.mjs`. On Claude Code
+2.1.287 or later, OPM's hooks module (`hooks/mod/bypass.mjs`) runs them in
+process as `tool.call` hooks on Bash, Edit and Write, and at session start
+sets `OPM_MOD_ACTIVE=1`; the two settings-hook scripts see that variable and
+exit at once, so each check runs once per tool call. On older Claude Code the
+module never loads, the variable is never set, and the scripts run exactly
+as in 0.8.0. The mod denies the same commands; for a config edit it asks
+"Allow edit" or "Cancel", and anything but "Allow edit" (including nobody to
+answer) is a deny. A failure of either mod check denies. `OPM_HOOKS_DISABLED=1`
+and `OPM_ALLOW_CONFIG_EDITS=1` work the same on both sides. Setting
+`OPM_MOD_ACTIVE=1` by hand silences the scripts, like `OPM_HOOKS_DISABLED=1`.
+
 ## Destructive-command hold (mod)
 
 `hooks/mod/guard.mjs`, a `tool.call` hook on Bash in OPM's hooks module

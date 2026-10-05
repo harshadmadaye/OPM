@@ -22,6 +22,7 @@ function runHook(name, input, extraEnv = {}) {
   const env = { ...process.env, TMPDIR: tmpRoot, TEMP: tmpRoot, TMP: tmpRoot };
   delete env.OPM_HOOKS_DISABLED;
   delete env.OPM_ALLOW_CONFIG_EDITS;
+  delete env.OPM_MOD_ACTIVE;
   Object.assign(env, extraEnv);
   const result = spawnSync(process.execPath, [path.join(SCRIPTS, name)], {
     input: typeof input === 'string' ? input : JSON.stringify(input),
@@ -398,6 +399,21 @@ test('all scripts: OPM_HOOKS_DISABLED=1 silences every hook', () => {
     const { status, stdout } = runHook(script, input, { OPM_HOOKS_DISABLED: '1', CLAUDE_PLUGIN_ROOT: path.join(tmpRoot, 'plugin') });
     assert.equal(status, 0, script);
     assert.equal(stdout, '', script);
+  }
+});
+
+test('OPM_MOD_ACTIVE=1: block-no-verify and config-protection step aside for the mod', () => {
+  const tsconfig = writeFixture('mod/tsconfig.json', '{}');
+  const cases = [
+    ['block-no-verify.js', bashInput('git commit --no-verify -m "wip"')],
+    ['config-protection.js', editInput(tsconfig)],
+  ];
+  for (const [script, input] of cases) {
+    assert.notEqual(runHook(script, input).stdout, '', `${script} checks without the mod`);
+    const { status, stdout, stderr } = runHook(script, input, { OPM_MOD_ACTIVE: '1' });
+    assert.equal(status, 0, script);
+    assert.equal(stdout, '', script);
+    assert.equal(stderr, '', script);
   }
 });
 
