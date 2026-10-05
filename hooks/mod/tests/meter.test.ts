@@ -53,7 +53,8 @@ function world(on: On, initial: Record<string, unknown> = {}, options: WorldOpti
   on('skill.prompt', (_$, e) => ({ text: e.text }));
   on('turn.complete', (_$, e) => ({ text: e.answer, usage: e.usage }));
   on('ui.log', (_$, e) => {
-    logs.push(e.text);
+    // Other features (status snapshots) share turn.complete; keep only the meter's lines.
+    if (String(e.text).startsWith('opm: meter')) logs.push(e.text);
     return { value: undefined };
   });
   return { logs, store };
