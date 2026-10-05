@@ -9,3 +9,4 @@ Deferred enhancements and known gaps found during execution, numbered ISS-NNN. R
 - ISS-005: brainstorming says bounded work proceeds with no plan document, but the routing table sends bounded work to brainstorming then writing-plans; writing-plans needs an inline mode for up to 3 tasks (found in 02-01).
 - ISS-006: doctor does not flag an installed plugin older than the package (seen: 0.6.1 installed vs 0.7.0); fold into the tested-range check in phase 3 (found in 02-04).
 - ISS-007: the regex heredoc detector in block-no-verify can be fooled by `<<` inside quotes or arithmetic; accepted as out of scope per docs/threat-model.md (found in 02-05).
+- ISS-008: verification-before-completion SKILL.md is 1,371 tokens, over the 1,200 soft cap (warn only, not an enforced skill); trim or enforce later (found in 02-02).
