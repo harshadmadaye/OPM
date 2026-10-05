@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>opm brew</title>
+<style>
+:root {
+  --bg: #f6f5f1;
+  --surface: #ffffff;
+  --surface-2: #efede7;
+  --ink: #1d1d1b;
+  --ink-2: #5d5b55;
+  --line: #d7d3ca;
+  --accent: #2c6b5a;
+  --accent-soft: #e1eee8;
+  --warn: #8f5500;
+  --warn-soft: #fbefd9;
+  --cut: #9b2f2a;
+  --cut-soft: #f7e2df;
+  --term-bg: #1e2320;
+  --term-ink: #d4e3da;
+  --term-dim: #8aa197;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131412;
+    --surface: #1c1e1b;
+    --surface-2: #252824;
+    --ink: #ebe9e3;
+    --ink-2: #a7a49c;
+    --line: #3a3d37;
+    --accent: #7cc5a8;
+    --accent-soft: #1d3029;
+    --warn: #e3a94f;
+    --warn-soft: #33291a;
+    --cut: #e8928a;
+    --cut-soft: #3a2320;
+    --term-bg: #0b0d0c;
+    --term-ink: #cfe0d6;
+    --term-dim: #7d9489;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+    --bg: #131412;
+    --surface: #1c1e1b;
+    --surface-2: #252824;
+    --ink: #ebe9e3;
+    --ink-2: #a7a49c;
+    --line: #3a3d37;
+    --accent: #7cc5a8;
+    --accent-soft: #1d3029;
+    --warn: #e3a94f;
+    --warn-soft: #33291a;
+    --cut: #e8928a;
+    --cut-soft: #3a2320;
+    --term-bg: #0b0d0c;
+    --term-ink: #cfe0d6;
+    --term-dim: #7d9489;
+    color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.5 var(--sans);
+}
+main { max-width: 920px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: -0.02em; }
+h2 { font-size: 21px; margin: 48px 0 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+h2 .num { color: var(--accent); font-variant-numeric: tabular-nums; margin-right: 6px; }
+h3 { font-size: 16px; margin: 0 0 6px; }
+h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-2); margin: 14px 0 6px; }
+p { margin: 0 0 10px; }
+ul, ol { margin: 0; padding-left: 20px; }
+li { margin: 3px 0; }
+code, .mono { font-family: var(--mono); font-size: 0.9em; }
+.meta { color: var(--ink-2); font-size: 13px; }
+.brief { border-left: 3px solid var(--line); padding: 4px 0 4px 12px; color: var(--ink-2); font-size: 14px; margin-top: 12px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.pitch { font-size: 18px; line-height: 1.45; }
+.tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); white-space: nowrap; vertical-align: 1px; }
+.tag.unchecked { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.tag.slice2 { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.success { background: var(--accent-soft); border: 0; }
+.success strong { color: var(--accent); }
+.nots li::marker { content: "✕  "; color: var(--cut); }
+.goals li::marker { content: "✓  "; color: var(--accent); }
+
+/* personas */
+.persona ol { padding-left: 0; list-style: none; counter-reset: step; }
+.persona ol li { counter-increment: step; position: relative; padding-left: 30px; margin: 8px 0; font-size: 14px; }
+.persona ol li::before { content: counter(step); position: absolute; left: 0; top: 1px; width: 21px; height: 21px; border-radius: 50%; background: var(--accent); color: var(--surface); font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+.persona .need { color: var(--ink-2); font-size: 14px; }
+
+/* screens */
+.screen { margin-top: 20px; }
+.screen-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.kind { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-2); }
+.wire { border: 2px solid var(--ink-2); border-radius: 8px; padding: 8px; background: var(--surface); display: grid; gap: 6px; }
+.wbox { border: 1.5px solid var(--line); border-radius: 5px; padding: 6px 8px; font-size: 13px; }
+.wbox.dash { border-style: dashed; }
+.wlabel { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-2); margin-bottom: 2px; }
+.wrow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.wrow .grow { flex: 1 1 auto; min-width: 0; }
+.btn { display: inline-block; border: 1.5px solid var(--ink-2); border-radius: 5px; padding: 1px 8px; font-size: 12px; white-space: nowrap; }
+.btn.primary { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+.bar { height: 7px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; margin: 4px 0; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.mini { display: grid; gap: 6px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+.mini .wbox { background: var(--bg); }
+.ph { color: var(--ink-2); font-style: italic; }
+.term { background: var(--term-bg); color: var(--term-ink); border-radius: 8px; font: 12.5px/1.6 var(--mono); padding: 10px 12px; overflow-wrap: anywhere; }
+.term .bar-top { display: flex; gap: 5px; margin-bottom: 8px; }
+.term .bar-top i { width: 9px; height: 9px; border-radius: 50%; background: var(--term-dim); opacity: 0.6; }
+.term .prompt { color: var(--term-dim); }
+.term .k { color: var(--term-dim); }
+.rr { display: grid; gap: 0; border: 2px solid var(--ink-2); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.rr > div { padding: 8px 10px; font-size: 13px; }
+.rr > div + div { border-top: 1.5px dashed var(--line); }
+.rr .method { font-family: var(--mono); font-weight: 700; font-size: 12px; }
+.rr ul { padding-left: 18px; }
+.under { display: grid; gap: 10px; margin-top: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); font-size: 13.5px; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { font-size: 12px; padding: 2px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--ink); }
+.states { display: grid; gap: 4px; }
+.states div { display: grid; grid-template-columns: 62px 1fr; gap: 6px; }
+.states b { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-2); padding-top: 2px; }
+
+/* svg */
+svg { display: block; width: 100%; height: auto; }
+.figure { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+.s-node { fill: var(--surface); stroke: var(--ink-2); stroke-width: 1.5; }
+.s-cmd { fill: var(--term-bg); stroke: var(--term-bg); }
+.s-ep { fill: var(--surface); stroke: var(--ink-2); stroke-width: 1.3; stroke-dasharray: 4 3; }
+.s-page { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.s-zone { fill: var(--surface-2); stroke: var(--line); stroke-width: 1; }
+.s-derived { fill: var(--surface); stroke: var(--ink-2); stroke-width: 1.3; stroke-dasharray: 4 3; }
+.s-stored { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.s-t { fill: var(--ink); font: 600 12px var(--sans); }
+.s-t2 { fill: var(--ink-2); font: 10.5px var(--sans); }
+.s-tz { fill: var(--ink-2); font: 700 10px var(--sans); letter-spacing: 0.06em; text-transform: uppercase; }
+.s-tc { fill: var(--term-ink); font: 600 12px var(--mono); }
+.s-edge { fill: none; stroke: var(--ink-2); stroke-width: 1.4; }
+.s-edge.dash { stroke-dasharray: 4 3; }
+.s-head { fill: var(--ink-2); }
+.s-badge { fill: var(--accent); }
+.s-badge-t { fill: var(--surface); font: 700 10px var(--sans); }
+.legend { display: grid; gap: 4px; margin-top: 10px; font-size: 13px; }
+.legend div { display: grid; grid-template-columns: 24px 1fr; gap: 6px; align-items: start; }
+.legend .n { width: 19px; height: 19px; border-radius: 50%; background: var(--accent); color: var(--surface); font-size: 10px; font-weight: 700; display: grid; place-items: center; margin-top: 1px; }
+.keys { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--ink-2); margin-top: 8px; }
+.keys span::before { content: ""; display: inline-block; width: 14px; height: 10px; margin-right: 5px; vertical-align: -1px; border-radius: 2px; }
+.keys .k-page::before { background: var(--accent-soft); border: 1.5px solid var(--accent); }
+.keys .k-cmd::before { background: var(--term-bg); }
+.keys .k-ep::before { border: 1.3px dashed var(--ink-2); }
+.keys .k-stored::before { background: var(--accent-soft); border: 1.5px solid var(--accent); }
+.keys .k-derived::before { border: 1.3px dashed var(--ink-2); }
+
+/* data cards */
+.entity h3 { font-family: var(--mono); font-size: 14px; }
+.entity ul { font-size: 13px; }
+.entity .rel { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); font-size: 12.5px; color: var(--ink-2); }
+
+/* stack */
+.stack { display: grid; gap: 8px; }
+.stack div { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.stack b { font-weight: 600; }
+.stack span { color: var(--ink-2); }
+@media (max-width: 560px) { .stack div { grid-template-columns: 1fr; gap: 2px; } }
+
+/* timeline */
+.timeline { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 10px; scroll-snap-type: x mandatory; }
+.phase { flex: 0 0 min(300px, 84%); scroll-snap-align: start; position: relative; padding-top: 30px; }
+.phase::before { content: ""; position: absolute; top: 11px; left: 0; right: -12px; height: 2px; background: var(--line); }
+.phase:last-child::before { right: 50%; }
+.phase .pin { position: absolute; top: 0; left: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--surface); font-weight: 700; font-size: 13px; display: grid; place-items: center; }
+.phase .card { height: 100%; font-size: 13.5px; }
+.phase .goal { font-weight: 600; margin-bottom: 4px; }
+.phase .risks li { color: var(--warn); }
+.phase .risks li span { color: var(--ink); }
+.hint { font-size: 12px; color: var(--ink-2); }
+
+/* decisions */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-2); background: var(--surface-2); }
+tr:last-child td { border-bottom: 0; }
+td.n { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+td.c { text-align: center; white-space: nowrap; }
+.dec { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; }
+.dec.add { background: var(--accent-soft); color: var(--accent); }
+.dec.keep { background: var(--surface-2); color: var(--ink-2); }
+.dec.improve { background: var(--warn-soft); color: var(--warn); }
+.dec.cut { background: var(--cut-soft); color: var(--cut); }
+.pips { letter-spacing: 1px; color: var(--accent); font-size: 11px; }
+.pips .off { color: var(--line); }
+.cutlist { display: grid; gap: 8px; margin-top: 12px; }
+.cutlist div { border-left: 3px solid var(--cut); background: var(--surface); padding: 8px 12px; border-radius: 0 8px 8px 0; font-size: 13.5px; }
+.cutlist b { display: block; }
+.cutlist span { color: var(--ink-2); }
+
+/* challenge */
+.challenge { border: 2px solid var(--warn); background: var(--warn-soft); border-radius: 12px; padding: 16px; }
+.challenge h3 { color: var(--warn); font-size: 17px; margin-bottom: 10px; }
+.challenge h4 { color: var(--ink); }
+.challenge li { font-size: 14px; }
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
+summary { cursor: pointer; font-weight: 600; }
+details ul { margin-top: 10px; font-size: 14px; }
+footer { margin-top: 40px; font-size: 12px; color: var(--ink-2); }
+
+/* additions for this render */
+.s-cmd { stroke: var(--term-dim); stroke-width: 1.2; }
+.keys .k-cmd::before { border: 1px solid var(--term-dim); }
+.keys .k-node::before { border: 1.5px solid var(--ink-2); background: var(--surface); }
+.keys .k-mod::before { content: "MOD"; width: auto; height: auto; padding: 0 4px; font-size: 9px; font-weight: 700; color: var(--surface); background: var(--accent); vertical-align: 1px; }
+.figure { overflow-x: auto; }
+.figure svg { min-width: 640px; }
+.s-tc2 { fill: var(--term-dim); font: 10.5px var(--mono); }
+.s-sub { fill: none; stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 3 3; }
+.s-lbl { fill: var(--ink-2); font: italic 10.5px var(--sans); }
+.s-modbg { fill: var(--accent); }
+.s-modt { fill: var(--surface); font: 700 8.5px var(--sans); letter-spacing: 0.06em; }
+.term .row { display: block; margin: 2px 0; }
+.term .k { display: inline-block; min-width: 0; margin-right: 6px; }
+.dlist { font-size: 13px; padding-left: 0; list-style: none; }
+.dlist li { margin: 2px 0; }
+.dlist .fid { font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 700; margin-right: 4px; }
+.vision { font-size: 15px; color: var(--ink-2); }
+.challenge .cols { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.challenge ul { padding-left: 18px; }
+.twocol { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-top: 12px; }
+.tag.mod { background: var(--accent); color: var(--surface); border-color: transparent; text-transform: uppercase; letter-spacing: 0.05em; font-size: 9.5px; padding: 1px 6px; }
+.transcript { border: 2px solid var(--ink-2); border-radius: 8px; background: var(--surface); padding: 10px 12px; font: 12.5px/1.6 var(--mono); overflow-wrap: anywhere; }
+.transcript .who { display: block; font: 600 10px var(--sans); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-2); margin-bottom: 4px; }
+.transcript .you { display: block; color: var(--accent); font-weight: 600; margin-bottom: 6px; }
+.transcript .out { display: block; border-left: 3px solid var(--line); padding: 1px 0 1px 10px; margin: 2px 0; }
+.transcript .out .k { color: var(--ink-2); margin-right: 6px; }
+.transcript .note { display: block; margin-top: 8px; font: 12px var(--sans); color: var(--ink-2); }
+.transcript .acts { display: flex; gap: 6px; margin: 6px 0 2px 13px; }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <h1>opm brew</h1>
+  <div class="meta">2026-10-05, revision 1 of 2026-10-02 · source: brew-idea run wf_8a106824-7a3 · OPM v0.6.1</div>
+  <p class="brief">Brief: a prioritized list of improvements and new features for OPM, the engineering-workflow plugin for Claude Code. Make it more reliable, easier to adopt and learn, cheaper in tokens and more useful day to day. Say what to fix, what to add next and what to cut.</p>
+</header>
+
+<!-- 1 -->
+<section>
+<h2><span class="num">1</span>Overview</h2>
+<p class="pitch"><strong>OPM 0.7-0.9:</strong> a measured, low-token, test-first Claude Code workflow where status, safety and cost checks run as code instead of model turns, and every release is gated by CI.</p>
+<p class="vision">Vision: OPM is a low-token, test-first, evidence-before-done workflow plugin for solo and small-team developers using Claude Code in the terminal and VS Code. It pairs measured token costs with guardrails that run on every call, and it uses in-process mods for status and safety at no model cost.</p>
+<p class="meta"><span class="tag mod">mod</span> marks features built as Claude Code mods: small pieces of plugin code that run inside Claude Code v2.1.287 or later and answer without a Claude turn.</p>
+
+<div class="twocol">
+  <div class="card">
+    <h4>Goals</h4>
+    <ul class="goals">
+      <li>Every release is gated by CI on macOS, Linux and Windows × Node 18/20/22: version/manifest gate, npm pack check, token-budget ceiling, and <code>claude plugin validate --strict</code> / <code>claude plugin test</code>.</li>
+      <li>The token-cost claim is backed by numbers: the linter holds always-on cost in CI, core SKILL.md files drop to about 4KB, and an opt-in local meter records real per-request usage.</li>
+      <li>A new user gets from <code>npx opm-core@latest</code> to a healthy install confirmed by <code>doctor</code>, and small tasks go straight to tdd-workflow instead of the full spec, plan and subagent pipeline.</li>
+      <li>Status, resume and destructive-command safety need no Claude turn and print plain text in the VS Code panel; settings hooks stay the fallback below Claude Code v2.1.287.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Not doing</h4>
+    <ul class="nots">
+      <li>Keeping the story-video alias (removed in 0.7.0)</li>
+      <li>verification-loop as a separate skill (merged into verification-before-completion)</li>
+      <li>push-via-api.sh in the shipped package</li>
+      <li>Static HTML /opm:dashboard or a mod-pane dashboard (<code>/opm:status --all</code> covers it in text)</li>
+      <li>/opm:start skill and bundled sample repo</li>
+      <li>Collapsing the front-door skills into one router, until eval data shows real collisions</li>
+      <li>Panes, bands, status lines or spinner restyles: the VS Code chat panel does not draw them</li>
+      <li>Telemetry or network calls from hooks, mods or the CLI; the meter stays local and off by default</li>
+      <li>Changes to the user's permission mode</li>
+      <li>Moving hot-path hooks to mods unless a spike finds a supported way to stop settings hooks also firing</li>
+      <li>Competitor figures in the README or listings; only OPM's own measured numbers</li>
+      <li>New stacks (Go, Rust, Java)</li>
+    </ul>
+  </div>
+</div>
+
+<div class="card success" style="margin-top:12px">
+  <strong>Success looks like:</strong> the 0.8.0 release PR passes CI on all three operating systems with the token-budget check under its ceiling, and in the VS Code chat panel <code>/opm:status</code> prints the open ledger task in about 5 lines without starting a Claude turn.
+</div>
+</section>
+
+<!-- 2 -->
+<section>
+<h2><span class="num">2</span>Who uses it</h2>
+<div class="grid">
+  <div class="card persona">
+    <h3>Harshad, the author, several projects in VS Code</h3>
+    <p class="need">Wants to know where each project's plan stands and resume without spending tokens or redoing finished tasks, all inside the VS Code chat panel.</p>
+    <ol>
+      <li>Opens a Claude Code session in project A in VS Code.</li>
+      <li>The SessionStart hook adds one line: open ledger docs/plans/...progress.md, task 4 of 9.</li>
+      <li>Types /opm:status <span class="tag mod">mod</span>; it prints 5 lines (plan, task, last ruling, done/total) with no Claude turn.</li>
+      <li>Types /opm:status --all <span class="tag mod">mod</span> to see projects B and C from per-session $.store entries.</li>
+      <li>Asks Claude to resume; executing-plans reads the ledger and continues at task 4.</li>
+      <li>Claude tries <code>git push --force origin main</code>; the guard <span class="tag mod">mod</span> holds it with $.ui.ask and he picks cancel.</li>
+    </ol>
+  </div>
+  <div class="card persona">
+    <h3>New adopter, solo TypeScript or Python developer</h3>
+    <p class="need">Wants to install OPM, confirm it works, and get a useful first result without reading the whole README or paying for the full pipeline on a 10-line fix.</p>
+    <ol>
+      <li>Finds OPM in a plugin marketplace listing or the README.</li>
+      <li>Runs <code>npx opm-core@latest</code> and picks rules in the checkbox picker.</li>
+      <li>The installer ends with one line: run <code>npx opm-core doctor</code>.</li>
+      <li>doctor reports Node, hook registration, rule freshness, tools and Claude Code version; one warning says ruff is missing, with the fix.</li>
+      <li>Asks Claude for a small bug fix; the using-opm routing table sends it straight to tdd-workflow.</li>
+      <li>The Stop hook skips tsc because no .ts files changed and runs ruff on the edited Python files.</li>
+    </ol>
+  </div>
+  <div class="card persona">
+    <h3>Maintainer cutting a release</h3>
+    <p class="need">Wants to ship fast without breaking manifests, Windows hooks, the always-on token budget or mod contracts when the Claude Code CLI changes.</p>
+    <ol>
+      <li>Opens a PR that adds a new section to executing-plans.</li>
+      <li>CI runs node:test on the OS × Node matrix, the version/changelog/manifest gate, npm pack --dry-run, validate --strict and plugin test.</li>
+      <li>The token linter fails: executing-plans is over its soft cap.</li>
+      <li>Moves the detail into skills/executing-plans/references/ and re-pushes; CI goes green.</li>
+      <li>Later, the scheduled job against the latest claude CLI fails validate, flagging mod API drift before users hit it.</li>
+      <li>Fixes it, bumps the declared tested range, and doctor shows the new range.</li>
+    </ol>
+  </div>
+</div>
+</section>
+
+<!-- 3 -->
+<section>
+<h2><span class="num">3</span>Screens</h2>
+<p class="meta">One wireframe per surface, in the order a user meets them. Terminal boxes are commands run in a shell; transcript boxes are mod commands, which only print text into the Claude Code chat. Numbers like #6 point to the Decisions table.</p>
+
+<!-- S1 -->
+<div class="screen">
+  <div class="screen-head"><h3>README, why-opm.md, threat model and marketplace listings</h3><span class="kind">page</span></div>
+  <div class="wire">
+    <div class="wbox"><span class="wlabel">hero</span>One-line pitch and install command</div>
+    <div class="wbox"><span class="wlabel">numbers</span>Measured always-on and per-run tokens, from the linter and the meter</div>
+    <div class="wbox"><span class="wlabel">guardrails</span>Hooks and mods, the events and APIs they use (from validate --json), "drift guard, not a security boundary"</div>
+    <div class="wbox"><span class="wlabel">compatibility</span>Tested Claude Code range; mod features need v2.1.287 or later</div>
+    <div class="wbox"><span class="wlabel">optional plugins</span>explainer-video, its tool needs and the cloud TTS disclosure</div>
+    <div class="wbox dash"><span class="wlabel">threat model link</span>Known evasions tested, and attacks out of scope</div>
+  </div>
+  <div class="under">
+    <div><h4>Purpose</h4>Position OPM on measured cost and honest guardrails, say what hooks and mods do and do not protect against, and list OPM where developers look for plugins.</div>
+    <div><h4>Delivers</h4><ul class="dlist"><li><span class="fid">#5</span>Rewrite README and why-opm.md positioning</li><li><span class="fid">#3</span>Submit to marketplaces</li><li><span class="fid">#13</span>Hook threat model + evasion tests</li><li><span class="fid">#15</span>Spin out explainer-video</li></ul></div>
+    <div><h4>States</h4><div class="states"><div><b>Empty</b><span>Until measured numbers exist, the numbers section is left out, not estimated.</span></div><div><b>Loading</b><span>Not applicable.</span></div><div><b>Error</b><span>Listing submission is blocked until the numbers and threat model are published.</span></div></div></div>
+  </div>
+</div>
+
+<!-- S2 -->
+<div class="screen">
+  <div class="screen-head"><h3>npx opm-core@latest (installer)</h3><span class="kind">command</span></div>
+  <div class="term">
+    <div class="bar-top"><i></i><i></i><i></i></div>
+    <span class="row"><span class="prompt">$</span> npx opm-core@latest</span>
+    <span class="row"><span class="k">header</span>OPM version and target repo path</span>
+    <span class="row"><span class="k">picker</span>[x] rule sets: common, typescript, react, python, dart</span>
+    <span class="row"><span class="k">progress</span>plugin install, then rules copied, version stamp written</span>
+    <span class="row"><span class="k">optional line</span>explainer-video is now a separate plugin: install command, and a note that its TTS sends text to a cloud service</span>
+    <span class="row"><span class="k">footer</span>next step: npx opm-core doctor</span>
+  </div>
+  <div class="under">
+    <div><h4>Purpose</h4>Install the plugin and copy the chosen rules per repo, offer the optional explainer-video plugin separately, then point to doctor.</div>
+    <div><h4>Delivers</h4><ul class="dlist"><li><span class="fid">#22</span>Installer, rules, agents, settings hooks</li><li><span class="fid">#7</span>Installer's one next-step line</li><li><span class="fid">#15</span>Spin out explainer-video</li></ul></div>
+    <div><h4>States</h4><div class="states"><div><b>Empty</b><span>No repo found, so it offers --plugin-only.</span></div><div><b>Loading</b><span>One line per step.</span></div><div><b>Error</b><span>A friendly one-line cause and fix; full detail only with --verbose; non-zero exit.</span></div></div></div>
+  </div>
+</div>
+
+<!-- S3 -->
+<div class="screen">
+  <div class="screen-head"><h3>npx opm-core doctor</h3><span class="kind">command</span></div>
+  <div class="term">
+    <div class="bar-top"><i></i><i></i><i></i></div>
+    <span class="row"><span class="prompt">$</span> npx opm-core doctor</span>
+    <span class="row"><span class="k">header</span>OPM plugin version, Node version, Claude Code version vs tested range</span>
+    <span class="row"><span class="k">checks list</span>one row per check: pass / warn / fail with a one-line detail</span>
+    <span class="row"><span class="k">mods row</span>mod features on (&gt;= v2.1.287) or settings-hook fallback only</span>
+    <span class="row"><span class="k">fix list</span>the exact command to run for each warn or fail</span>
+    <span class="row"><span class="k">footer</span>summary count and exit code</span>
+  </div>
+  <div class="under">
+    <div><h4>Purpose</h4>Check install health from outside a session and on any Claude Code version; the support and onboarding tool.</div>
+    <div><h4>Delivers</h4><ul class="dlist"><li><span class="fid">#7</span>npx opm-core doctor</li><li><span class="fid">#11</span>Declared tested Claude Code range</li></ul></div>
+    <div><h4>States</h4><div class="states"><div><b>Empty</b><span>No plugin found: one fail row says how to install.</span></div><div><b>Loading</b><span>Rows print as each check finishes.</span></div><div><b>Error</b><span>A crashing check reports as fail with its reason, never a stack trace.</span></div></div></div>
+  </div>
+</div>
+
+<!-- S4 -->
+<div class="screen">
+  <div class="screen-head"><h3>In-session OPM context and hook feedback</h3><span class="kind">other</span></div>
+  <div class="wire">
+    <div class="wbox"><span class="wlabel">session start</span>The using-opm text with a routing table (task size → skill)</div>
+    <div class="wbox"><span class="wlabel">session start</span>At most one resume line when a ledger is open</div>
+    <div class="wbox dash"><span class="wlabel">on demand</span>Short SKILL.md; references/ files read only when a step needs them</div>
+    <div class="wbox"><span class="wlabel">Stop</span>One line per language checked or skipped, plus warnings for a missing tool or nearing the 90s timeout</div>
+  </div>
+  <div class="under">
+    <div><h4>Purpose</h4>What the model and user see during a session: routing table and resume line at start, skills loaded on demand, visible Stop hook results.</div>
+    <div><h4>Delivers</h4><ul class="dlist"><li><span class="fid">#4</span>Routing table + 30-prompt fixture</li><li><span class="fid">#9</span>Split large skills</li><li><span class="fid">#14</span>brew-idea user-invoked only</li><li><span class="fid">#20</span>Dedupe stack pattern skills</li><li><span class="fid">#8</span>Stop hook fails visibly</li><li><span class="fid">#10</span>/opm:status + resume line <span class="tag mod">mod</span></li><li><span class="fid">#19</span>Hot-path hooks to mod hooks (gated)</li></ul></div>
+    <div><h4>States</h4><div class="states"><div><b>Empty</b><span>No ledger, no resume line; no changed files, Stop prints nothing.</span></div><div><b>Loading</b><span>Stop runs within 90s.</span></div><div><b>Error</b><span>A missing tsc/ruff/dart or a timeout shows a visible warning instead of passing silently.</span></div></div></div>
+  </div>
+</div>
+
+<!-- S5 -->
+<div class="screen">
+  <div class="screen-head"><h3>/opm:status, /opm:status --all and npx opm-core status</h3><span class="kind">command</span><span class="tag mod">mod</span></div>
+  <div class="transcript">
+    <span class="who">Claude Code chat · no Claude turn</span>
+    <span class="you">&gt; /opm:status</span>
+    <span class="out"><span class="k">line 1</span>plan file and ledger path</span>
+    <span class="out"><span class="k">line 2</span>tasks done / total and the current task title</span>
+    <span class="out"><span class="k">line 3</span>the last ruling or fix round from the ledger</span>
+    <span class="out"><span class="k">line 4</span>last-updated time and branch</span>
+    <span class="out"><span class="k">line 5</span>hint: "ask Claude to resume plan"</span>
+    <span class="you" style="margin-top:10px">&gt; /opm:status --all</span>
+    <span class="out"><span class="k">rows</span>one per project: repo, plan, done/total, last seen (at most about 30 lines)</span>
+    <span class="note">Before v2.1.287 the same text comes from <code>npx opm-core status</code> in a terminal.</span>
+  </div>
+  <div class="under">
+    <div><h4>Purpose</h4>Show the open plan and task for this repo, or across every project on the machine, with no Claude turn.</div>
+    <div><h4>Delivers</h4><ul class="dlist"><li><span class="fid">#10</span>/opm:status + npx fallback <span class="tag mod">mod</span></li><li><span class="fid">#18</span>/opm:status --all <span class="tag mod">mod</span></li><li><span class="fid">#21</span>Workflow engine (executing-plans)</li></ul></div>
+    <div><h4>States</h4><div class="states"><div><b>Empty</b><span>"no open ledger in this repo"</span></div><div><b>Loading</b><span>None: code answers at once, even while Claude works.</span></div><div><b>Error</b><span>An unreadable or malformed ledger prints one line naming the file; stale $.store entries are marked stale.</span></div></div></div>
+  </div>
+</div>
+
+<!-- S6 -->
+<div class="screen">
+  <div class="screen-head"><h3>/opm:report (opt-in token meter)</h3><span class="kind">command</span><span class="tag mod">mod</span></div>
+  <div class="transcript">
+    <span class="who">Claude Code chat · no Claude turn</span>
+    <span class="you">&gt; /opm:report</span>
+    <span class="out"><span class="k">status line</span>meter on or off, and how to toggle it</span>
+    <span class="out"><span class="k">totals</span>requests, input, output, cache read and cache write tokens over the window</span>
+    <span class="out"><span class="k">per-skill table</span>skill · times fired · median tokens per request</span>
+    <span class="out"><span class="k">footer</span>store size used vs its cap · "local only, nothing sent"</span>
+  </div>
+  <div class="under">
+    <div><h4>Purpose</h4>Turn measured per-request usage and skill invocations into a short copy-paste summary that backs the cost claim and the cut list.</div>
+    <div><h4>Delivers</h4><ul class="dlist"><li><span class="fid">#12</span>Opt-in local token meter <span class="tag mod">mod</span></li></ul></div>
+    <div><h4>States</h4><div class="states"><div><b>Empty</b><span>Meter off: shows the enable command. On but no data: "no turns recorded".</span></div><div><b>Error</b><span>A corrupt store key is reset with a one-line notice.</span></div></div></div>
+  </div>
+</div>
+
+<!-- S7 -->
+<div class="screen">
+  <div class="screen-head"><h3>Destructive-command hold</h3><span class="kind">other</span><span class="tag mod">mod</span></div>
+  <div class="transcript">
+    <span class="who">Claude Code chat · tool call held</span>
+    <span class="out"><span class="k">title</span>OPM held a destructive command</span>
+    <span class="out"><span class="k">body</span>the exact command and what it would affect (paths, branch, commits)</span>
+    <div class="acts"><span class="btn">Proceed</span><span class="btn primary">Cancel</span><span class="hint">via $.ui.ask</span></div>
+    <span class="out"><span class="k">fallback text</span>in claude -p or where the ask cannot render: a deny reason Claude reads, with a pointer to the threat model</span>
+  </div>
+  <div class="under">
+    <div><h4>Purpose</h4>Hold rm -rf, a force-push to main and reset --hard before they run, and let the user proceed or cancel; deny with a reason where asking is impossible.</div>
+    <div><h4>Delivers</h4><ul class="dlist"><li><span class="fid">#16</span>Destructive-command guard <span class="tag mod">mod</span></li><li><span class="fid">#13</span>Hook threat model + evasion tests</li></ul></div>
+    <div><h4>States</h4><div class="states"><div><b>Empty</b><span>Not shown for safe commands.</span></div><div><b>Loading</b><span>The call waits while the user decides; this does not count against the 10s limit.</span></div><div><b>Error</b><span>Any exception in the guard denies the call (fail closed) with a one-line reason.</span></div></div></div>
+  </div>
+</div>
+
+<!-- S8 -->
+<div class="screen">
+  <div class="screen-head"><h3>GitHub Actions CI checks</h3><span class="kind">page</span></div>
+  <div class="wire">
+    <div class="wbox"><span class="wlabel">PR checks</span>
+      <div class="mini"><div class="wbox">test matrix 3 OS × 3 Node</div><div class="wbox">manifest gate</div><div class="wbox">pack dry-run</div><div class="wbox">validate --strict</div><div class="wbox">plugin test</div><div class="wbox">token budget</div></div>
+    </div>
+    <div class="wbox"><span class="wlabel">token budget log</span>Always-on estimate vs ceiling, then per-skill size vs soft cap</div>
+    <div class="wbox"><span class="wlabel">scheduled job</span>validate and plugin test against the latest CLI, red on drift</div>
+    <div class="wbox dash"><span class="wlabel">manual workflow</span>Skill-trigger eval against the 30-prompt fixture, with a per-prompt hit/miss table</div>
+  </div>
+  <div class="under">
+    <div><h4>Purpose</h4>A deterministic release gate on every PR, a scheduled drift check against the latest claude CLI, and a manual or nightly trigger eval.</div>
+    <div><h4>Delivers</h4><ul class="dlist"><li><span class="fid">#1</span>GitHub Actions CI</li><li><span class="fid">#6</span>Static token-budget linter</li><li><span class="fid">#11</span>Scheduled latest-CLI job</li><li><span class="fid">#17</span>Skill-trigger eval harness</li></ul></div>
+    <div><h4>States</h4><div class="states"><div><b>Empty</b><span>Not applicable.</span></div><div><b>Loading</b><span>Jobs queued or running.</span></div><div><b>Error</b><span>A failing job names the file and the budget or check that broke; the eval is skipped when no API secret is set.</span></div></div></div>
+  </div>
+</div>
+</section>
+
+<!-- 4 -->
+<section>
+<h2><span class="num">4</span>How screens connect</h2>
+<div class="figure">
+<svg viewBox="0 0 770 415" role="img" aria-label="Navigation map between the eight surfaces">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="s-head"/></marker>
+  </defs>
+  <path class="s-edge" d="M240,65 H280" marker-end="url(#arr)"/>
+  <path class="s-edge" d="M495,65 H535" marker-end="url(#arr)"/>
+  <path class="s-edge" d="M642,40 C642,6 132,6 132,40" marker-end="url(#arr)"/>
+  <path class="s-edge" d="M495,203 H535" marker-end="url(#arr)"/>
+  <path class="s-edge" d="M535,227 H495" marker-end="url(#arr)"/>
+  <path class="s-edge" d="M305,240 V320" marker-end="url(#arr)"/>
+  <path class="s-edge" d="M345,320 V240" marker-end="url(#arr)"/>
+  <path class="s-edge" d="M445,240 V320" marker-end="url(#arr)"/>
+  <path class="s-edge" d="M517,370 V400 H10 V65 H25" marker-end="url(#arr)"/>
+  <path class="s-edge" d="M240,215 H280" marker-end="url(#arr)"/>
+
+  <rect class="s-page" x="25" y="40" width="215" height="50" rx="7"/>
+  <text class="s-t" x="132" y="61" text-anchor="middle">README · why-opm.md</text>
+  <text class="s-t2" x="132" y="78" text-anchor="middle">threat model · listings</text>
+
+  <rect class="s-cmd" x="280" y="40" width="215" height="50" rx="7"/>
+  <text class="s-tc" x="387" y="61" text-anchor="middle">npx opm-core@latest</text>
+  <text class="s-tc2" x="387" y="78" text-anchor="middle">installer</text>
+
+  <rect class="s-cmd" x="535" y="40" width="215" height="50" rx="7"/>
+  <text class="s-tc" x="642" y="61" text-anchor="middle">npx opm-core doctor</text>
+  <text class="s-tc2" x="642" y="78" text-anchor="middle">install health</text>
+
+  <rect class="s-page" x="25" y="190" width="215" height="50" rx="7"/>
+  <text class="s-t" x="132" y="211" text-anchor="middle">GitHub Actions CI</text>
+  <text class="s-t2" x="132" y="228" text-anchor="middle">PR gate · drift job · eval</text>
+
+  <rect class="s-node" x="280" y="190" width="215" height="50" rx="7"/>
+  <text class="s-t" x="387" y="211" text-anchor="middle">In-session context</text>
+  <text class="s-t2" x="387" y="228" text-anchor="middle">routing, resume line, hook feedback</text>
+
+  <rect class="s-cmd" x="535" y="190" width="215" height="50" rx="7"/>
+  <text class="s-tc" x="642" y="211" text-anchor="middle">/opm:status</text>
+  <text class="s-tc2" x="642" y="228" text-anchor="middle">--all · npx fallback</text>
+  <rect class="s-modbg" x="712" y="194" width="32" height="13" rx="3"/><text class="s-modt" x="728" y="203.5" text-anchor="middle">MOD</text>
+
+  <rect class="s-node" x="150" y="320" width="215" height="50" rx="7"/>
+  <text class="s-t" x="257" y="341" text-anchor="middle">Destructive-command hold</text>
+  <text class="s-t2" x="257" y="358" text-anchor="middle">Proceed / Cancel or deny</text>
+  <rect class="s-modbg" x="158" y="304" width="32" height="13" rx="3"/><text class="s-modt" x="174" y="313.5" text-anchor="middle">MOD</text>
+
+  <rect class="s-cmd" x="410" y="320" width="215" height="50" rx="7"/>
+  <text class="s-tc" x="517" y="341" text-anchor="middle">/opm:report</text>
+  <text class="s-tc2" x="517" y="358" text-anchor="middle">opt-in token meter</text>
+  <rect class="s-modbg" x="587" y="324" width="32" height="13" rx="3"/><text class="s-modt" x="603" y="333.5" text-anchor="middle">MOD</text>
+
+  <g>
+    <circle class="s-badge" cx="260" cy="65" r="9"/><text class="s-badge-t" x="260" y="65" text-anchor="middle" dominant-baseline="central">1</text>
+    <circle class="s-badge" cx="515" cy="65" r="9"/><text class="s-badge-t" x="515" y="65" text-anchor="middle" dominant-baseline="central">2</text>
+    <circle class="s-badge" cx="387" cy="15" r="9"/><text class="s-badge-t" x="387" y="15" text-anchor="middle" dominant-baseline="central">3</text>
+    <circle class="s-badge" cx="515" cy="191" r="8"/><text class="s-badge-t" x="515" y="191" text-anchor="middle" dominant-baseline="central">4</text>
+    <circle class="s-badge" cx="515" cy="239" r="8"/><text class="s-badge-t" x="515" y="239" text-anchor="middle" dominant-baseline="central">5</text>
+    <circle class="s-badge" cx="305" cy="280" r="9"/><text class="s-badge-t" x="305" y="280" text-anchor="middle" dominant-baseline="central">6</text>
+    <circle class="s-badge" cx="345" cy="280" r="9"/><text class="s-badge-t" x="345" y="280" text-anchor="middle" dominant-baseline="central">7</text>
+    <circle class="s-badge" cx="445" cy="280" r="9"/><text class="s-badge-t" x="445" y="280" text-anchor="middle" dominant-baseline="central">8</text>
+    <circle class="s-badge" cx="10" cy="300" r="9"/><text class="s-badge-t" x="10" y="300" text-anchor="middle" dominant-baseline="central">9</text>
+    <circle class="s-badge" cx="260" cy="215" r="9"/><text class="s-badge-t" x="260" y="215" text-anchor="middle" dominant-baseline="central">10</text>
+  </g>
+</svg>
+</div>
+<div class="keys"><span class="k-page">page</span><span class="k-cmd">command</span><span class="k-node">other surface</span><span class="k-mod">mod-based</span></div>
+<div class="legend">
+  <div><span class="n">1</span><span>README → installer: copy the install command, or <code>claude plugin install</code> from a listing.</span></div>
+  <div><span class="n">2</span><span>Installer → doctor: run the one next-step line printed at the end.</span></div>
+  <div><span class="n">3</span><span>Doctor → README: follow the fix line or compatibility link on a warn or fail row.</span></div>
+  <div><span class="n">4</span><span>In-session → /opm:status: the resume line names the open ledger; the user types /opm:status.</span></div>
+  <div><span class="n">5</span><span>/opm:status → in-session: ask Claude to resume; executing-plans reads the ledger and continues.</span></div>
+  <div><span class="n">6</span><span>In-session → hold: Claude issues rm -rf, a force-push to main or reset --hard; the tool.call mod holds it.</span></div>
+  <div><span class="n">7</span><span>Hold → in-session: Proceed or Cancel, or an automatic deny with a reason Claude reads.</span></div>
+  <div><span class="n">8</span><span>In-session → /opm:report: type /opm:report to enable the meter or read the summary.</span></div>
+  <div><span class="n">9</span><span>/opm:report → README: the maintainer pastes the measured summary into the numbers section.</span></div>
+  <div><span class="n">10</span><span>CI → in-session: a token-budget failure points to the SKILL.md to split into references/.</span></div>
+</div>
+</section>
+
+<!-- 5 -->
+<section>
+<h2><span class="num">5</span>Data</h2>
+<div class="figure">
+<svg viewBox="0 0 770 330" role="img" aria-label="Entities and their relations">
+  <path class="s-edge" d="M220,52 H285"/>
+  <text class="s-lbl" x="252" y="45" text-anchor="middle">mirrored by</text>
+  <path class="s-edge" d="M650,74 L440,150"/>
+  <text class="s-lbl" x="566" y="104">skillName</text>
+  <path class="s-edge" d="M485,172 H550"/>
+  <text class="s-lbl" x="517" y="165" text-anchor="middle">limited by</text>
+  <path class="s-edge" d="M220,172 H285"/>
+  <text class="s-lbl" x="252" y="165" text-anchor="middle">expects</text>
+  <path class="s-edge" d="M220,292 H285"/>
+  <text class="s-lbl" x="252" y="285" text-anchor="middle">vs version</text>
+
+  <rect class="s-stored" x="20" y="30" width="200" height="44" rx="6"/><text class="s-t" x="120" y="57" text-anchor="middle">PlanLedger</text>
+  <rect class="s-stored" x="285" y="30" width="200" height="44" rx="6"/><text class="s-t" x="385" y="57" text-anchor="middle">SessionStatusEntry</text>
+  <rect class="s-modbg" x="447" y="34" width="32" height="13" rx="3"/><text class="s-modt" x="463" y="43.5" text-anchor="middle">MOD</text>
+  <rect class="s-stored" x="550" y="30" width="200" height="44" rx="6"/><text class="s-t" x="650" y="57" text-anchor="middle">UsageMeterEntry</text>
+  <rect class="s-modbg" x="712" y="34" width="32" height="13" rx="3"/><text class="s-modt" x="728" y="43.5" text-anchor="middle">MOD</text>
+
+  <rect class="s-stored" x="20" y="150" width="200" height="44" rx="6"/><text class="s-t" x="120" y="177" text-anchor="middle">TriggerFixture</text>
+  <rect class="s-stored" x="285" y="150" width="200" height="44" rx="6"/><text class="s-t" x="385" y="177" text-anchor="middle">Skill</text>
+  <rect class="s-stored" x="550" y="150" width="200" height="44" rx="6"/><text class="s-t" x="650" y="177" text-anchor="middle">TokenBudget</text>
+
+  <rect class="s-stored" x="20" y="270" width="200" height="44" rx="6"/><text class="s-t" x="120" y="297" text-anchor="middle">InstalledRuleSet</text>
+  <rect class="s-stored" x="285" y="270" width="200" height="44" rx="6"/><text class="s-t" x="385" y="297" text-anchor="middle">ReleaseMetadata</text>
+</svg>
+</div>
+<div class="grid" style="margin-top:12px">
+  <div class="card entity"><h3>PlanLedger <span class="tag">existing</span></h3><ul><li>docs/plans/&lt;plan&gt;.progress.md</li><li>line 1: "# OPM ledger - plan: &lt;plan path&gt;"</li><li>"Task &lt;N&gt;: complete" lines</li><li>fix-round lines</li><li>Ruling lines (decision, why, cost if wrong)</li><li>pre-flight conflict table</li><li>file mtime</li></ul><div class="rel">Belongs to one plan; source of truth for /opm:status and the resume line; mirrored, never replaced, by SessionStatusEntry.</div></div>
+  <div class="card entity"><h3>SessionStatusEntry <span class="tag mod">mod</span> <span class="tag">new</span></h3><ul><li>stored in $.store</li><li>sessionId, repoPath, branch</li><li>ledgerPath</li><li>tasksDone, tasksTotal</li><li>currentTaskTitle</li><li>lastSeenAt</li></ul><div class="rel">Caches one PlanLedger; many per machine, read together by /opm:status --all; pruned by age to respect the shared 4 MiB store.</div></div>
+  <div class="card entity"><h3>UsageMeterEntry <span class="tag mod">mod</span> <span class="tag">opt-in</span></h3><ul><li>stored in $.store</li><li>isEnabled, timestamp, sessionId</li><li>skillName (from skill.prompt)</li><li>inputTokens, outputTokens</li><li>cacheReadTokens, cacheWriteTokens</li><li>keySizeBytes</li></ul><div class="rel">skillName refers to a Skill; summarized by /opm:report; capped and pruned within its own store key.</div></div>
+  <div class="card entity"><h3>Skill <span class="tag">changed</span></h3><ul><li>skills/&lt;name&gt;/</li><li>name, description</li><li>SKILL.md bytes and estimated tokens (bytes/4)</li><li>references/*.md files</li><li>isUserInvokedOnly (true for brew-idea)</li><li>isAlwaysOn (using-opm)</li></ul><div class="rel">Has many reference files read on demand; limited by a TokenBudget soft cap; the expected target of TriggerFixture rows.</div></div>
+  <div class="card entity"><h3>TokenBudget <span class="tag">new</span></h3><ul><li>CI config</li><li>bytesPerToken = 4</li><li>alwaysOnCeilingTokens, headroomPercent</li><li>perSkillSoftCapTokens</li><li>always-on files: using-opm, rules/common, skill descriptions</li></ul><div class="rel">Checked against every Skill and rules/common by the CI linter; its numbers feed the README beside the meter's.</div></div>
+  <div class="card entity"><h3>TriggerFixture <span class="tag">new</span></h3><ul><li>tests/fixtures</li><li>prompt</li><li>expectedSkill</li><li>sizeClass: small / bounded / multi-week</li></ul><div class="rel">Checked statically against the routing table; reused by the eval harness; eval misses decide whether front-door skills merge.</div></div>
+  <div class="card entity"><h3>InstalledRuleSet <span class="tag">changed</span></h3><ul><li>&lt;repo&gt;/.claude/rules/opm/</li><li>rule sets copied</li><li>version stamp of the plugin that copied them</li><li>installedAt</li></ul><div class="rel">Written by the installer; compared by doctor against ReleaseMetadata.version for freshness.</div></div>
+  <div class="card entity"><h3>ReleaseMetadata</h3><ul><li>package.json, plugin.json, marketplace.json, CHANGELOG</li><li>version (kept in sync)</li><li>testedClaudeCodeRange</li><li>minModVersion = 2.1.287</li><li>npm files allowlist</li><li>marketplace plugins (opm core, explainer-video)</li></ul><div class="rel">Enforced by the CI version/changelog/manifest gate; read by doctor and the README compatibility section.</div></div>
+</div>
+</section>
+
+<!-- 6 -->
+<section>
+<h2><span class="num">6</span>Architecture</h2>
+<div class="figure">
+<svg viewBox="0 0 770 480" role="img" aria-label="Parts of OPM and where each runs">
+  <defs>
+    <marker id="arr2" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="s-head"/></marker>
+  </defs>
+  <rect class="s-zone" x="10" y="10" width="750" height="300" rx="10"/>
+  <text class="s-tz" x="22" y="30">User's machine</text>
+  <rect class="s-sub" x="22" y="42" width="500" height="178" rx="8"/>
+  <text class="s-t2" x="34" y="60">Inside Claude Code (incl. VS Code chat panel)</text>
+
+  <rect class="s-zone" x="10" y="330" width="365" height="140" rx="10"/>
+  <text class="s-tz" x="22" y="350">GitHub-hosted runners</text>
+  <rect class="s-zone" x="395" y="330" width="365" height="140" rx="10"/>
+  <text class="s-tz" x="407" y="350">npm registry and GitHub</text>
+
+  <path class="s-edge" d="M395,128 V236" marker-end="url(#arr2)"/>
+  <text class="s-lbl" x="401" y="190">imports</text>
+  <path class="s-edge" d="M645,128 V264 H510" marker-end="url(#arr2)"/>
+  <text class="s-lbl" x="651" y="190">imports</text>
+  <path class="s-edge" d="M577,370 V310" marker-end="url(#arr2)"/>
+  <text class="s-lbl" x="583" y="325">ships plugins</text>
+
+  <rect class="s-node" x="36" y="72" width="230" height="56" rx="7"/>
+  <text class="s-t" x="151" y="95" text-anchor="middle">Settings command hooks</text>
+  <text class="s-t2" x="151" y="112" text-anchor="middle">any version · one Node process per call</text>
+
+  <rect class="s-node" x="280" y="72" width="230" height="56" rx="7"/>
+  <text class="s-t" x="395" y="95" text-anchor="middle">OPM mod (register.js)</text>
+  <text class="s-t2" x="395" y="112" text-anchor="middle">in-process, v2.1.287+, not sandboxed</text>
+  <rect class="s-modbg" x="472" y="76" width="32" height="13" rx="3"/><text class="s-modt" x="488" y="85.5" text-anchor="middle">MOD</text>
+
+  <rect class="s-node" x="36" y="150" width="230" height="56" rx="7"/>
+  <text class="s-t" x="151" y="173" text-anchor="middle">Skills, references, agents, rules</text>
+  <text class="s-t2" x="151" y="190" text-anchor="middle">loaded into context on demand</text>
+
+  <rect class="s-cmd" x="540" y="72" width="210" height="56" rx="7"/>
+  <text class="s-tc" x="645" y="95" text-anchor="middle">npx opm-core CLI</text>
+  <text class="s-tc2" x="645" y="112" text-anchor="middle">install · doctor · status</text>
+
+  <rect class="s-node" x="280" y="236" width="230" height="56" rx="7"/>
+  <text class="s-t" x="395" y="259" text-anchor="middle">Shared ledger/status module</text>
+  <text class="s-t2" x="395" y="276" text-anchor="middle">new, pure functions, no I/O</text>
+
+  <rect class="s-node" x="36" y="236" width="230" height="56" rx="7"/>
+  <text class="s-t" x="151" y="259" text-anchor="middle">explainer-video plugin</text>
+  <text class="s-t2" x="151" y="276" text-anchor="middle">optional · lazy, pinned tool install</text>
+
+  <rect class="s-node" x="24" y="370" width="337" height="60" rx="7"/>
+  <text class="s-t" x="192" y="393" text-anchor="middle">GitHub Actions CI (new)</text>
+  <text class="s-t2" x="192" y="410" text-anchor="middle">macOS, Linux, Windows · PR gate · drift job · eval</text>
+
+  <rect class="s-node" x="410" y="370" width="337" height="60" rx="7"/>
+  <text class="s-t" x="577" y="393" text-anchor="middle">Distribution</text>
+  <text class="s-t2" x="577" y="410" text-anchor="middle">npm opm-core · GitHub marketplace · listings</text>
+</svg>
+</div>
+<div class="legend">
+  <div><span class="n">·</span><span><b>npx opm-core CLI</b>: runs outside any session on Node &gt;= 18; installs and stamps rules, doctor checks health and replays synthetic hook payloads, status is the fallback before v2.1.287.</span></div>
+  <div><span class="n">·</span><span><b>Shared ledger/status module</b>: parses ledger text into done/total, current task and last ruling, so the CLI, the SessionStart line and /opm:status agree.</span></div>
+  <div><span class="n">·</span><span><b>Settings command hooks</b>: SessionStart context plus the resume line, block-no-verify, config-protection, post-edit accumulator, the 90s Stop typecheck and console.log check; the required fallback below v2.1.287.</span></div>
+  <div><span class="n">·</span><span><b>OPM mod</b> <span class="tag mod">mod</span>: registers /opm:status and /opm:report, the tool.call destructive guard with $.ui.ask and fail-closed .catch, and the opt-in meter in $.store. Text output only. Takes over hot-path hooks only if the dedupe spike passes.</span></div>
+  <div><span class="n">·</span><span><b>Skills, references, agents, rules</b>: using-opm gains the routing table, large skills shrink to about 4KB, brew-idea becomes user-invoked only, stack skills stop duplicating rules.</span></div>
+  <div><span class="n">·</span><span><b>GitHub Actions CI</b>: PR gate (node:test matrix, manifest gate, pack dry-run, token linter, validate --strict, plugin test with a pinned claude CLI), a scheduled drift job, a manual or nightly trigger eval.</span></div>
+  <div><span class="n">·</span><span><b>explainer-video plugin</b>: keeps the headless browser, ffmpeg and cloud edge-tts out of core, and says that narration text goes to a cloud service.</span></div>
+  <div><span class="n">·</span><span><b>Distribution</b>: npm opm-core, GitHub marketplace harshadmadaye/OPM, official and community listings, which go out only after measured numbers and the threat model are published.</span></div>
+</div>
+</section>
+
+<!-- 7 -->
+<section>
+<h2><span class="num">7</span>Stack</h2>
+<div class="stack">
+  <div><b>Node &gt;= 18, CommonJS scripts, zero runtime dependencies (unchanged)</b><span>Small, dependency-free install; hooks stay safe to run on every call.</span></div>
+  <div><b>node:test for unit tests, the token linter and the static trigger fixture</b><span>Deterministic, no network or session, already runs the 15 existing test files.</span></div>
+  <div><b>Plain JavaScript ES module for the mod's register.js <span class="tag mod">mod</span></b><span>Mods load as ES modules; plain JS skips a TypeScript build and keeps zero dependencies.</span></div>
+  <div><b><code>claude plugin validate --strict</code> and <code>claude plugin test</code> (CI only)</b><span>The official way to check mod events and APIs and test mods with stubs and a mock clock, no sign-in or network.</span></div>
+  <div><b>Pinned claude CLI in CI, plus a scheduled job on the latest CLI</b><span>Pinning keeps PR checks stable; the latest-CLI job catches mod API drift early.</span></div>
+  <div><b>GitHub Actions</b><span>Free for a public repo, gives the three-OS matrix, fits the existing .github folder.</span></div>
+  <div><b>$.store for the status cache and opt-in meter <span class="tag mod">mod</span></b><span>Shared by every session on the machine, no network; the on-disk ledger stays the source of truth.</span></div>
+  <div><b>Settings command hooks kept beside the mod in one hooks.json</b><span>Fallback below v2.1.287, and the only place the 90s Stop typecheck can run, since a mod hook is capped at 10s.</span></div>
+  <div><b>Sibling references/ markdown files, not skill.prompt injection</b><span>Simpler, works on every Claude Code version, and the linter can measure it.</span></div>
+  <div><b>Headless browser, ffmpeg and edge-tts move to the explainer-video plugin</b><span>Removes external tools and the cloud TTS call from core, keeping the no-network promise.</span></div>
+</div>
+</section>
+
+<!-- 8 -->
+<section>
+<h2><span class="num">8</span>Plan</h2>
+<p class="hint">Scroll sideways for later phases.</p>
+<div class="timeline">
+  <div class="phase"><span class="pin">1</span><div class="card">
+    <h3>0.7.0 · Safety net and measurement</h3>
+    <p class="goal">Gate every release on deterministic checks and turn the token claim into a CI number. Everything after depends on it.</p>
+    <h4>Features</h4>
+    <ul class="dlist"><li><span class="fid">#1</span>GitHub Actions CI</li><li><span class="fid">#2</span>Remove story-video alias</li><li><span class="fid">#6</span>Static token-budget linter</li><li><span class="fid">#24</span>Drop push-via-api.sh from the package</li></ul>
+    <h4>Risks</h4>
+    <ul class="risks"><li><span>A pinned claude CLI in CI adds a dev-only dependency, and validate output may change.</span></li><li><span>Windows may expose real breakage in dev-server.sh and install-rules.sh, to fix or scope out.</span></li><li><span>bytes/4 is an estimate, so the ceiling needs headroom against flaky failures.</span></li></ul>
+  </div></div>
+  <div class="phase"><span class="pin">2</span><div class="card">
+    <h3>0.7.x · Trim and steady the core</h3>
+    <p class="goal">Cut per-run tokens, make routing obvious, make install and hook failures visible. Settings hooks only; works on every Claude Code version.</p>
+    <h4>Features</h4>
+    <ul class="dlist"><li><span class="fid">#4</span>Routing table + 30-prompt fixture</li><li><span class="fid">#9</span>Split large skills</li><li><span class="fid">#23</span>Merge verification-loop</li><li><span class="fid">#7</span>npx opm-core doctor</li><li><span class="fid">#8</span>Stop hook fails visibly</li><li><span class="fid">#13</span>Hook threat model + evasion tests</li><li><span class="fid">#14</span>brew-idea user-invoked only</li><li><span class="fid">#15</span>Spin out explainer-video</li><li><span class="fid">#20</span>Dedupe stack pattern skills</li></ul>
+    <h4>Risks</h4>
+    <ul class="risks"><li><span>Split skills may lose context the core loop needs; check with the fixture and a manual run.</span></li><li><span>Moving explainer-video breaks existing commands; needs a migration note and a pointer release.</span></li><li><span>The routing table grows using-opm; it must fit within the linter ceiling.</span></li></ul>
+  </div></div>
+  <div class="phase"><span class="pin">3</span><div class="card">
+    <h3>0.8.0 · First mod</h3>
+    <p class="goal">Add status, safety and measured tokens with no model turns. Text output that works in the VS Code panel; every mod has <code>claude plugin test</code> coverage. Needs v2.1.287+, settings hooks kept as fallback.</p>
+    <h4>Features</h4>
+    <ul class="dlist"><li><span class="fid">#10</span>/opm:status + npx fallback + resume line <span class="tag mod">mod</span></li><li><span class="fid">#16</span>Destructive-command guard <span class="tag mod">mod</span></li><li><span class="fid">#12</span>Opt-in token meter + /opm:report <span class="tag mod">mod</span></li><li><span class="fid">#11</span>Tested range + scheduled latest-CLI job</li></ul>
+    <h4>Risks</h4>
+    <ul class="risks"><li><span>The mod API is new and may change; pin the tested version and let the scheduled job catch drift.</span></li><li><span>Mods are unsandboxed: keep the surface small, no network, publish the validate --json list in the README.</span></li><li><span>$.ui.ask may not render in the VS Code panel or claude -p; the guard must deny with a clear reason there.</span></li><li><span>The 4 MiB $.store is shared by every session; the meter must prune and cap its key.</span></li><li><span>Command output Claude reads still costs a few tokens; keep it to a few lines.</span></li></ul>
+  </div></div>
+  <div class="phase"><span class="pin">4</span><div class="card">
+    <h3>0.9.x · Evidence-driven growth</h3>
+    <p class="goal">Use measured data to decide merges, migration, positioning and the multi-project view.</p>
+    <h4>Features</h4>
+    <ul class="dlist"><li><span class="fid">#17</span>Skill-trigger eval harness</li><li><span class="fid">#19</span>Hot-path hooks to mod hooks (gated)</li><li><span class="fid">#5</span>Rewrite README positioning</li><li><span class="fid">#3</span>Submit to marketplaces</li><li><span class="fid">#18</span>/opm:status --all <span class="tag mod">mod</span></li></ul>
+    <h4>Risks</h4>
+    <ul class="risks"><li><span>claude -p may not trigger skills <span class="tag unchecked">not checked online</span>, leaving the eval harness with no signal.</span></li><li><span>With no dedupe path, hooks would fire twice, so the migration may be abandoned.</span></li><li><span>Measured cost may be unfavourable, which would change the positioning story.</span></li><li><span>The multi-project view may serve only the author.</span></li></ul>
+  </div></div>
+</div>
+</section>
+
+<!-- 9 -->
+<section>
+<h2><span class="num">9</span>Decisions</h2>
+<p class="meta">Ranked by impact over effort, on a 1-5 scale. keep = leave as is · improve = change it · add = new · cut = remove or do not build.</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>#</th><th>Feature</th><th>Decision</th><th>Impact</th><th>Effort</th></tr></thead>
+<tbody>
+<tr><td class="n">1</td><td>GitHub Actions CI (3 OS × Node 18/20/22) + manifest gate, pack dry-run, validate --strict</td><td><span class="dec add">add</span></td><td class="c">4</td><td class="c">1</td></tr>
+<tr><td class="n">2</td><td>Remove the story-video alias in 0.7.0</td><td><span class="dec cut">cut</span></td><td class="c">3</td><td class="c">1</td></tr>
+<tr><td class="n">3</td><td>Submit OPM to official and community plugin marketplaces</td><td><span class="dec add">add</span></td><td class="c">3</td><td class="c">1</td></tr>
+<tr><td class="n">4</td><td>Routing table in using-opm + static 30-prompt trigger fixture</td><td><span class="dec improve">improve</span></td><td class="c">5</td><td class="c">2</td></tr>
+<tr><td class="n">5</td><td>Rewrite README and why-opm.md around measured cost and guardrails</td><td><span class="dec add">add</span></td><td class="c">5</td><td class="c">2</td></tr>
+<tr><td class="n">6</td><td>Static token-budget linter (bytes/4) with CI ceiling and soft caps</td><td><span class="dec add">add</span></td><td class="c">4</td><td class="c">2</td></tr>
+<tr><td class="n">7</td><td><code>npx opm-core doctor</code> + installer's one next-step line</td><td><span class="dec add">add</span></td><td class="c">4</td><td class="c">2</td></tr>
+<tr><td class="n">8</td><td>Stop hook skips unchanged languages, warns visibly</td><td><span class="dec improve">improve</span></td><td class="c">4</td><td class="c">2</td></tr>
+<tr><td class="n">9</td><td>Split large skills into a short SKILL.md + references/</td><td><span class="dec improve">improve</span></td><td class="c">4</td><td class="c">2</td></tr>
+<tr><td class="n">10</td><td>/opm:status mod command, npx fallback, SessionStart resume line <span class="tag mod">mod</span></td><td><span class="dec add">add</span></td><td class="c">4</td><td class="c">2</td></tr>
+<tr><td class="n">11</td><td>Declared tested Claude Code range + scheduled latest-CLI job</td><td><span class="dec add">add</span></td><td class="c">4</td><td class="c">2</td></tr>
+<tr><td class="n">12</td><td>Opt-in local usage and token meter + /opm:report <span class="tag mod">mod</span></td><td><span class="dec add">add</span></td><td class="c">4</td><td class="c">2</td></tr>
+<tr><td class="n">13</td><td>Hook threat model doc + tests for known evasions</td><td><span class="dec improve">improve</span></td><td class="c">4</td><td class="c">2</td></tr>
+<tr><td class="n">14</td><td>Make brew-idea user-invoked only</td><td><span class="dec improve">improve</span></td><td class="c">2</td><td class="c">1</td></tr>
+<tr><td class="n">15</td><td>Spin explainer-video out into an optional second plugin</td><td><span class="dec improve">improve</span></td><td class="c">3</td><td class="c">2</td></tr>
+<tr><td class="n">16</td><td>Destructive-command guard as a tool.call mod <span class="tag mod">mod</span></td><td><span class="dec add">add</span></td><td class="c">4</td><td class="c">3</td></tr>
+<tr><td class="n">17</td><td>Skill-trigger eval harness, after a design spike</td><td><span class="dec add">add</span></td><td class="c">4</td><td class="c">3</td></tr>
+<tr><td class="n">18</td><td>Multi-project view via <code>/opm:status --all</code>, replacing /opm:dashboard <span class="tag mod">mod</span></td><td><span class="dec add">add</span></td><td class="c">3</td><td class="c">2</td></tr>
+<tr><td class="n">19</td><td>Migrate hot-path hooks to in-process mod hooks, gated on a dedupe spike</td><td><span class="dec add">add</span></td><td class="c">3</td><td class="c">3</td></tr>
+<tr><td class="n">20</td><td>Dedupe stack pattern skills against the rules</td><td><span class="dec improve">improve</span></td><td class="c">2</td><td class="c">2</td></tr>
+<tr><td class="n">21</td><td>Workflow engine: executing-plans, subagent per task, reviewer gate, ledger</td><td><span class="dec keep">keep</span></td><td class="c">5</td><td class="c">1</td></tr>
+<tr><td class="n">22</td><td>Installer, rules, agents, other skills, dev-server.sh, settings hooks</td><td><span class="dec keep">keep</span></td><td class="c">3</td><td class="c">1</td></tr>
+<tr><td class="n">23</td><td>verification-loop as a separate skill (merge it)</td><td><span class="dec cut">cut</span></td><td class="c">3</td><td class="c">2</td></tr>
+<tr><td class="n">24</td><td>push-via-api.sh in the shipped package</td><td><span class="dec cut">cut</span></td><td class="c">2</td><td class="c">1</td></tr>
+<tr><td class="n">25</td><td>Static HTML /opm:dashboard and a mod-pane dashboard</td><td><span class="dec cut">cut</span></td><td class="c">3</td><td class="c">3</td></tr>
+<tr><td class="n">26</td><td>/opm:start skill and bundled sample repo</td><td><span class="dec cut">cut</span></td><td class="c">5</td><td class="c">3</td></tr>
+<tr><td class="n">27</td><td>Collapse the front-door skills into one router skill</td><td><span class="dec cut">cut</span></td><td class="c">4</td><td class="c">3</td></tr>
+</tbody>
+</table>
+</div>
+<p class="meta" style="margin-top:8px">Market claims behind #3, #5, #12, #16, #17 and #27 (marketplace requirements, superpowers' star count and placement, the head-to-head benchmark, the guard idea, <code>claude -p</code> not triggering skills, the single-router idea) <span class="tag unchecked">not checked online</span></p>
+
+<h3 style="margin-top:20px">Cut and why</h3>
+<div class="cutlist">
+  <div><b>story-video alias</b><span>A deprecated rename costing a description every session; removal already promised for 0.7.0.</span></div>
+  <div><b>verification-loop as a separate skill</b><span>Its trigger overlaps verification-before-completion; merge into one skill with quick and full modes.</span></div>
+  <div><b>push-via-api.sh in the npm package</b><span>An account-specific workaround and extra attack surface for every user.</span></div>
+  <div><b>Static HTML /opm:dashboard and mod-pane dashboard</b><span>Built for one user, rests on an unverified Notification payload, and panes do not draw in the VS Code chat panel. <code>/opm:status --all</code> replaces it.</span></div>
+  <div><b>Mod panes, bands, status line and spinner UI</b><span>Invisible in the VS Code chat panel (YAGNI); text commands, $.ui.log and toasts cover the need. Revisit if terminal or Desktop users ask.</span></div>
+  <div><b>/opm:start skill and sample repo</b><span>A 17th always-on description and a fixture that rots; doctor, the next-step line and the routing table cover first run.</span></div>
+  <div><b>One router skill for the front door</b><span>A rewrite with no trigger data <span class="tag unchecked">not checked online</span>; deferred until evals show collisions.</span></div>
+  <div><b>Live head-to-head benchmark against superpowers</b><span>Noisy, spends tokens, unverified <span class="tag unchecked">not checked online</span>; the opt-in meter gives measured numbers instead.</span></div>
+  <div><b>SessionStart hook offering to install rules</b><span>A hook writing into user repos is a consent and trust problem; rule install stays explicit.</span></div>
+  <div><b>Stop hook mtime-hash cache</b><span>Risks stale-cache false greens and adds complexity before any timeouts are reported (KISS).</span></div>
+  <div><b>Evasion arms race beyond known variants</b><span>It has no end; document the drift-only threat model instead.</span></div>
+  <div><b>Reference injection through skill.prompt</b><span>Plain references/ files are simpler, work on every version and stay visible to the validator.</span></div>
+  <div><b>SessionStart warn-once for out-of-range versions</b><span>Noise in every session; doctor reports the version instead.</span></div>
+  <div><b>Go/Rust/Java stack skills and stack-pack template</b><span>Unverified demand, no external contributors yet (YAGNI).</span></div>
+  <div><b>Selective per-stack skill install</b><span>A plugin ships all its skills, and description cost is small once bodies are split.</span></div>
+  <div><b>Features built on the Notification hook payload</b><span>The payload is unverified; mod events cover status needs without it.</span></div>
+  <div><b>engineering-2b-placeholder</b><span>An empty idea with no content.</span></div>
+</div>
+</section>
+
+<!-- 10 -->
+<section>
+<h2><span class="num">10</span>Open questions and assumptions</h2>
+<div class="challenge">
+  <h3>Challenge these before approving</h3>
+  <div class="cols">
+    <div>
+      <h4>Open questions</h4>
+      <ul>
+        <li>When, if ever, should OPM require Claude Code v2.1.287+ and drop the settings-hook fallback?</li>
+        <li>Is explainer-video important enough to stay in core, or is a separate optional plugin acceptable?</li>
+        <li>Should the destructive-command guard be on by default or opt-in, and which other commands should it hold?</li>
+        <li>Does $.ui.ask render in your VS Code chat panel? A quick test decides whether the guard asks or only denies.</li>
+        <li>Do you or others need the multi-project view, now that it would be text rather than a pane or HTML page?</li>
+        <li>Does an opt-in, local-only meter fit how you want "nothing phones home" worded?</li>
+        <li>Which always-on ceiling should CI enforce: the claimed 2,300, or a measured baseline plus headroom?</li>
+        <li>Should the shell helpers support Windows without WSL, or be documented as WSL-only?</li>
+        <li>Should the brew-idea HTML design page stay on by default?</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Assumptions</h4>
+      <ul>
+        <li>Measured locally: skill files total 152,498 bytes, executing-plans 20,151 bytes; .github holds only templates; hooks.json has command hooks only.</li>
+        <li>A mod's 10s hook limit includes awaited $.process.run, so the Stop typecheck stays a 90s settings hook.</li>
+        <li>A plugin's mod cannot stop its own settings hooks also firing, so migrating hooks risks double-firing and needs a spike.</li>
+        <li>$.command.register commands add no always-on description; their output costs only the few tokens Claude reads.</li>
+        <li>The claude CLI runs <code>plugin validate</code> and <code>plugin test</code> in GitHub Actions without sign-in, as the mods docs state.</li>
+        <li>bytes/4 is good enough for a CI ceiling with headroom.</li>
+        <li>$.ui.ask may not render in the VS Code panel or claude -p, so fail-closed deny is the safe default there.</li>
+        <li>edge-tts sends narration text to a Microsoft cloud endpoint, conflicting with core's no-network promise.</li>
+        <li>A marketplace can list a second, optional plugin from the same repo.</li>
+        <li>The on-disk ledger stays the source of truth; $.store holds only a per-session cache plus one capped, opt-in usage key.</li>
+        <li>The skeptic's rebuttal comments stand for its votes; developer feedback counts for no angle.</li>
+        <li>The developer uses the VS Code chat panel, so every mod surface outputs text and never relies on panes, bands or status lines.</li>
+        <li>register.js loads as an ES module without "type": "module"; otherwise a hooks/package.json or .mjs file is needed (spike).</li>
+        <li><code>claude plugin test</code> runs *.test.ts files without a build step, using the pinned CLI.</li>
+        <li>The shared ledger module is CommonJS imported by the ESM mod; its location is not decided.</li>
+        <li>Store key names (opm.sessions, opm.meter), 14-day pruning and a ~256 KiB meter cap are proposals.</li>
+        <li>The meter toggles with <code>/opm:report --enable</code> and <code>--disable</code>; the verdict only says opt-in.</li>
+        <li>Protected branches are main and master; the exact rm -rf patterns held are not decided.</li>
+        <li>Where $.ui.ask cannot render it throws or reports unsupported, so .catch can deny with a reason.</li>
+        <li>The Stop hook's "nearing the limit" warning fires at about 75s of 90s.</li>
+        <li>The installer writes a version stamp into &lt;repo&gt;/.claude/rules/opm/ for doctor; it does not exist today.</li>
+        <li>doctor exits 0 when all pass, 1 on any fail; warnings exit 0.</li>
+        <li>Starting budget: always-on ceiling ~2,600 tokens (2,300 plus headroom), soft cap ~1,000 tokens (~4KB) per core SKILL.md.</li>
+        <li>Routing thresholds (one file or ~10 lines → tdd-workflow, up to 3 tasks → writing-plans inline, multi-week → milestone-planning) are proposals.</li>
+        <li>The 30-prompt fixture is checked statically; only the eval harness checks real triggering.</li>
+        <li>The eval harness needs an API key secret, runs manually or nightly, and is skipped without it.</li>
+        <li>Initial tested range for mod features is v2.1.287 to v2.1.289; the lowest version the fallback supports is unknown.</li>
+        <li>Windows CI may force dev-server.sh and install-rules.sh to be ported or scoped out as Unix-only.</li>
+        <li>The threat model lives at docs/threat-model.md, linked from the README and the guard's deny text.</li>
+        <li>The explainer-video plugin's name and migration pointer are not decided.</li>
+        <li>Marketplace requirements are unverified <span class="tag unchecked">not checked online</span> and get checked before submission.</li>
+        <li>The resume line only looks for docs/plans/*.progress.md in the current repo and prints at most one line.</li>
+        <li>No supported way to stop settings hooks firing alongside mod hooks is known, so hot-path hooks stay settings hooks by default.</li>
+        <li>All four angles returned proposals and every angle was rebutted.</li>
+        <li>Mods facts come from the official Claude Code docs read on 2026-10-05; the debate rounds predate them, only the judge and designer saw them.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- 11 -->
+<section>
+<h2><span class="num">11</span>Why these choices</h2>
+<details>
+  <summary>Four angles plus one revision: product, engineering, skeptic, market, revision 1</summary>
+  <ul>
+    <li><b>Product</b>: adoption and visibility first; the cost of a 17th always-on description moved /opm:start's job into doctor plus the routing table.</li>
+    <li><b>Engineering</b>: reliability and per-run cost first; its Stop-hook cache was deferred because a stale cache could report a false green.</li>
+    <li><b>Skeptic</b>: stop adding surface and prove the claims; its attacks made positioning and the new guard wait for measured numbers and hardened hooks, and pushed explainer-video out of core.</li>
+    <li><b>Market</b>: win on credibility against superpowers; its finding that <code>claude -p</code> may not trigger skills <span class="tag unchecked">not checked online</span> put a spike before the eval harness, and its rules-install hook was cut on consent grounds.</li>
+    <li><b>Revision 1 (developer feedback)</b>: rerun with the Claude Code mods docs; status, the meter, the guard and the multi-project view became <span class="tag mod">mod</span>-based with settings hooks and an npx fallback kept, and the dashboard and panes were cut because nothing draws in the VS Code chat panel.</li>
+  </ul>
+</details>
+</section>
+
+<footer>
+  Rendered from docs/specs/2026-10-02-opm-brew.md (revision 1) · brew-idea run wf_8a106824-7a3 · angles: product, engineering, skeptic, market · 5 unverified market claims · revisions: 1 (re-judged in light of Claude Code mods, from the official mods docs read 2026-10-05).
+</footer>
+
+</main>
+</body>
+</html>
