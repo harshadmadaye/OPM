@@ -9,6 +9,7 @@ engineering workflow: brainstorm a design, write a plan, build it test-first
 with fresh-context subagents, review it, and verify it before anything is
 called done. It keeps token costs down while it does.
 
+[![CI](https://github.com/harshadmadaye/OPM/actions/workflows/ci.yml/badge.svg)](https://github.com/harshadmadaye/OPM/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/opm-core.svg)](https://www.npmjs.com/package/opm-core)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-d97757.svg)](https://docs.claude.com/en/docs/claude-code/plugins)
@@ -58,9 +59,13 @@ being wiped, so if the session resets, the work does not restart.
 | "Tests pass" | Sometimes a guess | Pasted output, or it does not count |
 | If the session resets | Start over | The ledger picks up where it stopped |
 
-Carrying all of this costs about **2,300 tokens** in every session. That is the
-entire always-on price. Everything else loads only when it is actually used,
-and you can check the number yourself with `claude plugin details opm`.
+Carrying all of this costs about **2,541 tokens** in every session. That is the
+entire always-on price. The rules add about **1,401 tokens** when the rules are
+installed. Everything else loads only when it is actually used.
+
+These are bytes / 4 estimates. CI checks them with `npm run tokens` and fails if
+they grow past a ceiling. The full table is in [docs/why-opm.md](docs/why-opm.md).
+You can also check the plugin with `claude plugin details opm`.
 
 ---
 
@@ -198,6 +203,13 @@ recognised afterwards, run `/reload-plugins`. If your git reaches GitHub over
 SSH and that fails, set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1`.
 
 Nothing here phones home and nothing runs a model behind your back.
+
+### Platforms
+
+You need Node 18 or later. The installer, hooks and tests run on macOS, Linux
+and Windows, and CI tests all three. `scripts/dev-server.sh` and
+`scripts/install-rules.sh` are shell scripts, so they run on macOS, Linux and
+WSL only.
 
 ---
 
