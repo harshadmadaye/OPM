@@ -1,15 +1,15 @@
 # OPM 0.7-0.9 State
 
 **Goal:** a measured, CI-gated, low-token OPM where status, safety and cost checks run as code instead of model turns.
-**Current focus:** Phase 3 - First mod
+**Current focus:** Phase 4 - Evidence-driven growth
 
 ## Position
 
-Phase: 3 of 4 (First mod)
-Plan: 0 of 6 in this phase
+Phase: 4 of 4 (Evidence-driven growth)
+Plan: 0 of 5 in this phase
 Status: Ready to execute
-Last activity: 2026-10-05 - Phase 2 complete (0.7.1 on feat/0.7.1-trim-the-core)
-Progress: 11 / 11 planned plans done (phases 1-2)
+Last activity: 2026-10-05 - Phase 3 complete (0.8.0 on feat/0.8.0-first-mod); PRs #1-#3 open, CI green
+Progress: 17 / 22 plans done (phases 1-3)
 
 ## Recent decisions
 
@@ -21,7 +21,7 @@ Progress: 11 / 11 planned plans done (phases 1-2)
 
 ## Open blockers
 
-- Pushing needs the personal `harshadmadaye` gh account; only dev-firsteconomy and harshadmadaye-fe are signed in. Unblock: `gh auth login` as harshadmadaye.
+- Pushes use harshadmadaye's token per command (GH_TOKEN from `gh auth token -u harshadmadaye`, credential helpers reset); the active gh account stays dev-firsteconomy.
 - Phase 3 mods need Claude Code >= 2.1.287; this machine runs 2.1.273. Mods cannot be exercised in a live session here until Claude Code is updated.
 
 ## Deferred issues
@@ -33,7 +33,7 @@ Progress: 11 / 11 planned plans done (phases 1-2)
 ## Session continuity
 
 Last session: 2026-10-05
-Stopped at: Phase 2 closed
-Next: execute Phase 3 wave 1 (03-01, 03-05)
+Stopped at: Phase 3 closed
+Next: execute Phase 4 wave 1 (04-01, 04-02, 04-03)
 
 Notes for executors: subagents cannot write SUMMARY files (harness guard); the orchestrator writes them from the subagent's report. Until 0.7.1 is installed, the session's live block-no-verify hook is the 0.6.1 copy, which blocks Bash text that mentions git commit hook-skip flags or husky env assignments even in heredocs; use Write/Edit for such content.

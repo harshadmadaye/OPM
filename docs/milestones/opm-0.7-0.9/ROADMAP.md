@@ -34,7 +34,7 @@ Goal: status, safety and measured tokens with no model turns, as text that works
 
 Features: `/opm:status` mod command plus `npx opm-core status` fallback and a SessionStart resume line; destructive-command guard as a `tool.call` mod; opt-in local token meter plus `/opm:report`; declared tested Claude Code range plus a scheduled latest-CLI CI job.
 
-Status: Planned (6 plans, 4 waves: 03-01 + 03-05, then 03-02, then 03-03 + 03-04, then 03-06)
+Status: Complete (2026-10-05), released as 0.8.0 on the branch. Commands are /opm-status and /opm-report (names cannot contain a colon).
 
 ## Phase 4: Evidence-driven growth (0.9.0)
 
@@ -42,4 +42,4 @@ Goal: use measured data to decide merges, migration, positioning and the multi-p
 
 Features: skill-trigger eval harness after a design spike; hot-path hooks to mod hooks, gated on a dedupe spike; README positioning rewrite around measured numbers; marketplace submissions; `/opm:status --all`.
 
-Status: Not planned
+Status: Planned (5 plans, 3 waves: 04-01 + 04-02 + 04-03, then 04-04, then 04-05)
