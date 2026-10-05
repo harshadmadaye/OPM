@@ -345,6 +345,39 @@ test('session-start: injects fixture skill content with frontmatter stripped', (
   assert.doesNotMatch(out.additionalContext, /description: fixture/);
 });
 
+test('session-start: adds exactly one resume line when the cwd has an open ledger', () => {
+  const pluginRoot = path.join(tmpRoot, 'plugin');
+  writeFixture('plugin/skills/using-opm/SKILL.md', '---\nname: using-opm\n---\n# Using OPM\n\nAlways start here.\n');
+  const repo = path.join(tmpRoot, 'resume-repo');
+  writeFixture('resume-repo/docs/plans/2026-10-01-auth.md', '### Task 1: Model\n### Task 2: Route\n');
+  writeFixture('resume-repo/docs/plans/2026-10-01-auth.progress.md', '# OPM ledger - plan: docs/plans/2026-10-01-auth.md\nTask 1: complete\n');
+  const baseline = parseOutput(runHook('session-start.js', { cwd: path.join(tmpRoot, 'no-ledger') }, { CLAUDE_PLUGIN_ROOT: pluginRoot }).stdout);
+  const { status, stdout } = runHook('session-start.js', { session_id: SESSION, source: 'startup', cwd: repo }, { CLAUDE_PLUGIN_ROOT: pluginRoot });
+  assert.equal(status, 0);
+  const context = parseOutput(stdout).hookSpecificOutput.additionalContext;
+  const baseLines = baseline.hookSpecificOutput.additionalContext.split('\n');
+  const added = context.split('\n').filter((line) => !baseLines.includes(line));
+  assert.equal(added.length, 1, added.join('\n'));
+  assert.match(added[0], /docs\/plans\/2026-10-01-auth\.progress\.md/);
+  assert.match(added[0], /1 of 2/);
+  assert.match(context, /<\/opm-plugin>$/);
+});
+
+test('session-start: output is unchanged when the cwd has no open ledger', () => {
+  const pluginRoot = path.join(tmpRoot, 'plugin');
+  writeFixture('plugin/skills/using-opm/SKILL.md', '---\nname: using-opm\n---\n# Using OPM\n\nAlways start here.\n');
+  writeFixture('done-repo/docs/plans/x.progress.md', '# OPM ledger - plan: docs/plans/x.md\nMode: inline (1 tasks)\nTask 1: complete\n');
+  writeFixture('bad-repo/docs/plans/y.progress.md', 'not a ledger\n');
+  const expected = '<opm-plugin>\n' +
+    "The OPM plugin is active. Below is the full content of its 'opm:using-opm' skill; " +
+    'use the Skill tool for every other opm skill.\n\n# Using OPM\n\nAlways start here.\n</opm-plugin>';
+  for (const cwd of [path.join(tmpRoot, 'done-repo'), path.join(tmpRoot, 'bad-repo'), path.join(tmpRoot, 'nowhere'), 42]) {
+    const { status, stdout } = runHook('session-start.js', { cwd }, { CLAUDE_PLUGIN_ROOT: pluginRoot });
+    assert.equal(status, 0, String(cwd));
+    assert.equal(parseOutput(stdout).hookSpecificOutput.additionalContext, expected, String(cwd));
+  }
+});
+
 test('session-start: silent when the skill file is missing', () => {
   const { status, stdout } = runHook('session-start.js', {}, { CLAUDE_PLUGIN_ROOT: path.join(tmpRoot, 'missing') });
   assert.equal(status, 0);
