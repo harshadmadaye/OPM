@@ -53,6 +53,6 @@ the patterns and worked examples.
 ## Related skills
 
 - `opm:tdd-workflow` - pytest RED/GREEN cycle with `uv run pytest`.
-- `opm:verification-loop` - the uv/ruff/pytest gate sequence.
+- `opm:verification-before-completion` (full gate) - the uv/ruff/pytest gate sequence.
 
 <!-- Adapted from affaan-m/ecc (MIT) -->

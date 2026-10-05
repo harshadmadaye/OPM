@@ -131,7 +131,7 @@ the four stop conditions in `opm:executing-plans`.
 
 ## Phase 7: verify
 
-1. Run `opm:verification-loop` on the whole project.
+1. Run `opm:verification-before-completion` (full gate) on the whole project.
 2. Dispatch `code-reviewer`, `security-reviewer` and `silent-failure-hunter` in parallel on the full tree.
 3. Fix every CRITICAL and HIGH finding, then rerun the loop.
 4. Run `opm:verification-before-completion`. G4 needs real output, not a summary.

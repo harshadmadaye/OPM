@@ -216,7 +216,7 @@ WSL only.
 ## Everything in the box
 
 <details>
-<summary><b>All 15 skills</b> — invoked as <code>/opm:&lt;name&gt;</code>, or picked up automatically when they match the task</summary>
+<summary><b>All 14 skills</b> — invoked as <code>/opm:&lt;name&gt;</code>, or picked up automatically when they match the task</summary>
 
 **The loop**
 
@@ -227,7 +227,7 @@ WSL only.
 | `brainstorming` | No code before the design is agreed. One question at a time, scaled to the size of the job. |
 | `writing-plans` | Turns an approved spec into bite-sized tasks, each with a failing test, implementation and commit. |
 | `executing-plans` | Runs a plan with one fresh subagent per task and a reviewer gate after each. Ledger survives compaction. |
-| `verification-before-completion` | No "done", "fixed" or "passing" without fresh command output as evidence. |
+| `verification-before-completion` | No "done", "fixed" or "passing" without fresh command output as evidence. A full gate (build, types, lint, tests, secrets scan, diff review) runs before a PR or release. |
 | `compound-learnings` | Captures non-obvious fixes as short docs, and reads them back before planning. |
 
 **Bigger scope**
@@ -243,7 +243,6 @@ WSL only.
 | Skill | What it does |
 |---|---|
 | `tdd-workflow` | Strict red, green, refactor with a "fails for the right reason" gate and an evidence report. |
-| `verification-loop` | Build, types, lint, tests, secrets scan and diff review, with a pass or fail report. |
 
 **Stack patterns**
 
@@ -292,7 +291,7 @@ Set `OPM_HOOKS_DISABLED=1` to turn them all off. Per-hook switches are
 ```
 .claude-plugin/   plugin.json, marketplace.json
 agents/           5 subagents
-skills/           15 skills (SKILL.md plus templates/scripts where needed)
+skills/           14 skills (SKILL.md plus templates/scripts where needed)
 hooks/            hooks.json and 6 dependency-free Node scripts
 rules/            copied into <repo>/.claude/rules/opm/ by the installer
 bin/              the npx installer

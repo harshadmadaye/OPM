@@ -63,6 +63,6 @@ One approach per app: rule `dart/coding-style.md` (Architecture).
 ## Related skills
 
 - `opm:tdd-workflow` - `flutter test` RED/GREEN cycle.
-- `opm:verification-loop` - `dart analyze` and `flutter test` as the release gate.
+- `opm:verification-before-completion` (full gate) - `dart analyze` and `flutter test` as the release gate.
 
 <!-- Adapted from affaan-m/ecc (MIT) -->

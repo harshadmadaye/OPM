@@ -67,6 +67,6 @@ its subtree and loses state.
 ## Related skills
 
 - `opm:tdd-workflow` - component behaviour tests with Testing Library before implementation.
-- `opm:verification-loop` - build, `tsc --noEmit`, lint, tests before claiming done.
+- `opm:verification-before-completion` (full gate) - build, `tsc --noEmit`, lint, tests before claiming done.
 
 <!-- Adapted from affaan-m/ecc (MIT) -->
