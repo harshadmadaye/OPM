@@ -5,32 +5,19 @@
 // Set OPM_ALLOW_CONFIG_EDITS=1 to allow such edits without asking.
 // Creating a config that does not exist yet is always allowed. A .git/config
 // edit asks only when it changes core.hooksPath (see docs/threat-model.md).
+// The rules live in hooks/lib/bypass-rules.mjs, shared with the mod; when the
+// mod is running (OPM_MOD_ACTIVE=<session id>) it asks in process and this script steps aside.
 
-if (process.env.OPM_HOOKS_DISABLED === '1' || process.env.OPM_ALLOW_CONFIG_EDITS === '1') process.exit(0);
+if (
+  process.env.OPM_HOOKS_DISABLED === '1' ||
+  process.env.OPM_ALLOW_CONFIG_EDITS === '1'
+) process.exit(0);
 process.on('uncaughtException', () => process.exit(0));
 
 const fs = require('fs');
-const path = require('path');
 
 const MAX_STDIN = 1024 * 1024;
 const STDIN_TIMEOUT_MS = 3000;
-const PROTECTED_BASENAMES = [
-  /^\.eslintrc(\..+)?$/i,
-  /^eslint\.config\.[cm]?[jt]s$/i,
-  /^\.prettierrc(\..+)?$/i,
-  /^prettier\.config\.[cm]?js$/i,
-  /^biome\.jsonc?$/i,
-  /^tsconfig(\..+)?\.json$/i,
-  /^\.?ruff\.toml$/i,
-  /^analysis_options\.yaml$/i,
-  /^\.editorconfig$/i,
-];
-const HUSKY_DIR = /(^|[\\/])\.husky[\\/]/;
-const PYPROJECT = /^pyproject\.toml$/i;
-const LINT_SECTION_HEADER = /^\s*\[tool\.(ruff|mypy)(\.|\])/;
-const ANY_SECTION_HEADER = /^\s*\[/;
-const GIT_CONFIG_FILE = /(^|[\\/])\.git[\\/]config$/;
-const HOOKS_PATH_LINE = /^\s*hookspath\s*=.*$/gim;
 
 function readStdin(cb) {
   let data = '';
@@ -54,85 +41,45 @@ function readFileOrNull(filePath) {
   try { return fs.readFileSync(filePath, 'utf8'); } catch { return null; }
 }
 
-// The [tool.ruff*] / [tool.mypy*] sections of a pyproject.toml, as one string.
-function lintSections(toml) {
-  const kept = [];
-  let inLintSection = false;
-  for (const line of toml.split('\n')) {
-    if (ANY_SECTION_HEADER.test(line)) inLintSection = LINT_SECTION_HEADER.test(line);
-    if (inLintSection) kept.push(line.trim());
+// The file facts configEditKind needs, read only as far as configLookup asks.
+function fileFacts(lookup, filePath) {
+  if (lookup === 'content') {
+    const content = readFileOrNull(filePath);
+    return { exists: content !== null || fileExists(filePath), content };
   }
-  return kept.join('\n');
+  return { exists: fileExists(filePath), content: null };
 }
 
-// Apply the proposed Write/Edit/MultiEdit to the current pyproject content.
-function simulateEdit(toolName, toolInput, existing) {
-  if (toolName === 'Write') return typeof toolInput.content === 'string' ? toolInput.content : existing;
-  const edits = toolName === 'MultiEdit' && Array.isArray(toolInput.edits) ? toolInput.edits : [toolInput];
-  let result = existing;
-  for (const edit of edits) {
-    if (!edit || typeof edit.old_string !== 'string' || typeof edit.new_string !== 'string') continue;
-    result = edit.replace_all
-      ? result.split(edit.old_string).join(edit.new_string)
-      : result.replace(edit.old_string, () => edit.new_string);
-  }
-  return result;
-}
-
-function pyprojectTouchesLintConfig(toolName, toolInput, filePath) {
-  const existing = readFileOrNull(filePath);
-  if (existing === null) return false;
-  const proposed = simulateEdit(toolName, toolInput, existing);
-  return lintSections(existing) !== lintSections(proposed);
-}
-
-function hooksPathLines(gitConfig) {
-  return (gitConfig.match(HOOKS_PATH_LINE) || []).map((line) => line.trim()).join('\n');
-}
-
-// Pointing core.hooksPath elsewhere (or removing it) silently disables git hooks.
-function gitConfigTouchesHooksPath(toolName, toolInput, filePath) {
-  const existing = readFileOrNull(filePath) || '';
-  const proposed = simulateEdit(toolName, toolInput, existing);
-  return hooksPathLines(existing) !== hooksPathLines(proposed);
-}
-
-function classify(toolName, toolInput) {
-  const filePath = toolInput.file_path;
-  if (typeof filePath !== 'string' || !filePath) return null;
-  const basename = path.basename(filePath);
-  if (GIT_CONFIG_FILE.test(filePath)) {
-    return gitConfigTouchesHooksPath(toolName, toolInput, filePath) ? 'git config core.hooksPath setting' : null;
-  }
-  if (HUSKY_DIR.test(filePath)) return fileExists(filePath) ? 'git hook script' : null;
-  if (PYPROJECT.test(basename)) {
-    return pyprojectTouchesLintConfig(toolName, toolInput, filePath) ? '[tool.ruff]/[tool.mypy] config' : null;
-  }
-  if (!PROTECTED_BASENAMES.some((pattern) => pattern.test(basename))) return null;
-  return fileExists(filePath) ? 'linter/formatter/typecheck config' : null;
-}
-
-function ask(filePath, kind) {
+function ask(reason) {
   const output = {
     hookSpecificOutput: {
       hookEventName: 'PreToolUse',
       permissionDecision: 'ask',
-      permissionDecisionReason:
-        `OPM: ${path.basename(filePath)} is a ${kind}. Agents often loosen these to make ` +
-        'checks pass instead of fixing the code. Approve only if this config change is ' +
-        'genuinely intended (or set OPM_ALLOW_CONFIG_EDITS=1 to skip this prompt).',
+      permissionDecisionReason: reason,
     },
   };
   process.stdout.write(JSON.stringify(output) + '\n');
 }
 
-readStdin((raw) => {
+// The mod sets OPM_MOD_ACTIVE to its session id; only a hook call from that
+// same session steps aside, so a variable inherited by a nested, older Claude
+// Code (a different session) never silences these checks.
+function isHandledByMod(input) {
+  const active = process.env.OPM_MOD_ACTIVE;
+  return Boolean(active) && Boolean(input) && input.session_id === active;
+}
+
+readStdin(async (raw) => {
   try {
     const input = raw.trim() ? JSON.parse(raw) : {};
+    if (isHandledByMod(input)) return;
     const toolInput = input && input.tool_input;
     if (!toolInput || typeof toolInput !== 'object') return;
-    const kind = classify(input.tool_name || 'Edit', toolInput);
-    if (kind) ask(toolInput.file_path, kind);
+    const { configLookup, configEditKind, configAskReason } = await import('../lib/bypass-rules.mjs');
+    const lookup = configLookup(toolInput.file_path);
+    if (lookup === null) return;
+    const kind = configEditKind(input.tool_name || 'Edit', toolInput, fileFacts(lookup, toolInput.file_path));
+    if (kind) ask(configAskReason(toolInput.file_path, kind));
   } catch {
     // Malformed input or internal error: never block the user.
   }
