@@ -1,8 +1,8 @@
 'use strict';
 // Tests for the OPM hook scripts. Run with: node --test tests/hooks.test.js
 // Each script is spawned as a real process with crafted stdin JSON, exactly as
-// Claude Code would invoke it. TMPDIR is pointed at a per-run temp dir so the
-// accumulator files never leak into the real temp directory.
+// Claude Code would invoke it. TMPDIR, TEMP and TMP all point at a per-run temp
+// dir so the accumulator files never leak into the real temp directory.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -18,7 +18,8 @@ const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'opm-hooks-test-'));
 test.after(() => fs.rmSync(tmpRoot, { recursive: true, force: true }));
 
 function runHook(name, input, extraEnv = {}) {
-  const env = { ...process.env, TMPDIR: tmpRoot };
+  // os.tmpdir() reads TMPDIR on POSIX and TEMP/TMP on Windows; set all three.
+  const env = { ...process.env, TMPDIR: tmpRoot, TEMP: tmpRoot, TMP: tmpRoot };
   delete env.OPM_HOOKS_DISABLED;
   delete env.OPM_ALLOW_CONFIG_EDITS;
   Object.assign(env, extraEnv);
@@ -128,10 +129,11 @@ test('post-edit-accumulator: writes deduped per-session list, no output', () => 
     session_id: SESSION, tool_name: 'MultiEdit', tool_input: { file_path: '/tmp/b.py', edits: [{ file_path: '/tmp/c.dart' }] },
   });
   const lines = fs.readFileSync(accumulatorFile(), 'utf8').trim().split('\n');
-  assert.deepEqual(lines, ['/tmp/a.ts', '/tmp/b.py', '/tmp/c.dart']);
+  // The hook stores path.resolve()d paths, which gain a drive letter on Windows.
+  assert.deepEqual(lines, ['/tmp/a.ts', '/tmp/b.py', '/tmp/c.dart'].map((file) => path.resolve(file)));
   const { stdout } = runHook('post-edit-accumulator.js', editInput('/tmp/d.js'), { OPM_HOOKS_DISABLED: '1' });
   assert.equal(stdout, '');
-  assert.equal(fs.readFileSync(accumulatorFile(), 'utf8').includes('/tmp/d.js'), false);
+  assert.equal(fs.readFileSync(accumulatorFile(), 'utf8').includes(path.resolve('/tmp/d.js')), false);
 });
 
 test('check-console-log: warns on console.log in an edited fixture, skips tests and allow-marker', () => {

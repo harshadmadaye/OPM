@@ -8,6 +8,8 @@ const path = require('node:path');
 const net = require('node:net');
 
 const SCRIPT = path.join(__dirname, '..', 'scripts', 'dev-server.sh');
+// Decision (OPM 0.7-0.9): native Windows covers Node parts only.
+const POSIX_ONLY = { skip: process.platform === 'win32' ? 'shell helpers are macOS/Linux/WSL only' : false };
 
 function run(args) {
   const result = spawnSync('sh', [SCRIPT, ...args], { encoding: 'utf8' });
@@ -23,7 +25,7 @@ function freePort() {
 
 function pidAlive(pid) { try { process.kill(pid, 0); return true; } catch { return false; } }
 
-test('dev-server.sh start, status, duplicate start, stop', async () => {
+test('dev-server.sh start, status, duplicate start, stop', POSIX_ONLY, async () => {
   const project = fs.mkdtempSync(path.join(os.tmpdir(), 'opm-devserver-'));
   fs.writeFileSync(path.join(project, '.gitignore'), 'node_modules/\n');
   const port = await freePort();
@@ -52,7 +54,7 @@ test('dev-server.sh start, status, duplicate start, stop', async () => {
   fs.rmSync(project, { recursive: true, force: true });
 });
 
-test('dev-server.sh start without --url only detaches', () => {
+test('dev-server.sh start without --url only detaches', POSIX_ONLY, () => {
   const project = fs.mkdtempSync(path.join(os.tmpdir(), 'opm-devserver-'));
   const start = run(['start', '--project', project, '--name', 'mobile', '--', 'sleep', '5']);
   assert.strictEqual(start.code, 0, start.out);
@@ -62,7 +64,7 @@ test('dev-server.sh start without --url only detaches', () => {
   fs.rmSync(project, { recursive: true, force: true });
 });
 
-test('dev-server.sh reports a process that exits before ready', async () => {
+test('dev-server.sh reports a process that exits before ready', POSIX_ONLY, async () => {
   const project = fs.mkdtempSync(path.join(os.tmpdir(), 'opm-devserver-'));
   const port = await freePort();
   const start = run(['start', '--project', project, '--name', 'web', '--url', `http://localhost:${port}`, '--', 'node', '-e', 'console.log("boom");process.exit(1)']);
@@ -71,7 +73,7 @@ test('dev-server.sh reports a process that exits before ready', async () => {
   fs.rmSync(project, { recursive: true, force: true });
 });
 
-test('dev-server.sh rejects missing project', () => {
+test('dev-server.sh rejects missing project', POSIX_ONLY, () => {
   const result = run(['status', '--project', '/nonexistent/opm-project']);
   assert.strictEqual(result.code, 1);
 });
