@@ -12,3 +12,5 @@ Deferred enhancements and known gaps found during execution, numbered ISS-NNN. R
 - ISS-008: verification-before-completion SKILL.md is 1,371 tokens, over the 1,200 soft cap (warn only, not an enforced skill); trim or enforce later (found in 02-02).
 - ISS-009: bin/install.js USAGE text lists neither `doctor` nor `status` (found in 03-01).
 - ISS-010: the weekly scheduled CI run shares the main concurrency group (can cancel or be cancelled by a push) and runs the full matrix, not only latest-cli (found in 03-05).
+- ISS-011: the guard does not hold deleting main (push origin :main, --delete main) or rm -rf on an unset $VAR/ path (found in 03-03).
+- ISS-012: the meter store key is shared across sessions, so a read-then-write race can drop an entry; skill credit is approximate with parallel subagents; no mod feature has run in a live session yet because the installed CLI is 2.1.273 (found in 03-04).
