@@ -4,6 +4,10 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Weekly drift check against the latest Claude Code CLI (latest-cli job).
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -13,8 +17,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Pinned Claude Code CLI for manifest validation. Phase 3 adds a scheduled
-  # job that runs the same checks against the latest CLI.
+  # Pinned Claude Code CLI for manifest validation and mod tests. The
+  # latest-cli job runs the same checks against @latest on a schedule.
   CLAUDE_CODE_VERSION: 2.1.289
 
 jobs:
@@ -54,3 +58,35 @@ jobs:
         run: claude plugin validate --strict .
       - name: Validate plugin manifest
         run: claude plugin validate --strict .claude-plugin/plugin.json
+      # `claude plugin test` runs only *.test.ts / *.test.tsx and exits 1 when
+      # hooks.json names no module, so skip until the mod tests exist.
+      - name: Mod tests
+        run: |
+          if [ -z "$(git ls-files '*.test.ts' '*.test.tsx')" ]; then
+            echo "No *.test.ts mod tests yet; skipping claude plugin test."
+            exit 0
+          fi
+          claude plugin test .
+
+  latest-cli:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install latest Claude Code CLI
+        run: npm install -g "@anthropic-ai/claude-code@latest"
+      - run: claude --version
+      - name: Validate marketplace manifest
+        run: claude plugin validate --strict .
+      - name: Validate plugin manifest
+        run: claude plugin validate --strict .claude-plugin/plugin.json
+      - name: Mod tests
+        run: |
+          if [ -z "$(git ls-files '*.test.ts' '*.test.tsx')" ]; then
+            echo "No *.test.ts mod tests yet; skipping claude plugin test."
+            exit 0
+          fi
+          claude plugin test .
