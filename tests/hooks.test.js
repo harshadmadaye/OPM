@@ -173,8 +173,92 @@ test('stop-format-typecheck: empty list exits silently; processed list is cleare
   fs.writeFileSync(accumulatorFile('fmt'), file + '\n');
   const { status, stdout } = runHook('stop-format-typecheck.js', { session_id: 'fmt', cwd: tmpRoot }, { OPM_SKIP_FORMAT: '1' });
   assert.equal(status, 0);
-  assert.equal(stdout, '');
+  const message = parseOutput(stdout).systemMessage;
+  assert.match(message, /prettier: skipped \(OPM_SKIP_FORMAT=1\)/);
+  assert.match(message, /tsc: skipped \(no tsconfig\.json\)/);
   assert.equal(fs.existsSync(accumulatorFile('fmt')), false);
+});
+
+// A fake CLI on a stubbed PATH: a node script plus a POSIX sh or Windows .cmd shim.
+function writeFakeTool(dir, name, body) {
+  fs.mkdirSync(dir, { recursive: true });
+  const script = path.join(dir, `${name}-impl.js`);
+  fs.writeFileSync(script, body, 'utf8');
+  if (process.platform === 'win32') {
+    fs.writeFileSync(path.join(dir, `${name}.cmd`), `@"${process.execPath}" "${script}" %*\r\n`);
+    return;
+  }
+  const shim = path.join(dir, name);
+  fs.writeFileSync(shim, `#!/bin/sh\nexec "${process.execPath}" "${script}" "$@"\n`);
+  fs.chmodSync(shim, 0o755);
+}
+
+function envWithPath(dir, extra = {}) {
+  const env = {};
+  for (const key of Object.keys(process.env)) if (key.toLowerCase() === 'path') env[key] = undefined;
+  return { ...env, PATH: dir, ...extra };
+}
+
+function runStop(sessionId, files, extraEnv) {
+  fs.writeFileSync(accumulatorFile(sessionId), files.join('\n') + '\n');
+  return runHook('stop-format-typecheck.js', { session_id: sessionId, cwd: tmpRoot }, extraEnv);
+}
+
+const SLEEP_ON_FORMAT = (ms) =>
+  `if (process.argv[2] === 'format') Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ${ms});\n`;
+
+test('stop-format-typecheck: missing tool warns, unchanged language says skipped', () => {
+  writeFixture('nopath/pyproject.toml', '[project]\nname = "x"\n');
+  const py = writeFixture('nopath/app.py', 'x = 1\n');
+  const dart = writeFixture('nopath/lib/a.dart', 'void main() {}\n');
+  const emptyBin = path.join(tmpRoot, 'empty-bin');
+  fs.mkdirSync(emptyBin, { recursive: true });
+  const { status, stdout } = runStop('nopath', [py, dart], envWithPath(emptyBin));
+  assert.equal(status, 0);
+  const message = parseOutput(stdout).systemMessage;
+  assert.match(message, /ruff: not found on PATH, install it or set OPM_SKIP_FORMAT=1/);
+  assert.match(message, /dart: not found on PATH, install it or set OPM_SKIP_FORMAT=1/);
+  assert.match(message, /tsc: skipped \(no \.js\/\.ts changed\)/);
+});
+
+test('stop-format-typecheck: a working tool reports what it did', () => {
+  const bin = path.join(tmpRoot, 'ok-bin');
+  writeFakeTool(bin, 'ruff', 'process.exit(0);\n');
+  writeFixture('okpy/pyproject.toml', '[project]\nname = "x"\n');
+  const py = writeFixture('okpy/app.py', 'x = 1\n');
+  const message = parseOutput(runStop('okpy', [py], envWithPath(bin)).stdout).systemMessage;
+  assert.match(message, /ruff: formatted 1 file, check passed in /);
+  assert.match(message, /dart: skipped \(no \.dart changed\)/);
+});
+
+test('stop-format-typecheck: a slow tool triggers the stopped-early line', () => {
+  const bin = path.join(tmpRoot, 'slow-bin');
+  writeFakeTool(bin, 'ruff', SLEEP_ON_FORMAT(3000));
+  writeFakeTool(bin, 'dart', 'process.exit(0);\n');
+  writeFixture('slow/pyproject.toml', '[project]\nname = "x"\n');
+  const py = writeFixture('slow/app.py', 'x = 1\n');
+  const dart = writeFixture('slow/lib/a.dart', 'void main() {}\n');
+  const { status, stdout } = runStop('slow', [py, dart], envWithPath(bin, { OPM_STOP_BUDGET_MS: '2000' }));
+  assert.equal(status, 0);
+  const message = parseOutput(stdout).systemMessage;
+  assert.match(message, /stopped early: \d+ checks? skipped to stay inside the hook timeout/);
+  assert.doesNotMatch(message, /dart: formatted/);
+});
+
+test('stop-format-typecheck: tsc errors still block the stop', () => {
+  writeFixture('tsblock/package.json', '{"name":"tsblock"}');
+  writeFixture('tsblock/tsconfig.json', '{}');
+  const ts = writeFixture('tsblock/src/a.ts', 'const a: number = "x";\n');
+  writeFakeTool(path.join(tmpRoot, 'tsblock', 'node_modules', '.bin'), 'tsc',
+    'console.log("src/a.ts(1,7): error TS2322: Type string is not assignable to type number.");\nprocess.exit(2);\n');
+  const emptyBin = path.join(tmpRoot, 'empty-bin');
+  fs.mkdirSync(emptyBin, { recursive: true });
+  const { status, stdout } = runStop('tsblock', [ts], envWithPath(emptyBin, { OPM_SKIP_FORMAT: '1' }));
+  assert.equal(status, 0);
+  const out = parseOutput(stdout);
+  assert.equal(out.decision, 'block');
+  assert.match(out.reason, /error TS2322/);
+  assert.match(out.reason, /prettier: skipped \(OPM_SKIP_FORMAT=1\)/);
 });
 
 test('session-start: injects fixture skill content with frontmatter stripped', () => {
