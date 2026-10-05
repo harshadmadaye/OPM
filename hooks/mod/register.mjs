@@ -20,9 +20,11 @@ const errorText = (error) => (error && error.message ? error.message : String(er
 export const register = (on) => {
   on('session.start', async ($, e, next) => {
     // Tells the settings-hook scripts (child processes) that the mod runs the
-    // same checks in process, so they exit early instead of firing twice.
+    // same checks in process, so they exit early instead of firing twice. The
+    // value is this session's id, so a nested Claude Code that inherits the
+    // variable (another session) keeps running its own checks.
     try {
-      await $.env.set('OPM_MOD_ACTIVE', '1');
+      await $.env.set('OPM_MOD_ACTIVE', await $.session.id());
     } catch (error) {
       $.ui.log(`opm: could not set OPM_MOD_ACTIVE: ${errorText(error)}`, { to: 'debug' });
     }

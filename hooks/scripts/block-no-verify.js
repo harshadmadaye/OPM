@@ -6,11 +6,11 @@
 // command position, and heredoc bodies, echo/printf arguments and quoted
 // strings that merely mention these words pass. The rules live in
 // hooks/lib/bypass-rules.mjs, shared with the mod; when the mod is running
-// (OPM_MOD_ACTIVE=1, set by hooks/mod/register.mjs) it runs them in process
+// (OPM_MOD_ACTIVE=<session id>, set by hooks/mod/register.mjs) it runs them in process
 // and this script steps aside. See docs/threat-model.md.
 // Everything else is allowed silently. Never throws; exits 0 on internal error.
 
-if (process.env.OPM_HOOKS_DISABLED === '1' || process.env.OPM_MOD_ACTIVE === '1') process.exit(0);
+if (process.env.OPM_HOOKS_DISABLED === '1') process.exit(0);
 process.on('uncaughtException', () => process.exit(0));
 
 const MAX_STDIN = 1024 * 1024;
@@ -41,9 +41,18 @@ function deny(reason) {
   process.stdout.write(JSON.stringify(output) + '\n');
 }
 
+// The mod sets OPM_MOD_ACTIVE to its session id; only a hook call from that
+// same session steps aside, so a variable inherited by a nested, older Claude
+// Code (a different session) never silences these checks.
+function isHandledByMod(input) {
+  const active = process.env.OPM_MOD_ACTIVE;
+  return Boolean(active) && Boolean(input) && input.session_id === active;
+}
+
 readStdin(async (raw) => {
   try {
     const input = raw.trim() ? JSON.parse(raw) : {};
+    if (isHandledByMod(input)) return;
     const command = input && input.tool_input && input.tool_input.command;
     if (typeof command !== 'string' || !command.includes('git')) return;
     const { findBypass, bypassDenial } = await import('../lib/bypass-rules.mjs');

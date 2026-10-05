@@ -6,12 +6,11 @@
 // Creating a config that does not exist yet is always allowed. A .git/config
 // edit asks only when it changes core.hooksPath (see docs/threat-model.md).
 // The rules live in hooks/lib/bypass-rules.mjs, shared with the mod; when the
-// mod is running (OPM_MOD_ACTIVE=1) it asks in process and this script steps aside.
+// mod is running (OPM_MOD_ACTIVE=<session id>) it asks in process and this script steps aside.
 
 if (
   process.env.OPM_HOOKS_DISABLED === '1' ||
-  process.env.OPM_ALLOW_CONFIG_EDITS === '1' ||
-  process.env.OPM_MOD_ACTIVE === '1'
+  process.env.OPM_ALLOW_CONFIG_EDITS === '1'
 ) process.exit(0);
 process.on('uncaughtException', () => process.exit(0));
 
@@ -62,9 +61,18 @@ function ask(reason) {
   process.stdout.write(JSON.stringify(output) + '\n');
 }
 
+// The mod sets OPM_MOD_ACTIVE to its session id; only a hook call from that
+// same session steps aside, so a variable inherited by a nested, older Claude
+// Code (a different session) never silences these checks.
+function isHandledByMod(input) {
+  const active = process.env.OPM_MOD_ACTIVE;
+  return Boolean(active) && Boolean(input) && input.session_id === active;
+}
+
 readStdin(async (raw) => {
   try {
     const input = raw.trim() ? JSON.parse(raw) : {};
+    if (isHandledByMod(input)) return;
     const toolInput = input && input.tool_input;
     if (!toolInput || typeof toolInput !== 'object') return;
     const { configLookup, configEditKind, configAskReason } = await import('../lib/bypass-rules.mjs');

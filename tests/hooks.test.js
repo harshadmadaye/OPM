@@ -402,7 +402,7 @@ test('all scripts: OPM_HOOKS_DISABLED=1 silences every hook', () => {
   }
 });
 
-test('OPM_MOD_ACTIVE=1: block-no-verify and config-protection step aside for the mod', () => {
+test('OPM_MOD_ACTIVE=<this session id>: block-no-verify and config-protection step aside for the mod', () => {
   const tsconfig = writeFixture('mod/tsconfig.json', '{}');
   const cases = [
     ['block-no-verify.js', bashInput('git commit --no-verify -m "wip"')],
@@ -410,10 +410,23 @@ test('OPM_MOD_ACTIVE=1: block-no-verify and config-protection step aside for the
   ];
   for (const [script, input] of cases) {
     assert.notEqual(runHook(script, input).stdout, '', `${script} checks without the mod`);
-    const { status, stdout, stderr } = runHook(script, input, { OPM_MOD_ACTIVE: '1' });
+    const { status, stdout, stderr } = runHook(script, input, { OPM_MOD_ACTIVE: SESSION });
     assert.equal(status, 0, script);
     assert.equal(stdout, '', script);
     assert.equal(stderr, '', script);
+  }
+});
+
+test('OPM_MOD_ACTIVE from another session (an inherited variable) does not silence the checks', () => {
+  const tsconfig = writeFixture('mod-inherited/tsconfig.json', '{}');
+  const cases = [
+    ['block-no-verify.js', bashInput('git commit --no-verify -m "wip"')],
+    ['config-protection.js', editInput(tsconfig)],
+  ];
+  for (const [script, input] of cases) {
+    for (const value of ['1', 'some-other-session']) {
+      assert.notEqual(runHook(script, input, { OPM_MOD_ACTIVE: value }).stdout, '', `${script} still checks with OPM_MOD_ACTIVE=${value}`);
+    }
   }
 });
 
