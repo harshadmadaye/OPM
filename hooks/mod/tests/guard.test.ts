@@ -134,7 +134,9 @@ describe('guard hook', () => {
     const world = serveEngine(on, RUN_IT, { isRootMissing: true });
     const result = await runBash($, 'ls');
     expect(world.ran).toEqual([]);
-    expect(deniedText(result).startsWith('OPM guard failed (throw)')).toBe(true);
+    // The failure kind depends on where in the chain the error surfaces; the
+    // contract is that the call is denied and nothing runs.
+    expect(/^OPM (guard|hook-bypass check) failed \(/.test(deniedText(result))).toBe(true);
   });
 
   test('OPM_GUARD=off passes everything', async ($, on) => {

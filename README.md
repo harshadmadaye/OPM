@@ -7,7 +7,7 @@
 OPM is a [Claude Code](https://claude.com/claude-code) plugin that adds a full
 engineering workflow: brainstorm a design, write a plan, build it test-first
 with fresh-context subagents, review it, and verify it before anything is
-called done. It keeps token costs down while it does.
+called done. It measures what it costs, and CI holds it to that.
 
 [![CI](https://github.com/harshadmadaye/OPM/actions/workflows/ci.yml/badge.svg)](https://github.com/harshadmadaye/OPM/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/opm-core.svg)](https://www.npmjs.com/package/opm-core)
@@ -19,6 +19,47 @@ called done. It keeps token costs down while it does.
 ```bash
 npx opm-core@latest
 ```
+
+## What OPM can show
+
+Four claims, each with its evidence. Token counts are bytes / 4 estimates from
+`npm run tokens`.
+
+**1. It costs 2,379 tokens per session.** That is every skill and agent
+description plus the using-opm skill injected at session start. The rules add
+1,401 tokens in repos that install them. CI fails if either grows past its
+ceiling. Evidence: [the cost table](docs/why-opm.md#what-opm-costs-per-session).
+You can also check the plugin with `claude plugin details opm`.
+
+**2. Big skills load a small core.** A skill costs nothing until it runs. The
+split skills then load only their core; the `references/` files load when a
+step needs them.
+
+| Skill | Core, per run (tokens) | References, on demand (bytes) |
+|---|---|---|
+| `executing-plans` | 1,056 | 18,567 |
+| `flutter-patterns` | 856 | 10,754 |
+| `react-patterns` | 828 | 8,849 |
+| `python-patterns` | 797 | 10,166 |
+| `verification-before-completion` | 1,371 | 4,814 |
+
+The other skills are not split yet. The largest, `milestone-planning`, loads
+2,911 tokens. Evidence: [the per-skill table](docs/why-opm.md#what-opm-costs-per-session).
+
+**3. CI runs on macOS, Linux and Windows, with Node 18, 20 and 22.** Nine test
+jobs, then a gate that validates the manifests with the Claude Code CLI.
+Evidence: [CI](https://github.com/harshadmadaye/OPM/actions/workflows/ci.yml)
+and the badge above.
+
+**4. Status and safety cost no model turn, on Claude Code 2.1.287 or later.**
+`/opm-status`, `/opm-status --all` and `/opm-report` are answered by code. The
+destructive-command hold and the hook-bypass checks run as code before a tool
+call. These are tested with the Claude Code test kit in CI, not yet in a live
+session. Evidence: [Mod features](#mod-features-claude-code-21287-or-later) and
+[docs/threat-model.md](docs/threat-model.md).
+
+What OPM cannot show yet, such as the cost of a whole task, is listed in
+[docs/why-opm.md](docs/why-opm.md#what-we-can-and-cannot-show-yet).
 
 ---
 
@@ -42,9 +83,8 @@ the expensive way.
 ## What OPM does instead
 
 OPM splits the work. A small main thread holds the plan. Each task goes to a
-**fresh worker that sees only that one task** and then disappears. The main
-thread never balloons, so it does not get slower, dumber or pricier as the day
-goes on.
+**fresh worker that sees only that one task** and then disappears. The long
+work happens in the workers, so the main thread stays small.
 
 Then it refuses to take anyone's word for anything. A reviewer reads every
 task's diff before the next one starts. Nothing is called done, fixed or
@@ -54,18 +94,11 @@ being wiped, so if the session resets, the work does not restart.
 |  | One long chat | OPM |
 |---|---|---|
 | What the model re-reads each turn | Everything so far | The current task |
-| Cost as the day goes on | Climbs | Stays flat |
 | Quality as the day goes on | Drifts | Held by a reviewer gate |
 | "Tests pass" | Sometimes a guess | Pasted output, or it does not count |
 | If the session resets | Start over | The ledger picks up where it stopped |
 
-Carrying all of this costs about **2,379 tokens** in every session. That is the
-entire always-on price. The rules add about **1,401 tokens** when the rules are
-installed. Everything else loads only when it is actually used.
-
-These are bytes / 4 estimates. CI checks them with `npm run tokens` and fails if
-they grow past a ceiling. The full table is in [docs/why-opm.md](docs/why-opm.md).
-You can also check the plugin with `claude plugin details opm`.
+What this costs is measured above, in [What OPM can show](#what-opm-can-show).
 
 ---
 
@@ -201,8 +234,10 @@ live session.
 | Feature | What it does | On older Claude Code |
 |---|---|---|
 | `/opm-status` | Prints the open plan ledger (tasks done, current task, last ruling), the milestone position and the git branch. Code answers it; Claude never sees it. | Run `npx opm-core status` in a terminal. It prints the same thing on any version. |
+| `/opm-status --all` | Lists every open OPM plan on this machine, newest first (at most 25 rows), from small per-repo snapshots the mod keeps in its local store after each turn. Rows older than 3 days are marked "(stale)"; snapshots are pruned after 14 days. | Not available. Run `npx opm-core status` in each repo. |
 | Resume line | When a plan ledger is open, session start adds one line naming it and the next task. Nothing is added when no ledger is open. | Works on every version: it comes from the SessionStart settings hook. |
 | Destructive-command hold | Before Claude runs `rm -rf` on a root-like or out-of-repo path, a force-push to `main` or `master`, or `git reset --hard`, you are asked. Anything but "Run it" denies, and so does a session where nobody can answer, or a failure of the guard itself. Set `OPM_GUARD=off` to turn it off. | Not available. The settings hooks still block hook bypasses. |
+| Hook-bypass and config checks | The same checks as the `block-no-verify` and `config-protection` settings hooks, run in process from one shared rules module: a Bash command that skips git hooks is denied, and an edit that weakens linter, formatter, typecheck or git hook config asks first (nobody answering is a deny). The mod sets `OPM_MOD_ACTIVE` to its session id, and the two settings-hook scripts step aside only for that session, so each check runs once. | The settings hooks run the same checks. |
 | `/opm-report` | An opt-in token meter. Off by default; `/opm-report --enable` starts it and `--disable` stops it. It records each turn's token use and the skills that ran, keeps 14 days in one local store key capped at 256 KiB, and prints a summary. Nothing is sent anywhere. | Not available. |
 
 Commands are typed with a hyphen (`/opm-status`, not `/opm:status`). All output
@@ -214,9 +249,9 @@ What the mod declares, from
 
 | | Declared |
 |---|---|
-| Events | `session.start`, `command.run` (`opm-status`, `opm-report`), `tool.call` (Bash), `skill.prompt`, `turn.complete` |
-| Calls | `$.clock.now`, `$.command.register`, `$.env.get`, `$.fs.exists`, `$.fs.list`, `$.fs.read`, `$.fs.stat`, `$.process.run` (only `git branch --show-current`), `$.session.cwd`, `$.session.id`, `$.session.root`, `$.store.get`, `$.store.set`, `$.ui.ask`, `$.ui.log` |
-| Environment | reads `OPM_GUARD`; writes nothing |
+| Events | `session.start`, `command.run` (`opm-status`, `opm-report`), `tool.call` (Bash, Edit, Write), `skill.prompt`, `turn.complete` (one with `isAborted=false`, one unmatched) |
+| Calls | `$.clock.now`, `$.command.register`, `$.env.get`, `$.env.set`, `$.fs.exists`, `$.fs.list`, `$.fs.read`, `$.fs.stat`, `$.process.run` (via `currentBranch`), `$.session.cwd`, `$.session.id`, `$.session.root`, `$.store.delete`, `$.store.get`, `$.store.keys`, `$.store.set`, `$.ui.ask`, `$.ui.log` |
+| Environment | reads `OPM_ALLOW_CONFIG_EDITS`, `OPM_GUARD`, `OPM_HOOKS_DISABLED`; writes `OPM_MOD_ACTIVE` |
 
 No network calls and no model calls.
 

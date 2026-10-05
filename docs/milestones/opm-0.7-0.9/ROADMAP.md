@@ -1,5 +1,15 @@
 # OPM 0.7-0.9 Roadmap
 
+## Retrospective (2026-10-05)
+
+All four phases shipped on stacked branches (PRs #1-#5): 22 plans, 0.7.0 to 0.9.0.
+
+- Measured instead of claimed: always-on cost went from an unmeasured "2,300" (really 2,541) to 2,379 tokens under a CI ceiling of 2,650; executing-plans dropped from about 5,000 to 1,056 tokens per run.
+- CI paid for itself on the first run: 9 Windows failures (CRLF checkouts, mixed path separators in doctor), then 3 mod-test failures that only showed once features shared the same events. Both were invisible locally.
+- Mods worked as designed but the API differed from the docs in small ways (no colon in command names, $ never crosses an import, one unmatched hook per event per module). Plans written from docs needed correcting after the first mod plan.
+- Not yet proven: any mod feature in a live interactive session (this machine runs Claude Code 2.1.273, and the mods switch is cached off), and the full 30-prompt trigger eval.
+- Process friction: subagents cannot write report files, so the orchestrator wrote every SUMMARY; the installed 0.6.1 bypass hook blocked heredocs that only mentioned its trigger words (fixed in 0.7.1, still live until the plugin is updated).
+
 Source spec: [docs/specs/2026-10-02-opm-brew.md](../../specs/2026-10-02-opm-brew.md) (brew-idea run wf_8a106824-7a3, revision 1, approved 2026-10-05).
 
 Goal: a measured, low-token, test-first Claude Code workflow where status, safety and cost checks run as code instead of model turns, and every release is gated by CI.
@@ -42,4 +52,4 @@ Goal: use measured data to decide merges, migration, positioning and the multi-p
 
 Features: skill-trigger eval harness after a design spike; hot-path hooks to mod hooks, gated on a dedupe spike; README positioning rewrite around measured numbers; marketplace submissions; `/opm:status --all`.
 
-Status: Planned (5 plans, 3 waves: 04-01 + 04-02 + 04-03, then 04-04, then 04-05)
+Status: Complete (2026-10-05), released as 0.9.0 on the branch. The hot-path migration was proven and done (session-scoped OPM_MOD_ACTIVE).

@@ -14,3 +14,11 @@ Deferred enhancements and known gaps found during execution, numbered ISS-NNN. R
 - ISS-010: the weekly scheduled CI run shares the main concurrency group (can cancel or be cancelled by a push) and runs the full matrix, not only latest-cli (found in 03-05).
 - ISS-011: the guard does not hold deleting main (push origin :main, --delete main) or rm -rf on an unset $VAR/ path (found in 03-03).
 - ISS-012: the meter store key is shared across sessions, so a read-then-write race can drop an entry; skill credit is approximate with parallel subagents; no mod feature has run in a live session yet because the installed CLI is 2.1.273 (found in 03-04).
+- ISS-013: the mods rollout switch is cached off on the maintainer machine, so `claude plugin test` refuses to run locally ("hooks modules are turned off in this process"); mod tests rely on CI until Claude Code is started once with network access (found in 04-01).
+- ISS-014: guard.mjs keeps its own copy of the command parser; it should import hooks/lib/bypass-rules.mjs (found in 04-02).
+- ISS-015: hooks/mod/tests/guard.test.ts line 34 fails strict tsc with noUncheckedIndexedAccess (found in 04-02).
+- ISS-016: the first full 30-prompt eval run must confirm --max-turns 2 reaches the real pick after a using-opm reload (found in 04-03).
+- ISS-017: haiku reloads using-opm although SessionStart already injected it, costing a turn; a wording tweak in using-opm may stop it (found in 04-03).
+- ISS-018: brew-idea and jump-start are user-invoked only, so a model that routes to them gets a refusal and should tell the user to run the command; check the wording real sessions show (found in 04-03).
+- ISS-019: when the guard throws behind the bypass hook in the Bash tool.call chain, the engine reports the guard hook as skipped and the outer bypass .catch answers; still fail-closed, but check why the guard's own .catch does not answer (found in 04-04 CI).
+- ISS-020: docs/why-opm.md "What we looked at" table carries competitor counts from the 2026-09-12 review; decide whether to keep unverified third-party numbers (found in 04-04).
