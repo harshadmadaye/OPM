@@ -1,6 +1,6 @@
 {
   "name": "opm-core",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Claude Code plugin: spec-driven, test-first engineering workflow. Brainstorm, plan, TDD with fresh-context subagents, code review and verification, with lower token costs.",
   "bin": {
     "opm-core": "bin/install.js"

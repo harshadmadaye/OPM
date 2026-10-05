@@ -12,7 +12,7 @@
       "name": "opm",
       "source": "./",
       "description": "An opinionated engineering workflow: brainstorm, plan, TDD execution with fresh-context subagents, verification, captured learnings. Lean reviewers, stack patterns and six light safety hooks.",
-      "version": "0.7.0",
+      "version": "0.7.1",
       "author": {
         "name": "Harshad Madaye",
         "url": "https://github.com/harshadmadaye"
@@ -22,7 +22,7 @@
       "name": "opm-video",
       "source": "./plugins/opm-video",
       "description": "Optional add-on: turns a spec or document into a narrated explainer video. Needs a headless browser, ffmpeg and a text-to-speech voice; the neural voice (edge-tts) sends narration text to a Microsoft cloud service unless the local OS voice is used.",
-      "version": "0.7.0",
+      "version": "0.7.1",
       "author": {
         "name": "Harshad Madaye",
         "url": "https://github.com/harshadmadaye"
