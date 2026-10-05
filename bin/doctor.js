@@ -173,7 +173,7 @@ function listHooks(root, hooksJson) {
       for (const hook of group.hooks || []) {
         if (hook.type !== 'command') continue;
         const match = String(hook.command).replace(/\$\{CLAUDE_PLUGIN_ROOT\}/g, root).match(HOOK_SCRIPT);
-        if (match) hooks.push({ event, matcher: group.matcher || '', script: match[1], timeoutS: hook.timeout || DEFAULT_HOOK_TIMEOUT_S });
+        if (match) hooks.push({ event, matcher: group.matcher || '', script: path.normalize(match[1]), timeoutS: hook.timeout || DEFAULT_HOOK_TIMEOUT_S });
       }
     }
   }
