@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0 - 2026-10-05
+
+- New `/opm-status --all` (mod): lists every open OPM plan on this machine, newest first and at most 25 rows, from small per-repo snapshots in the mod's local store. Snapshots are written after each main-loop turn and on `/opm-status`, keyed by a hash of the repo root (no paths in keys), marked "(stale)" after 3 days and pruned after 14 days or when the plan completes, under a 64 KiB cap.
+- Hot-path dedupe, migrated: the hook-bypass and config checks run in the mod on Claude Code 2.1.287+ (Bash bypasses are denied; config edits ask first, and nobody answering is a deny), sharing one rules module (`hooks/lib/bypass-rules.mjs`) with the settings hooks. The mod sets `OPM_MOD_ACTIVE` to its session id, and `block-no-verify` and `config-protection` step aside only for that session, so each check runs once and an inherited variable never silences a nested older Claude Code. A live spike on 2.1.289 proved the settings-hook process sees the value the mod sets. Older Claude Code keeps running the settings hooks unchanged.
+- Trigger eval: a 3-prompt spike showed headless `claude -p` runs do trigger OPM skills (2 of 3 chose the expected skill directly; one reloaded `using-opm` first). `npm run eval:triggers -- --yes` runs the 30-prompt fixture by hand at about $0.02 a prompt; it is not part of `npm test` or CI. `docs/evals.md` has the evidence. This is a spike, not an accuracy figure.
+- The README opens with "What OPM can show": measured always-on cost, core vs reference skill sizes, three-OS CI and zero-turn mod features, each linked to its source. Two unmeasured cost statements were removed. `docs/why-opm.md` gains "What we can and cannot show yet", and the README's mod table lists `/opm-status --all`, the in-process checks and what the mod now declares.
+- `docs/marketplace-listing.md`: a marketplace listing kit (descriptions, keywords, install commands, requirements, privacy, submission checklist). Nothing has been submitted.
+- Always-on cost is unchanged at about 2,379 tokens (ceiling 2,650) and `rules/common` at about 1,401 (ceiling 1,550).
+- The mod tests run in CI. They could not run on the maintainer machine, where the mods rollout switch is cached off. The mod features are tested with the Claude Code test kit, not yet in a live session.
+
 ## 0.8.0 - 2026-10-05
 
 - New `npx opm-core status`: prints the open plan ledger (tasks done, current task, last ruling), the milestone position and the git branch, on any Claude Code version. One shared ledger parser (`bin/lib/ledger.mjs`) feeds it and the mod. A malformed ledger counts as open so its error reaches you; plan paths outside the repo are never read.

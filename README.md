@@ -234,8 +234,10 @@ live session.
 | Feature | What it does | On older Claude Code |
 |---|---|---|
 | `/opm-status` | Prints the open plan ledger (tasks done, current task, last ruling), the milestone position and the git branch. Code answers it; Claude never sees it. | Run `npx opm-core status` in a terminal. It prints the same thing on any version. |
+| `/opm-status --all` | Lists every open OPM plan on this machine, newest first (at most 25 rows), from small per-repo snapshots the mod keeps in its local store after each turn. Rows older than 3 days are marked "(stale)"; snapshots are pruned after 14 days. | Not available. Run `npx opm-core status` in each repo. |
 | Resume line | When a plan ledger is open, session start adds one line naming it and the next task. Nothing is added when no ledger is open. | Works on every version: it comes from the SessionStart settings hook. |
 | Destructive-command hold | Before Claude runs `rm -rf` on a root-like or out-of-repo path, a force-push to `main` or `master`, or `git reset --hard`, you are asked. Anything but "Run it" denies, and so does a session where nobody can answer, or a failure of the guard itself. Set `OPM_GUARD=off` to turn it off. | Not available. The settings hooks still block hook bypasses. |
+| Hook-bypass and config checks | The same checks as the `block-no-verify` and `config-protection` settings hooks, run in process from one shared rules module: a Bash command that skips git hooks is denied, and an edit that weakens linter, formatter, typecheck or git hook config asks first (nobody answering is a deny). The mod sets `OPM_MOD_ACTIVE` to its session id, and the two settings-hook scripts step aside only for that session, so each check runs once. | The settings hooks run the same checks. |
 | `/opm-report` | An opt-in token meter. Off by default; `/opm-report --enable` starts it and `--disable` stops it. It records each turn's token use and the skills that ran, keeps 14 days in one local store key capped at 256 KiB, and prints a summary. Nothing is sent anywhere. | Not available. |
 
 Commands are typed with a hyphen (`/opm-status`, not `/opm:status`). All output
@@ -247,9 +249,9 @@ What the mod declares, from
 
 | | Declared |
 |---|---|
-| Events | `session.start`, `command.run` (`opm-status`, `opm-report`), `tool.call` (Bash), `skill.prompt`, `turn.complete` |
-| Calls | `$.clock.now`, `$.command.register`, `$.env.get`, `$.fs.exists`, `$.fs.list`, `$.fs.read`, `$.fs.stat`, `$.process.run` (only `git branch --show-current`), `$.session.cwd`, `$.session.id`, `$.session.root`, `$.store.get`, `$.store.set`, `$.ui.ask`, `$.ui.log` |
-| Environment | reads `OPM_GUARD`; writes nothing |
+| Events | `session.start`, `command.run` (`opm-status`, `opm-report`), `tool.call` (Bash, Edit, Write), `skill.prompt`, `turn.complete` (one with `isAborted=false`, one unmatched) |
+| Calls | `$.clock.now`, `$.command.register`, `$.env.get`, `$.env.set`, `$.fs.exists`, `$.fs.list`, `$.fs.read`, `$.fs.stat`, `$.process.run` (via `currentBranch`), `$.session.cwd`, `$.session.id`, `$.session.root`, `$.store.delete`, `$.store.get`, `$.store.keys`, `$.store.set`, `$.ui.ask`, `$.ui.log` |
+| Environment | reads `OPM_ALLOW_CONFIG_EDITS`, `OPM_GUARD`, `OPM_HOOKS_DISABLED`; writes `OPM_MOD_ACTIVE` |
 
 No network calls and no model calls.
 
