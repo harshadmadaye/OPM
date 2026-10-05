@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Requires running verification commands and reading their actual output before any claim that work is complete, fixed, or passing. Use when about to say done, tests pass, bug fixed, or build works; before committing, creating a PR, marking a task complete, or trusting a subagent's success report.
+description: Requires running verification commands and reading their actual output before any claim that work is complete, fixed, or passing. Use when about to say done, tests pass, or bug fixed; before committing, a PR, or trusting a subagent's report; or when asked to run the full quality gate (build, types, lint, tests, secrets, diff).
 ---
 
 # Verification Before Completion
@@ -36,6 +36,11 @@ BEFORE claiming any status or expressing satisfaction:
 
 Skip any step = lying, not verifying
 ```
+
+## Quick Gate or Full Gate
+
+- **Quick gate:** the Gate Function above, for any done claim.
+- **Full gate:** before a PR, a release, or a phase close (or when asked for the full verification loop), read `references/full-loop.md` and run all six gates: build, types, lint, tests, secrets, diff review.
 
 ## Claim -> Required Evidence
 
