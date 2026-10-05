@@ -121,3 +121,40 @@ test('the Next list names every user-facing command, explainer-video included', 
     assert.ok(source.includes(command), `Next list is missing ${command}`);
   }
 });
+
+test('installRules writes a version stamp whose hashes match the copied files', () => {
+  const crypto = require('node:crypto');
+  const rulesRoot = path.join(tmpRoot, 'stamp-rules');
+  fs.mkdirSync(path.join(rulesRoot, 'common'), { recursive: true });
+  fs.mkdirSync(path.join(rulesRoot, 'python', 'nested'), { recursive: true });
+  fs.writeFileSync(path.join(rulesRoot, 'common', 'a.md'), '# a\n');
+  fs.writeFileSync(path.join(rulesRoot, 'python', 'nested', 'b.md'), '# b\n');
+
+  const target = path.join(tmpRoot, 'stamped-repo');
+  fs.mkdirSync(target, { recursive: true });
+  installRules(target, ['python'], rulesRoot, () => {});
+
+  const dest = path.join(target, '.claude', 'rules', 'opm');
+  const stamp = JSON.parse(fs.readFileSync(path.join(dest, '.opm-version'), 'utf8'));
+  const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'package.json'), 'utf8'));
+  assert.equal(stamp.version, pkg.version);
+  assert.deepEqual(stamp.ruleSets, ['common', 'python']);
+  assert.ok(!Number.isNaN(Date.parse(stamp.installedAt)), 'installedAt is an ISO date');
+  assert.deepEqual(Object.keys(stamp.files).sort(), ['common/a.md', 'python/nested/b.md']);
+  for (const [rel, hash] of Object.entries(stamp.files)) {
+    const actual = crypto.createHash('sha256').update(fs.readFileSync(path.join(dest, rel))).digest('hex');
+    assert.equal(hash, actual, `hash for ${rel}`);
+  }
+});
+
+test('the Next block starts with the single doctor next step', () => {
+  const source = fs.readFileSync(BIN, 'utf8');
+  assert.ok(source.includes('Next: run npx opm-core doctor, then ask Claude Code for your first task.'));
+  assert.ok(!source.includes('Start Claude Code and describe what you want to build.'), 'the old first line is gone');
+});
+
+test('`opm-core doctor --help` is routed to the doctor command', () => {
+  const out = spawnSync(process.execPath, [BIN, 'doctor', '--help'], { encoding: 'utf8' });
+  assert.equal(out.status, 0, out.stderr);
+  assert.match(out.stdout, /npx opm-core doctor/);
+});
