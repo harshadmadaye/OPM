@@ -304,7 +304,9 @@ export function installStatus(on) {
   });
 
   // Main-loop turns only: a subagent's ledger edits show on the next one.
-  on('turn.complete', async ($, e, next) => {
+  // The matcher keeps this registration distinct from the meter's unmatched
+  // turn.complete hook (one unmatched registration per event per module).
+  on('turn.complete', { isAborted: false }, async ($, e, next) => {
     const result = await next(e);
     if (!e.agentId) await recordSnapshot($);
     return result;
