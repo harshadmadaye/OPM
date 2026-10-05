@@ -32,6 +32,17 @@ Then announce "Using opm:<name> to <purpose>" and follow the skill exactly. If i
 
 When no row fits, ask one question about size.
 
+## Scale the approach
+
+Use Claude Code's power without being asked; announce each step in one line ("Using 3 parallel subagents to ...").
+
+- Wide search, review or audit -> a subagent, so the main context stays small.
+- Independent pieces -> parallel subagents in one message; git worktrees when they edit files.
+- More than about 3 tasks -> `opm:writing-plans`; weeks of work -> `opm:milestone-planning`.
+- Many agents at once -> offer a multi-agent Workflow with a rough agent count; run it only after the user says yes.
+
+Read references/orchestration.md when you are about to escalate.
+
 ## Workflow Map
 
 1. `opm:brainstorming` - design, get approval. Architectural work writes `docs/specs/YYYY-MM-DD-<topic>.md`.

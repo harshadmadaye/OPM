@@ -20,12 +20,38 @@ called done. It measures what it costs, and CI holds it to that.
 npx opm-core@latest
 ```
 
+## Start here: `using-opm`
+
+Every Claude Code session with OPM installed starts with the `using-opm` skill
+already loaded. You do not have to remember any other command. It is the front
+door to everything else in the plugin, and it does five things for you:
+
+- **Picks the right amount of process.** A 10-line fix goes straight to a
+  test-first change. A feature gets a short design and a plan. Weeks of work
+  get a milestone. You never pay for ceremony a small job does not need.
+- **Uses Claude Code's power without being asked.** Wide searches and reviews
+  go to subagents, so your main conversation stays small and cheap.
+  Independent pieces run in parallel, in separate git worktrees when they edit
+  files.
+- **Offers the big tools instead of hiding them.** When a job would clearly
+  benefit from many agents at once, it offers a multi-agent run with a rough
+  agent count, and starts it only after you say yes.
+- **Tells you what it is doing.** Every step up is announced in one line
+  ("Using 3 parallel subagents to ..."), so you can stop it.
+- **Checks before it says done.** Subagent reports are verified, tests are run,
+  and nothing is called finished without fresh evidence.
+
+It loads by itself through a session-start hook. Run `/opm:using-opm` at the
+start of a session when you want to be sure it is active: after a long session
+was compacted, in an editor where the hook did not run, or just to see the
+rules. Details: [docs/using-opm.md](docs/using-opm.md).
+
 ## What OPM can show
 
 Four claims, each with its evidence. Token counts are bytes / 4 estimates from
 `npm run tokens`.
 
-**1. It costs 2,379 tokens per session.** That is every skill and agent
+**1. It costs 2,526 tokens per session.** That is every skill and agent
 description plus the using-opm skill injected at session start. The rules add
 1,401 tokens in repos that install them. CI fails if either grows past its
 ceiling. Evidence: [the cost table](docs/why-opm.md#what-opm-costs-per-session).
@@ -316,7 +342,7 @@ through edge-tts**; pick the local OS voice and nothing leaves your machine.
 
 | Skill | What it does |
 |---|---|
-| `using-opm` | Injected at session start. Tells Claude to check for an applicable skill before any other action. Its routing table picks the skill by job size: a small fix goes straight to `tdd-workflow`, multi-week work to `milestone-planning`. |
+| `using-opm` | Injected at session start. Tells Claude to check for an applicable skill before any other action. Its routing table picks the skill by job size, and its "Scale the approach" ladder moves to subagents, parallel work, plans or an offered multi-agent run as the job grows. See [docs/using-opm.md](docs/using-opm.md). |
 | `brew-idea` | Four agents argue the idea from product, engineering, skeptic and market angles; a judge ranks features. |
 | `brainstorming` | No code before the design is agreed. One question at a time, scaled to the size of the job. |
 | `writing-plans` | Turns an approved spec into bite-sized tasks, each with a failing test, implementation and commit. |

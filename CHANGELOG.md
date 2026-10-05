@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.1 - 2026-10-05
+
+- `using-opm` scales the approach without being asked. A short "Scale the approach" ladder sends wide searches and reviews to subagents, runs independent pieces in parallel (in git worktrees when they edit files), moves to `writing-plans` or `milestone-planning` as the work grows, and offers a multi-agent Workflow with a rough agent count, starting it only after the user says yes. Every step up is announced in one line. The detail (when not to escalate, costs, the opt-in rule, collecting and verifying agent results) loads on demand from `skills/using-opm/references/orchestration.md`.
+- Always-on cost rises from about 2,379 to 2,526 tokens per session, still under the 2,650 ceiling.
+- README "Start here: using-opm" section and a new `docs/using-opm.md` page explaining what the front-door skill does for new users and when to run `/opm:using-opm` by hand.
+
 ## 0.9.0 - 2026-10-05
 
 - New `/opm-status --all` (mod): lists every open OPM plan on this machine, newest first and at most 25 rows, from small per-repo snapshots in the mod's local store. Snapshots are written after each main-loop turn and on `/opm-status`, keyed by a hash of the repo root (no paths in keys), marked "(stale)" after 3 days and pruned after 14 days or when the plan completes, under a 64 KiB cap.
