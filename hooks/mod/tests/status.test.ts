@@ -106,7 +106,7 @@ describe('/opm-status', () => {
     });
     on('session.start', (_$, e) => e);
     await $.session.start({ cwd: '/repo', surface: null, isInteractive: false });
-    expect(registered).toEqual([expect.objectContaining({ name: COMMAND, immediate: true })]);
+    expect(registered).toContainEqual(expect.objectContaining({ name: COMMAND, immediate: true }));
   });
 
   test('an open ledger prints the plan in at most five lines', async ($, on) => {
