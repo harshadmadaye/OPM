@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'claude-code/testing';
+import { describe, expect, mock, test } from 'claude-code/testing';
 import type { Engine } from 'claude-code/testing';
 import type { FsEntry, On } from 'claude-code';
 
@@ -11,6 +11,7 @@ import {
   OPEN_PLAN,
   UPDATED_AT_MS,
 } from './fixtures/repo';
+import { formatAllStatus, pruneStatusEntries, statusKey } from '../status.mjs';
 
 const COMMAND = 'opm-status';
 const MAX_LINES = 5;
@@ -106,7 +107,7 @@ describe('/opm-status', () => {
     });
     on('session.start', (_$, e) => e);
     await $.session.start({ cwd: '/repo', surface: null, isInteractive: false });
-    expect(registered).toContainEqual(expect.objectContaining({ name: COMMAND, immediate: true }));
+    expect(registered).toContainEqual(expect.objectContaining({ name: COMMAND, immediate: true, argumentHint: '[--all]' }));
   });
 
   test('an open ledger prints the plan in at most five lines', async ($, on) => {
@@ -146,5 +147,264 @@ describe('/opm-status', () => {
     const lines = await runStatus($);
     expect(lines.length).toBe(1);
     expect(lines[0].startsWith('opm status: could not list docs/plans')).toBe(true);
+  });
+});
+
+// Snapshot recording: a per-repo entry in $.store, refreshed after each turn.
+
+const STATUS_PREFIX = 'opm.status.';
+const REPO_ROOT = '/Users/dev/widget';
+const SESSION_ID = 'session-1';
+const DAY_MS = 24 * 60 * 60 * 1000;
+const NOW_MS = UPDATED_AT_MS + 60_000;
+const MAX_STATUS_BYTES = 64 * 1024;
+
+type StatusEntry = {
+  sessionId: string;
+  repoPath: string;
+  branch: string | null;
+  ledgerPath: string;
+  planPath: string;
+  tasksDone: number;
+  tasksTotal: number | null;
+  currentTaskTitle: string | null;
+  lastSeenAt: number;
+  sourceMtimeMs: number;
+};
+
+type Store = { store: Map<string, unknown>; sets: string[]; logs: string[] };
+
+function entryFor(repoPath: string, lastSeenAt: number, overrides: Partial<StatusEntry> = {}): StatusEntry {
+  return {
+    sessionId: 'old-session',
+    repoPath,
+    branch: 'main',
+    ledgerPath: 'docs/plans/2026-09-20-other.progress.md',
+    planPath: 'docs/plans/2026-09-20-other.md',
+    tasksDone: 1,
+    tasksTotal: 4,
+    currentTaskTitle: 'Task 2 Other work',
+    lastSeenAt,
+    sourceMtimeMs: lastSeenAt,
+    ...overrides,
+  };
+}
+
+// The store beneath the mod: a Map the test reads, the session and clock it
+// sees, the core answer for turn.complete, and captured log lines.
+function serveStore(on: On, initial: Record<string, unknown> = {}, options: { failSet?: boolean; root?: string } = {}): Store {
+  const store = new Map<string, unknown>(Object.entries(initial));
+  const sets: string[] = [];
+  const logs: string[] = [];
+  on('store.get', (_$, e) => ({ value: store.get(e.key) }));
+  on('store.keys', () => ({ value: [...store.keys()] }));
+  on('store.delete', (_$, e) => {
+    store.delete(e.key);
+    return { value: undefined };
+  });
+  on('store.set', (_$, e) => {
+    if (options.failSet) return { deny: 'store full' };
+    sets.push(e.key);
+    store.set(e.key, JSON.parse(JSON.stringify(e.value)));
+    return { value: undefined };
+  });
+  on('session.root', () => ({ value: options.root ?? REPO_ROOT }));
+  on('session.cwd', () => ({ value: options.root ?? REPO_ROOT }));
+  on('session.id', () => ({ value: SESSION_ID }));
+  mock.clock(on, { now: NOW_MS });
+  on('turn.complete', (_$, e) => ({ text: e.answer, usage: e.usage }));
+  on('ui.log', (_$, e) => {
+    logs.push(e.text);
+    return { value: undefined };
+  });
+  return { store, sets, logs };
+}
+
+async function completeTurn($: Engine) {
+  return $.turn.complete({ turnId: 't1', answer: 'done', durationMs: 10, isAborted: false, reason: 'answer' });
+}
+
+const statusKeys = (store: Map<string, unknown>) => [...store.keys()].filter((key) => key.startsWith(STATUS_PREFIX));
+
+function freshRepo(): FakeRepo {
+  return Object.fromEntries(Object.entries(OPEN_REPO).map(([path, file]) => [path, { ...file }]));
+}
+
+describe('status snapshots', () => {
+  test('a turn writes the repo snapshot under a hashed key and returns the turn unchanged', async ($, on) => {
+    serveRepo(on, freshRepo(), { exitCode: 0, stdout: 'feat/widget\n' });
+    const { store } = serveStore(on);
+    const result = await completeTurn($);
+    expect(result.text).toBe('done');
+    const keys = statusKeys(store);
+    expect(keys).toEqual([statusKey(REPO_ROOT)]);
+    expect(/^opm\.status\.[0-9a-f]{16}$/.test(keys[0])).toBe(true);
+    expect(store.get(keys[0])).toEqual({
+      sessionId: SESSION_ID,
+      repoPath: REPO_ROOT,
+      branch: 'feat/widget',
+      ledgerPath: 'docs/plans/2026-10-01-widget.progress.md',
+      planPath: 'docs/plans/2026-10-01-widget.md',
+      tasksDone: 1,
+      tasksTotal: 3,
+      currentTaskTitle: 'Task 2 Widget view',
+      lastSeenAt: NOW_MS,
+      sourceMtimeMs: UPDATED_AT_MS + 1000,
+    });
+  });
+
+  test('no store key holds the repo path', async ($, on) => {
+    serveRepo(on, freshRepo(), { exitCode: 0, stdout: 'main\n' });
+    const { store } = serveStore(on);
+    await completeTurn($);
+    for (const key of store.keys()) expect(key.includes('/') || key.includes('widget')).toBe(false);
+  });
+
+  test('an unchanged ledger is not written again; a changed one is', async ($, on) => {
+    const repo = freshRepo();
+    serveRepo(on, repo, { exitCode: 0, stdout: 'main\n' });
+    const { sets } = serveStore(on);
+    await completeTurn($);
+    await completeTurn($);
+    expect(sets.length).toBe(1);
+    repo['docs/plans/2026-10-01-widget.progress.md'].mtimeMs = UPDATED_AT_MS + 5000;
+    await completeTurn($);
+    expect(sets.length).toBe(2);
+  });
+
+  test('a ledger that became complete drops its entry', async ($, on) => {
+    const key = statusKey(REPO_ROOT);
+    serveRepo(on, { 'docs/plans/2026-09-01-done.progress.md': { text: COMPLETE_LEDGER, mtimeMs: UPDATED_AT_MS } }, { exitCode: 0, stdout: 'main\n' });
+    const { store } = serveStore(on, { [key]: entryFor(REPO_ROOT, NOW_MS - DAY_MS) });
+    await completeTurn($);
+    expect(store.has(key)).toBe(false);
+  });
+
+  test('a write prunes entries older than 14 days and complete ones', async ($, on) => {
+    const oldKey = statusKey('/Users/dev/old');
+    const doneKey = statusKey('/Users/dev/done');
+    const liveKey = statusKey('/Users/dev/live');
+    serveRepo(on, freshRepo(), { exitCode: 0, stdout: 'main\n' });
+    const { store } = serveStore(on, {
+      [oldKey]: entryFor('/Users/dev/old', NOW_MS - 15 * DAY_MS),
+      [doneKey]: entryFor('/Users/dev/done', NOW_MS - DAY_MS, { tasksDone: 4, tasksTotal: 4 }),
+      [liveKey]: entryFor('/Users/dev/live', NOW_MS - 2 * DAY_MS),
+      'opm.meter': [],
+    });
+    await completeTurn($);
+    expect(statusKeys(store).sort()).toEqual([liveKey, statusKey(REPO_ROOT)].sort());
+    expect(store.has('opm.meter')).toBe(true);
+  });
+
+  test('a store failure goes to the debug log and never breaks the turn', async ($, on) => {
+    serveRepo(on, freshRepo(), { exitCode: 0, stdout: 'main\n' });
+    const { logs } = serveStore(on, {}, { failSet: true });
+    const result = await completeTurn($);
+    expect(result.text).toBe('done');
+    expect(logs.length).toBe(1);
+    expect(logs[0].startsWith('opm: status could not record the snapshot')).toBe(true);
+  });
+
+  test('/opm-status refreshes the snapshot too', async ($, on) => {
+    serveRepo(on, freshRepo(), { exitCode: 0, stdout: 'main\n' });
+    const { store } = serveStore(on);
+    await runStatus($);
+    expect(statusKeys(store)).toEqual([statusKey(REPO_ROOT)]);
+  });
+});
+
+describe('pruneStatusEntries', () => {
+  test('keeps the newest entries under the byte cap', () => {
+    const entries = Array.from({ length: 400 }, (_, i) => {
+      const repoPath = `/Users/dev/project-${i}-${'x'.repeat(60)}`;
+      return { key: statusKey(repoPath), value: entryFor(repoPath, NOW_MS - (i + 1) * 60_000) };
+    });
+    const dropped = new Set(pruneStatusEntries(entries, NOW_MS));
+    const kept = entries.filter((entry) => !dropped.has(entry.key));
+    const size = kept.reduce((total, entry) => total + entry.key.length + JSON.stringify(entry.value).length, 0);
+    expect(size <= MAX_STATUS_BYTES).toBe(true);
+    expect(kept.length > 100).toBe(true);
+    expect(dropped.has(entries[0].key)).toBe(false);
+    expect(dropped.has(entries[entries.length - 1].key)).toBe(true);
+  });
+
+  test('drops values that are not status entries', () => {
+    expect(pruneStatusEntries([{ key: 'opm.status.0000000000000000', value: 'junk' }], NOW_MS)).toEqual(['opm.status.0000000000000000']);
+  });
+});
+
+// /opm-status --all: every open plan on this machine, from the store alone.
+
+const MAX_ALL_LINES = 30;
+const MAX_ALL_ROWS = 25;
+const ALL_FOOTER = /^\d+ projects, cache only: run \/opm-status in a repo for its live state$/;
+const SEEN = '\\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d';
+
+async function runAll($: Engine, args = '--all'): Promise<string[]> {
+  await $.session.start({ cwd: REPO_ROOT, surface: null, isInteractive: false });
+  const result = await $.command.run({ command: COMMAND, args, origin: { kind: 'composer' }, presentation: { isFullscreen: false, columns: 80 } });
+  const lines = (result.text ?? '').split('\n');
+  expect(lines.length <= MAX_ALL_LINES).toBe(true);
+  return lines;
+}
+
+describe('/opm-status --all', () => {
+  test('two repos with open plans are two rows, newest first, then the footer', async ($, on) => {
+    serveRepo(on, { 'README.md': { text: '# hi', mtimeMs: OLDER_MS } }, { exitCode: 0, stdout: 'main\n' });
+    serveStore(on, {
+      [statusKey('/Users/dev/older-app')]: entryFor('/Users/dev/older-app', NOW_MS - 2 * DAY_MS),
+      [statusKey('/Users/dev/newer-app')]: entryFor('/Users/dev/newer-app', NOW_MS - 60_000, { planPath: 'docs/plans/2026-10-04-api.md', tasksDone: 2, tasksTotal: 5, currentTaskTitle: 'Task 3 API routes' }),
+    });
+    const lines = await runAll($);
+    expect(lines.length).toBe(3);
+    expect(new RegExp(`^newer-app: 2026-10-04-api\\.md 2/5, Task 3 API routes, seen ${SEEN}$`).test(lines[0])).toBe(true);
+    expect(new RegExp(`^older-app: 2026-09-20-other\\.md 1/4, Task 2 Other work, seen ${SEEN}$`).test(lines[1])).toBe(true);
+    expect(lines[2]).toBe('2 projects, cache only: run /opm-status in a repo for its live state');
+  });
+
+  test('an empty store says no plans are recorded', async ($, on) => {
+    serveRepo(on, { 'README.md': { text: '# hi', mtimeMs: OLDER_MS } }, { exitCode: 0, stdout: 'main\n' });
+    serveStore(on, { 'opm.meter': [] });
+    expect(await runAll($)).toEqual(['no open plans recorded on this machine yet']);
+  });
+
+  test('the current repo is refreshed before listing', async ($, on) => {
+    serveRepo(on, freshRepo(), { exitCode: 0, stdout: 'main\n' });
+    serveStore(on);
+    const lines = await runAll($);
+    expect(lines[0].startsWith('widget: 2026-10-01-widget.md 1/3, Task 2 Widget view, seen ')).toBe(true);
+  });
+
+  test('an unknown option names itself', async ($, on) => {
+    serveRepo(on, freshRepo(), { exitCode: 0, stdout: 'main\n' });
+    serveStore(on);
+    expect(await runAll($, '--everything')).toEqual(['opm: unknown option "--everything"; use --all']);
+  });
+});
+
+describe('formatAllStatus', () => {
+  test('marks rows older than 3 days stale and truncates long titles to 40 characters', () => {
+    const lines = formatAllStatus([
+      entryFor('/Users/dev/quiet', NOW_MS - 4 * DAY_MS, { currentTaskTitle: `Task 9 ${'very long title '.repeat(5)}` }),
+    ], NOW_MS);
+    expect(lines.length).toBe(2);
+    expect(lines[0].endsWith(' (stale)')).toBe(true);
+    const title = lines[0].split(', ')[1];
+    expect(title.length).toBe(40);
+    expect(title.endsWith('...')).toBe(true);
+  });
+
+  test('shows at most 25 rows and counts every project in the footer', () => {
+    const entries = Array.from({ length: 40 }, (_, i) => entryFor(`/Users/dev/p${i}`, NOW_MS - i * 60_000));
+    const lines = formatAllStatus(entries, NOW_MS);
+    expect(lines.length).toBe(MAX_ALL_ROWS + 1);
+    expect(lines[0].startsWith('p0: ')).toBe(true);
+    expect(ALL_FOOTER.test(lines[MAX_ALL_ROWS])).toBe(true);
+    expect(lines[MAX_ALL_ROWS].startsWith('40 projects')).toBe(true);
+  });
+
+  test('an entry with no task title or total still reads', () => {
+    const [row] = formatAllStatus([entryFor('C:\\work\\winapp\\', NOW_MS, { tasksTotal: null, currentTaskTitle: null })], NOW_MS);
+    expect(new RegExp(`^winapp: 2026-09-20-other\\.md 1/\\?, no current task, seen ${SEEN}$`).test(row)).toBe(true);
   });
 });
