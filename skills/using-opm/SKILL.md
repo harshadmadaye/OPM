@@ -40,7 +40,7 @@ When no row fits, ask one question about size.
 4. `opm:verification-before-completion` - fresh evidence before any "done", commit, or PR.
 5. `opm:compound-learnings` - capture anything non-obvious learned along the way.
 
-Explainer video of a spec or document: `opm:explainer-video <path>` makes a narrated slideshow (MP4) from it.
+Optional: `/opm-video:explainer-video <path>` turns this into a narrated explainer (install the opm-video plugin first).
 
 ## Red Flags
 

@@ -69,7 +69,7 @@ You can also check the plugin with `claude plugin details opm`.
 
 ---
 
-## Three things worth trying first
+## Two things worth trying first
 
 ### 🧠 `/opm:brew-idea` — argue with your idea before you build it
 
@@ -122,37 +122,6 @@ first, offline capable.
 It ends by handing you a running app and a URL, or launching it on a connected
 device. For the build to run unattended, switch Claude Code to auto mode with
 Shift+Tab when it asks. OPM never changes your permission mode itself.
-
-### 🎬 `/opm:explainer-video` — turn a spec into a narrated video
-
-Point it at a spec, a brew-idea result, or any document. You get a 1920x1080
-MP4 with a neural voice-over and subtitles, plus the editable storyboard and
-slides. It is a narrated slideshow with fades, not animation.
-
-```
-/opm:explainer-video docs/specs/2026-09-17-field-sales-brew.md
-```
-
-**Here is the interesting part.** The first version of this pipeline was run by
-hand, with an AI drawing every slide. Fourteen slides cost about **190,000
-tokens, 77 tool calls and 22 minutes.**
-
-So the AI was taken out of the drawing. Slides are now rendered by script from
-a kit of nine layouts and 24 icons, filled in from the storyboard like a form.
-**Drawing a slide now costs no AI tokens at all** — it is a script, and scripts
-are free. What is left is writing the storyboard, which is words and genuinely
-needs judgement, plus hand-drawing the occasional scene no layout can express.
-
-| | Hand-drawn by AI | Layout kit |
-|---|---|---|
-| Who draws the slides | An AI, one at a time | A script, all at once |
-| Tokens to draw them | ~190,000 | none |
-| Reviewing the result | 14 images, one by one | one contact sheet, looked at once |
-| Changing one word | redraw the slide | re-render; only that scene rebuilds |
-
-It asks before any audio leaves your machine, and offers a fully offline voice
-if you would rather nothing did. Every fact in the video has to trace back to
-the source document, and a validator enforces it.
 
 ---
 
@@ -213,6 +182,56 @@ WSL only.
 
 ---
 
+## Optional plugins
+
+The marketplace carries one optional plugin beside the core. It is kept out of
+`opm` so the core stays small and ships no video toolchain.
+
+### 🎬 `opm-video` — turn a spec into a narrated video
+
+Point it at a spec, a brew-idea result, or any document. You get a 1920x1080
+MP4 with a neural voice-over and subtitles, plus the editable storyboard and
+slides. It is a narrated slideshow with fades, not animation.
+
+```
+/opm-video:explainer-video docs/specs/2026-09-17-field-sales-brew.md
+```
+
+**Here is the interesting part.** The first version of this pipeline was run by
+hand, with an AI drawing every slide. Fourteen slides cost about **190,000
+tokens, 77 tool calls and 22 minutes.**
+
+So the AI was taken out of the drawing. Slides are now rendered by script from
+a kit of nine layouts and 24 icons, filled in from the storyboard like a form.
+**Drawing a slide now costs no AI tokens at all** — it is a script, and scripts
+are free. What is left is writing the storyboard, which is words and genuinely
+needs judgement, plus hand-drawing the occasional scene no layout can express.
+
+| | Hand-drawn by AI | Layout kit |
+|---|---|---|
+| Who draws the slides | An AI, one at a time | A script, all at once |
+| Tokens to draw them | ~190,000 | none |
+| Reviewing the result | 14 images, one by one | one contact sheet, looked at once |
+| Changing one word | redraw the slide | re-render; only that scene rebuilds |
+
+It asks before any audio leaves your machine, and offers a fully offline voice
+if you would rather nothing did. Every fact in the video has to trace back to
+the source document, and a validator enforces it.
+
+Install it after the core:
+
+```bash
+claude plugin install opm-video@opm
+```
+
+It needs a headless browser (Chrome, Chromium, Edge or Brave, or `CHROME_PATH`),
+and on first build it installs pinned ffmpeg, ffprobe and edge-tts into
+`~/.opm/explainer-video-tools`. Python is needed for the neural voice.
+**The neural voice sends the narration text to Microsoft's cloud speech service
+through edge-tts**; pick the local OS voice and nothing leaves your machine.
+
+---
+
 ## Everything in the box
 
 <details>
@@ -236,7 +255,6 @@ WSL only.
 |---|---|
 | `milestone-planning` | Multi-week work: roadmap, short STATE digest, phased plans with wave scheduling for parallel subagents. |
 | `jump-start` | A whole project from one prompt. |
-| `explainer-video` | A spec becomes a narrated explainer video, rendered from a layout kit. macOS, Linux and Windows. |
 
 **Engineering**
 
@@ -292,6 +310,7 @@ Set `OPM_HOOKS_DISABLED=1` to turn them all off. Per-hook switches are
 .claude-plugin/   plugin.json, marketplace.json
 agents/           5 subagents
 skills/           13 skills (SKILL.md plus templates/scripts where needed)
+plugins/          opm-video, the optional explainer-video plugin
 hooks/            hooks.json and 6 dependency-free Node scripts
 rules/            copied into <repo>/.claude/rules/opm/ by the installer
 bin/              the npx installer

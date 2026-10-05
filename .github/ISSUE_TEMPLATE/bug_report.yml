@@ -9,8 +9,8 @@ body:
     id: part
     attributes:
       label: Which part
-      description: The skill, agent, hook or script involved.
-      placeholder: skills/explainer-video/scripts/render-frames.js
+      description: The skill, agent, hook or script involved, and the plugin (opm or opm-video).
+      placeholder: plugins/opm-video/skills/explainer-video/scripts/render-frames.js
     validations:
       required: true
   - type: textarea

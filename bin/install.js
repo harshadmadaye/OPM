@@ -238,7 +238,8 @@ async function main(argv) {
   log(dim('  /opm:brainstorming     design it before writing code'));
   log(dim('  /opm:brew-idea         four agents argue the idea out first'));
   log(dim('  /opm:jump-start        a whole new project from one prompt'));
-  log(dim('  /opm:explainer-video   turn a spec into a narrated explainer video'));
+  log(dim('  Optional: /opm-video:explainer-video turns a spec into a narrated video;'));
+  log(dim('  install it with claude plugin install opm-video@opm'));
   log('');
   log(dim('  Docs: https://github.com/harshadmadaye/OPM'));
   log('');

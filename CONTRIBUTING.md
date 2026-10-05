@@ -30,7 +30,7 @@ Good first contributions:
 
 - A stack patterns skill for a language the plugin does not cover.
 - A reviewer subagent for a domain you know well.
-- A layout for `explainer-video`, which is self-contained and has a clear contract.
+- A layout for `explainer-video` in the optional `opm-video` plugin, which is self-contained and has a clear contract.
 - Fixing something the README promises and the code does not do.
 
 Please open an issue before a large change, so we can agree the shape before
@@ -67,7 +67,7 @@ git config core.hooksPath .githooks
 Every test runs offline. No test may reach the network, launch a browser, run
 `ffmpeg`, install a package or speak. Where a script drives an external tool,
 give it an injectable seam and a `--dry-run`, and test the arguments it would
-have used. `skills/explainer-video/scripts/` is the worked example of this.
+have used. `plugins/opm-video/skills/explainer-video/scripts/` is the worked example of this.
 
 ```
 node --test tests/*.test.js
