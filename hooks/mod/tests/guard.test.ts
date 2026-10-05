@@ -136,7 +136,7 @@ describe('guard hook', () => {
     expect(world.ran).toEqual([]);
     // The failure kind depends on where in the chain the error surfaces; the
     // contract is that the call is denied and nothing runs.
-    expect(deniedText(result).startsWith('OPM guard failed (')).toBe(true);
+    expect(/^OPM (guard|hook-bypass check) failed \(/.test(deniedText(result))).toBe(true);
   });
 
   test('OPM_GUARD=off passes everything', async ($, on) => {
