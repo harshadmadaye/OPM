@@ -204,7 +204,7 @@ Nothing here phones home and nothing runs a model behind your back.
 ## Everything in the box
 
 <details>
-<summary><b>All 16 skills</b> — invoked as <code>/opm:&lt;name&gt;</code>, or picked up automatically when they match the task</summary>
+<summary><b>All 15 skills</b> — invoked as <code>/opm:&lt;name&gt;</code>, or picked up automatically when they match the task</summary>
 
 **The loop**
 
@@ -225,7 +225,6 @@ Nothing here phones home and nothing runs a model behind your back.
 | `milestone-planning` | Multi-week work: roadmap, short STATE digest, phased plans with wave scheduling for parallel subagents. |
 | `jump-start` | A whole project from one prompt. |
 | `explainer-video` | A spec becomes a narrated explainer video, rendered from a layout kit. macOS, Linux and Windows. |
-| `story-video` | Old name for `explainer-video`; forwards to it. Removed in the next release. |
 
 **Engineering**
 
@@ -281,7 +280,7 @@ Set `OPM_HOOKS_DISABLED=1` to turn them all off. Per-hook switches are
 ```
 .claude-plugin/   plugin.json, marketplace.json
 agents/           5 subagents
-skills/           16 skills (SKILL.md plus templates/scripts where needed)
+skills/           15 skills (SKILL.md plus templates/scripts where needed)
 hooks/            hooks.json and 6 dependency-free Node scripts
 rules/            copied into <repo>/.claude/rules/opm/ by the installer
 bin/              the npx installer
