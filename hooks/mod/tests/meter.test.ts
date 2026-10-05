@@ -176,3 +176,99 @@ describe('summarize', () => {
     });
   });
 });
+
+const REPORT = 'opm-report';
+const MAX_REPORT_LINES = 15;
+
+async function report($: Engine, args = ''): Promise<string[]> {
+  const result = await $.command.run({
+    command: REPORT,
+    args,
+    origin: { kind: 'composer' },
+    presentation: { isFullscreen: false, columns: 80 },
+  });
+  const lines = (result.text ?? '').split('\n');
+  expect(lines.length <= MAX_REPORT_LINES).toBe(true);
+  return lines;
+}
+
+describe('/opm-report', () => {
+  test('session start registers the report command to run mid-turn', async ($, on) => {
+    const registered: unknown[] = [];
+    on('command.register', (_$, e) => {
+      registered.push(e);
+      return { value: { command: e.name } };
+    });
+    on('session.start', (_$, e) => e);
+    await $.session.start({ cwd: '/repo', surface: null, isInteractive: false });
+    expect(registered).toContainEqual(expect.objectContaining({ name: REPORT, immediate: true }));
+  });
+
+  test('off with no data points at the enable command', async ($, on) => {
+    world(on);
+    expect(await report($)).toEqual([
+      'meter: off (toggle with --enable / --disable)',
+      'turn it on with /opm-report --enable',
+      'local only, nothing sent',
+    ]);
+  });
+
+  test('on with no data says no turns yet', async ($, on) => {
+    world(on, { [ENABLED_KEY]: true });
+    expect(await report($)).toEqual([
+      'meter: on (toggle with --enable / --disable)',
+      'no turns recorded yet',
+      'local only, nothing sent',
+    ]);
+  });
+
+  test('--enable and --disable flip the flag and confirm in one line', async ($, on) => {
+    const { store } = world(on);
+    expect(await report($, '--enable')).toEqual(['opm: meter on; each turn is recorded on this machine only']);
+    expect(store.get(ENABLED_KEY)).toBe(true);
+    expect(await report($, ' --disable ')).toEqual(['opm: meter off; recorded turns are kept until they age out']);
+    expect(store.get(ENABLED_KEY)).toBe(false);
+  });
+
+  test('an unknown option is named', async ($, on) => {
+    world(on);
+    expect(await report($, '--bogus')).toEqual(['opm: unknown option "--bogus"; use --enable or --disable']);
+  });
+
+  test('with data: totals, a per-skill table, store use and the privacy line', async ($, on) => {
+    const entries = [
+      entryAt(NOW_MS - 3000, { input: 1000, output: 100, cacheRead: 9000, cacheWrite: 500, skills: ['opm:tdd-workflow'] }),
+      entryAt(NOW_MS - 2000, { input: 3000, output: 200, cacheRead: 9000, cacheWrite: 500, skills: ['opm:tdd-workflow', 'opm:writing-plans'], isSubagent: true }),
+      entryAt(NOW_MS - 1000, { input: 2000, output: 300, cacheRead: 9000, cacheWrite: 500 }),
+    ];
+    world(on, { [ENABLED_KEY]: true, [METER_KEY]: entries });
+    const storeBytes = JSON.stringify(entries).length;
+    expect(await report($)).toEqual([
+      'meter: on (toggle with --enable / --disable)',
+      'last 14 days: 3 turns (1 subagent)',
+      'tokens: input 6,000, output 600, cache read 27,000, cache write 1,500',
+      'skill                          turns  median input',
+      'opm:tdd-workflow                   2         2,000',
+      'opm:writing-plans                  1         3,000',
+      `store: ${(storeBytes / 1024).toFixed(1)} KiB of 256 KiB`,
+      'local only, nothing sent',
+    ]);
+  });
+
+  test('the skill table shows at most 8 rows', async ($, on) => {
+    const skills = Array.from({ length: 12 }, (_, i) => `skill-${String(i).padStart(2, '0')}`);
+    world(on, { [ENABLED_KEY]: true, [METER_KEY]: [entryAt(NOW_MS, { skills })] });
+    const lines = await report($);
+    expect(lines.filter((line) => line.startsWith('skill-')).length).toBe(8);
+    expect(lines).toContain('(4 more skills not shown)');
+  });
+
+  test('corrupt data is reported, not thrown', async ($, on) => {
+    world(on, { [ENABLED_KEY]: true, [METER_KEY]: { bad: true } });
+    expect(await report($)).toEqual([
+      'meter: on (toggle with --enable / --disable)',
+      'meter data is unreadable; it resets on the next recorded turn',
+      'local only, nothing sent',
+    ]);
+  });
+});
