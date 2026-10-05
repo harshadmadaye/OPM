@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0 - 2026-10-05
+
+- CI: every pull request runs the suite on macOS, Linux and Windows with Node 18, 20 and 22. A gate job then checks the token budget, the npm package contents and both manifests with `claude plugin validate --strict`.
+- `npm run tokens` measures the always-on cost and fails when it passes a ceiling. The plugin costs about 2,541 tokens per session (ceiling 2,850) and `rules/common` about 1,401 when the rules are installed (ceiling 1,550). These are bytes / 4 estimates. The README's earlier 2,300 figure was an underestimate. `docs/why-opm.md` carries the generated table.
+- Breaking: `/opm:story-video` is removed. Use `/opm:explainer-video`. Existing tool installs under `~/.opm/story-video-tools/` still work.
+- `scripts/push-via-api.sh` is removed from the repo. It was a maintainer helper and no longer ships.
+- Windows scope: the installer, hooks and tests run on Windows. `scripts/dev-server.sh` and `scripts/install-rules.sh` are macOS, Linux and WSL only.
+
 ## 0.6.1 - 2026-09-29
 
 - `explainer-video` can no longer ship a silent video. Before encoding, `build-video.js` measures every scene's narration and stops, naming the scene, when it is silent (loudest moment under -50 dB) or too short to hold its words. After encoding it confirms the MP4 has an audio track. The done line ends `narration checked`, and the skill forbids covering a failed narration with silent audio.
