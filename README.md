@@ -7,7 +7,7 @@
 OPM is a [Claude Code](https://claude.com/claude-code) plugin that adds a full
 engineering workflow: brainstorm a design, write a plan, build it test-first
 with fresh-context subagents, review it, and verify it before anything is
-called done. It keeps token costs down while it does.
+called done. It measures what it costs, and CI holds it to that.
 
 [![CI](https://github.com/harshadmadaye/OPM/actions/workflows/ci.yml/badge.svg)](https://github.com/harshadmadaye/OPM/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/opm-core.svg)](https://www.npmjs.com/package/opm-core)
@@ -19,6 +19,47 @@ called done. It keeps token costs down while it does.
 ```bash
 npx opm-core@latest
 ```
+
+## What OPM can show
+
+Four claims, each with its evidence. Token counts are bytes / 4 estimates from
+`npm run tokens`.
+
+**1. It costs 2,379 tokens per session.** That is every skill and agent
+description plus the using-opm skill injected at session start. The rules add
+1,401 tokens in repos that install them. CI fails if either grows past its
+ceiling. Evidence: [the cost table](docs/why-opm.md#what-opm-costs-per-session).
+You can also check the plugin with `claude plugin details opm`.
+
+**2. Big skills load a small core.** A skill costs nothing until it runs. The
+split skills then load only their core; the `references/` files load when a
+step needs them.
+
+| Skill | Core, per run (tokens) | References, on demand (bytes) |
+|---|---|---|
+| `executing-plans` | 1,056 | 18,567 |
+| `flutter-patterns` | 856 | 10,754 |
+| `react-patterns` | 828 | 8,849 |
+| `python-patterns` | 797 | 10,166 |
+| `verification-before-completion` | 1,371 | 4,814 |
+
+The other skills are not split yet. The largest, `milestone-planning`, loads
+2,911 tokens. Evidence: [the per-skill table](docs/why-opm.md#what-opm-costs-per-session).
+
+**3. CI runs on macOS, Linux and Windows, with Node 18, 20 and 22.** Nine test
+jobs, then a gate that validates the manifests with the Claude Code CLI.
+Evidence: [CI](https://github.com/harshadmadaye/OPM/actions/workflows/ci.yml)
+and the badge above.
+
+**4. Status and safety cost no model turn, on Claude Code 2.1.287 or later.**
+`/opm-status`, `/opm-status --all` and `/opm-report` are answered by code. The
+destructive-command hold and the hook-bypass checks run as code before a tool
+call. These are tested with the Claude Code test kit in CI, not yet in a live
+session. Evidence: [Mod features](#mod-features-claude-code-21287-or-later) and
+[docs/threat-model.md](docs/threat-model.md).
+
+What OPM cannot show yet, such as the cost of a whole task, is listed in
+[docs/why-opm.md](docs/why-opm.md#what-we-can-and-cannot-show-yet).
 
 ---
 
@@ -42,9 +83,8 @@ the expensive way.
 ## What OPM does instead
 
 OPM splits the work. A small main thread holds the plan. Each task goes to a
-**fresh worker that sees only that one task** and then disappears. The main
-thread never balloons, so it does not get slower, dumber or pricier as the day
-goes on.
+**fresh worker that sees only that one task** and then disappears. The long
+work happens in the workers, so the main thread stays small.
 
 Then it refuses to take anyone's word for anything. A reviewer reads every
 task's diff before the next one starts. Nothing is called done, fixed or
@@ -54,18 +94,11 @@ being wiped, so if the session resets, the work does not restart.
 |  | One long chat | OPM |
 |---|---|---|
 | What the model re-reads each turn | Everything so far | The current task |
-| Cost as the day goes on | Climbs | Stays flat |
 | Quality as the day goes on | Drifts | Held by a reviewer gate |
 | "Tests pass" | Sometimes a guess | Pasted output, or it does not count |
 | If the session resets | Start over | The ledger picks up where it stopped |
 
-Carrying all of this costs about **2,379 tokens** in every session. That is the
-entire always-on price. The rules add about **1,401 tokens** when the rules are
-installed. Everything else loads only when it is actually used.
-
-These are bytes / 4 estimates. CI checks them with `npm run tokens` and fails if
-they grow past a ceiling. The full table is in [docs/why-opm.md](docs/why-opm.md).
-You can also check the plugin with `claude plugin details opm`.
+What this costs is measured above, in [What OPM can show](#what-opm-can-show).
 
 ---
 

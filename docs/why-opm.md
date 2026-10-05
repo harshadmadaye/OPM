@@ -53,3 +53,28 @@ Skills load only when invoked. The 10 largest, soft cap 1200 tokens each:
 | executing-plans | 1056 |
 | using-opm | 883 |
 <!-- token-budget:end -->
+
+## What we can and cannot show yet
+
+**Measured.** The bytes of every always-on part, every SKILL.md and every
+`references/` folder, by `scripts/token-budget.js` on every CI run. The test
+suite on macOS, Linux and Windows with Node 18, 20 and 22. The mod features
+pass the Claude Code test kit (`claude plugin test`) in CI.
+
+**Estimated.** Every token count on this page is bytes / 4. No tokenizer runs,
+so a real count will differ.
+
+**Not measured yet.**
+
+- The cost of a whole task, end to end. Nobody has compared a plan run with
+  OPM against the same plan without it, so OPM makes no per-task saving claim.
+- Real per-turn use across users. The `/opm-report` meter is opt-in and keeps
+  its data in a local store; nothing is sent, so no aggregate numbers exist.
+- The mod in a live interactive session. Its features have run only under the
+  test kit.
+- Skill routing accuracy. [docs/evals.md](evals.md) records a spike of 3
+  prompts on haiku. Two runs picked the expected skill (`tdd-workflow`,
+  `brew-idea`). The third reloaded `using-opm` and hit the one-turn limit
+  before it chose, so it could not tell. The spike shows that a headless run
+  can see which skill a prompt triggers. It is not an accuracy figure; the
+  30-prompt eval has not been run.
