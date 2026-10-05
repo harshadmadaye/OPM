@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.0 - 2026-10-05
+
+- New `npx opm-core status`: prints the open plan ledger (tasks done, current task, last ruling), the milestone position and the git branch, on any Claude Code version. One shared ledger parser (`bin/lib/ledger.mjs`) feeds it and the mod. A malformed ledger counts as open so its error reaches you; plan paths outside the repo are never read.
+- The SessionStart hook adds one resume line when a plan ledger is open, naming it and the next task. With no open ledger the start-up text is unchanged, and any ledger problem leaves it exactly as before.
+- OPM's first mod (Claude Code 2.1.287+): `hooks/hooks.json` now loads `hooks/mod/register.mjs` beside the unchanged settings hooks, which older Claude Code keeps running. `/opm-status` is answered from code with no Claude turn. Commands use a hyphen (`/opm-status`), since names cannot contain a colon; output is plain text, so it works in the VS Code chat panel.
+- Destructive-command hold (mod): `rm -rf` on root-like or out-of-repo paths, force-pushes to `main` or `master` (or naming no branch) and `git reset --hard` ask first. Anything but "Run it" denies, as does a session where nobody can answer or a failure of the guard itself. `OPM_GUARD=off` turns it off. `docs/threat-model.md` covers it.
+- Opt-in token meter (mod): off by default. `/opm-report --enable` records each turn's token use and the skills that ran in one local store key (14 days, 256 KiB cap); `/opm-report` prints the summary and `--disable` stops it. Local only, nothing sent.
+- Tested range: `package.json` declares Claude Code 2.1.273 - 2.1.289 and mods from 2.1.287. Doctor adds rows for the tested range, mod availability and an installed plugin older than the package (with `claude update` and `claude plugin update opm@opm` as fixes).
+- CI runs the mod tests (`claude plugin test .`) in the gate job and a weekly or manual job against the latest Claude Code. The README lists the events and calls the mod declares. The mod features are tested with the Claude Code test kit, not yet in a live session.
+
 ## 0.7.1 - 2026-10-05
 
 - Always-on cost drops from about 2,541 tokens per session to about 2,379, and the CI ceiling drops from 2,850 to 2,650. `rules/common` is unchanged at about 1,401 (ceiling 1,550). `docs/why-opm.md` carries the regenerated table.

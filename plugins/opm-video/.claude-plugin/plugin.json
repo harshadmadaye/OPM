@@ -1,7 +1,7 @@
 {
   "name": "opm-video",
   "displayName": "OPM Explainer Video",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Optional OPM add-on: turns a spec or document into a narrated explainer video. Needs a headless browser (Chrome, Chromium, Edge or Brave), ffmpeg and a text-to-speech voice. The neural voice uses edge-tts, which sends the narration text to a Microsoft cloud speech service; choose the local OS voice to keep everything on the machine.",
   "author": {
     "name": "Harshad Madaye",

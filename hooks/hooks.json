@@ -1,4 +1,7 @@
 {
+  "modules": [
+    "./mod/register.mjs"
+  ],
   "hooks": {
     "SessionStart": [
       {

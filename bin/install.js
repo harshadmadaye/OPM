@@ -206,6 +206,7 @@ async function chooseLanguages(target) {
 
 async function main(argv) {
   if (argv[0] === 'doctor') return require('./doctor').main(argv.slice(1));
+  if (argv[0] === 'status') return require('./status').main(argv.slice(1));
   const options = parseArgs(argv);
   const log = console.log;
   if (options.help) { log(USAGE); return 0; }

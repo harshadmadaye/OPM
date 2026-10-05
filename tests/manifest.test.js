@@ -49,3 +49,17 @@ test('explainer-video is pointed to, never copied, by the skills that can feed i
   const usingOpm = fs.readFileSync(path.join(ROOT, 'skills', 'using-opm', 'SKILL.md'), 'utf8');
   assert.ok(usingOpm.includes(pointer), 'using-opm does not carry the pointer line');
 });
+
+test('package.json declares the tested Claude Code range and a modsMin no newer than its upper bound', () => {
+  const declared = read('package.json').opm && read('package.json').opm.claudeCode;
+  assert.ok(declared, 'package.json has no opm.claudeCode');
+  const semver = /^\d+\.\d+\.\d+$/;
+  const [low, high] = String(declared.tested).split(' - ');
+  assert.match(low, semver, 'tested range must read "<low> - <high>"');
+  assert.match(high || '', semver, 'tested range must read "<low> - <high>"');
+  assert.match(String(declared.modsMin), semver);
+  const parts = (v) => v.split('.').map(Number);
+  const compare = (a, b) => parts(a).reduce((acc, n, i) => acc || n - parts(b)[i], 0);
+  assert.ok(compare(low, high) <= 0, 'range low is above its high');
+  assert.ok(compare(declared.modsMin, high) <= 0, 'modsMin is above the tested upper bound');
+});

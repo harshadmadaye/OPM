@@ -62,8 +62,9 @@ test('CRLF frontmatter measures the same as LF', () => {
 });
 
 test('the session preamble matches what the SessionStart hook injects', () => {
+  // cwd points at a folder with no docs/plans, so an open ledger in this repo adds no resume line.
   const output = execFileSync('node', [path.join(ROOT, 'hooks', 'scripts', 'session-start.js')], {
-    input: '{}', env: { ...process.env, CLAUDE_PLUGIN_ROOT: ROOT, OPM_HOOKS_DISABLED: '' },
+    input: JSON.stringify({ cwd: path.join(ROOT, 'tests', 'fixtures') }), env: { ...process.env, CLAUDE_PLUGIN_ROOT: ROOT, OPM_HOOKS_DISABLED: '' },
   }).toString();
   const injected = JSON.parse(output).hookSpecificOutput.additionalContext;
   const usingOpm = fs.readFileSync(path.join(ROOT, 'skills', 'using-opm', 'SKILL.md'), 'utf8');
