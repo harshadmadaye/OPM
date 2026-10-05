@@ -10,7 +10,7 @@ const path = require('path');
 
 const BYTES_PER_TOKEN = 4;
 // Ceilings = measured baseline on 2026-10-05 plus 10%, rounded up to the next 50.
-const PLUGIN_ALWAYS_ON_CEILING_TOKENS = 2850; // measured 2,579
+const PLUGIN_ALWAYS_ON_CEILING_TOKENS = 2650; // measured 2,379 (0.7.1)
 const RULES_COMMON_CEILING_TOKENS = 1550; // measured 1,401
 const SKILL_SOFT_CAP_TOKENS = 1200; // fits a 4.5 KB SKILL.md core
 // Split skills keep their core under the soft cap as a hard limit; others only warn.

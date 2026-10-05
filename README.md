@@ -59,7 +59,7 @@ being wiped, so if the session resets, the work does not restart.
 | "Tests pass" | Sometimes a guess | Pasted output, or it does not count |
 | If the session resets | Start over | The ledger picks up where it stopped |
 
-Carrying all of this costs about **2,541 tokens** in every session. That is the
+Carrying all of this costs about **2,379 tokens** in every session. That is the
 entire always-on price. The rules add about **1,401 tokens** when the rules are
 installed. Everything else loads only when it is actually used.
 
@@ -173,6 +173,10 @@ SSH and that fails, set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1`.
 
 Nothing here phones home and nothing runs a model behind your back.
 
+To check an install, run `npx opm-core doctor`. It checks Node, Claude Code,
+the plugin, whether the copied rules are current, the tools the hooks call, and
+replays each hook offline. It exits 1 only when a check fails.
+
 ### Platforms
 
 You need Node 18 or later. The installer, hooks and tests run on macOS, Linux
@@ -241,7 +245,7 @@ through edge-tts**; pick the local OS voice and nothing leaves your machine.
 
 | Skill | What it does |
 |---|---|
-| `using-opm` | Injected at session start. Tells Claude to check for an applicable skill before any other action. |
+| `using-opm` | Injected at session start. Tells Claude to check for an applicable skill before any other action. Its routing table picks the skill by job size: a small fix goes straight to `tdd-workflow`, multi-week work to `milestone-planning`. |
 | `brew-idea` | Four agents argue the idea from product, engineering, skeptic and market angles; a judge ranks features. |
 | `brainstorming` | No code before the design is agreed. One question at a time, scaled to the size of the job. |
 | `writing-plans` | Turns an approved spec into bite-sized tasks, each with a failing test, implementation and commit. |
@@ -300,6 +304,10 @@ through edge-tts**; pick the local OS voice and nothing leaves your machine.
 Set `OPM_HOOKS_DISABLED=1` to turn them all off. Per-hook switches are
 `OPM_ALLOW_CONFIG_EDITS`, `OPM_SKIP_FORMAT` and `OPM_SKIP_TYPECHECK`; see
 [hooks/README.md](hooks/README.md).
+
+The hooks are guard rails, not a security boundary.
+[docs/threat-model.md](docs/threat-model.md) lists what they block, what they
+let through on purpose, and what is out of scope.
 
 </details>
 
