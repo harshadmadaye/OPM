@@ -2,3 +2,6 @@ firebase-debug.log
 node_modules/
 .DS_Store
 *.log
+
+# Maintainer-only helper, kept locally and out of the shipped repo
+scripts/push-via-api.sh

@@ -6,19 +6,19 @@ Goal: a measured, low-token, test-first Claude Code workflow where status, safet
 
 Decisions taken at milestone start (2026-10-05):
 - Token ceiling = today's measured always-on cost plus 10% headroom; the README is corrected to measured numbers; later trims lower the ceiling.
-- `push-via-api.sh` moves out of the repo (a copy lives in `~/.opm/bin/`).
+- `push-via-api.sh` no longer ships: untracked and git-ignored, kept in the maintainer working copy (ISS-001: move it to `~/.opm/bin/` by hand).
 - Native Windows support covers the Node parts (installer, hooks, tests); the shell helpers are documented as macOS, Linux and WSL only.
 
 ## Phase 1: Gate and measure (0.7.0)
 
 Goal: every release is tested on macOS, Linux and Windows, and the token-cost claim becomes a number enforced in CI.
 
-- [ ] 01-01 Token budget linter (`npm run tokens`) with an always-on ceiling and warn-only per-skill soft caps
-- [ ] 01-02 Remove the story-video alias, move push-via-api.sh out, untrack firebase-debug.log
-- [ ] 01-03 GitHub Actions CI: test matrix, release gate, package contents, plugin validate
-- [ ] 01-04 Release 0.7.0: measured numbers in README and why-opm.md, Windows scope, changelog, versions
+- [x] 01-01 Token budget linter (`npm run tokens`) with an always-on ceiling and warn-only per-skill soft caps
+- [x] 01-02 Remove the story-video alias, move push-via-api.sh out, untrack firebase-debug.log
+- [x] 01-03 GitHub Actions CI: test matrix, release gate, package contents, plugin validate
+- [x] 01-04 Release 0.7.0: measured numbers in README and why-opm.md, Windows scope, changelog, versions
 
-Status: Planned
+Status: Complete (2026-10-05), released as 0.7.0 on the branch
 
 ## Phase 2: Trim and steady the core (0.7.1)
 
@@ -26,7 +26,7 @@ Goal: cut per-run tokens, make routing obvious, make install and hook failures v
 
 Features: routing table in using-opm plus a 30-prompt fixture; split large skills into SKILL.md plus references/; merge verification-loop into verification-before-completion; `npx opm-core doctor` and the installer's next-step line; Stop hook skips unchanged languages and warns visibly; hook threat model and evasion tests; brew-idea user-invoked only; spin explainer-video out into an optional plugin; dedupe stack pattern skills against rules.
 
-Status: Not planned
+Status: Planned (7 plans, 4 waves)
 
 ## Phase 3: First mod (0.8.0)
 
