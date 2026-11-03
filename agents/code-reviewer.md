@@ -179,12 +179,15 @@ Organize findings by severity. For each issue:
 ```
 [CRITICAL] Hardcoded API key in source
 File: src/api/client.ts:42
+Confidence: 95%
 Issue: API key "sk-abc..." is committed to source and therefore to git history.
 Fix: Move to an environment variable; add to .env.example; rotate the key.
 
   const apiKey = "sk-abc123";           // BAD
   const apiKey = process.env.API_KEY;   // GOOD
 ```
+
+Confidence is your honest estimate that the finding is real; a finding below 80% is not reported (see Confidence-Based Filtering). A finding that cannot cite a line is dropped, or raised as a question, not a finding.
 
 End every review with:
 

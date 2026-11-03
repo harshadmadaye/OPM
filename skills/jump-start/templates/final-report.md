@@ -18,8 +18,16 @@ Phases completed, screens and flows delivered, stack used.
 | Typecheck | | unit |
 | Lint | | unit |
 | E2E or smoke | routes tested | simulator, physical-device or prod-like |
-| Code review | findings by severity, all CRITICAL/HIGH fixed | |
-| Security review | | |
+
+### Review findings
+| Severity | Found | Fixed | Parked | Dismissed |
+|---|---|---|---|---|
+| CRITICAL | 0 | | | |
+| HIGH | 0 | | | |
+| MEDIUM | 0 | | | |
+| LOW | 0 | | | |
+
+Code and security review combined. Dismissed: "[finding]" and why. Every CRITICAL or HIGH is fixed, parked or dismissed with a reason.
 
 ## Decisions made for you
 Link to `docs/milestones/v0.1/DECISIONS.md` and list the three that matter most.

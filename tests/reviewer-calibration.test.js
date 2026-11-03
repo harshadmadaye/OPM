@@ -25,14 +25,14 @@ const flatten = (text) => text.replace(/\s+/g, ' ');
 const frontmatter = (text) => text.split('---')[1];
 
 function findingsHeader(text) {
-  const line = text.split('\n').find((l) => /^\|\s*Severity\s*\|/.test(l));
-  return line ? line.split('|').map((c) => c.trim()).filter(Boolean) : [];
+  const line = text.split('\n').find((l) => /^\s*\|\s*Severity\s*\|/.test(l));
+  return line ? line.trim().split('|').map((c) => c.trim()).filter(Boolean) : [];
 }
 
 for (const file of AGENTS) {
   test(`A: ${file} output shows Confidence, a cited line, and drops uncited findings`, () => {
     const text = read(file);
-    assert.match(text, /Confidence: \d{2}%/, `${file}: no "Confidence: NN%" line`);
+    assert.match(text, /Confidence: (\d{2}|NN)%/, `${file}: no "Confidence: NN%" line`);
     assert.match(text, /File: [\w./-]+:(\d+|line)|`file:line`/, `${file}: no cited file:line`);
     assert.match(
       flatten(text),

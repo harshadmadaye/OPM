@@ -124,6 +124,6 @@ New API endpoints or server actions, auth changes, user input handling, DB or ru
 
 ## Output
 
-Group findings by severity, CRITICAL first, each with `file:line`, the concrete attack scenario, and the fix. End with a per-severity count and a verdict: **Block** on any CRITICAL, **Warning** on HIGH only, otherwise **Approve**. A review that finds nothing is valid; say so.
+Group findings by severity, CRITICAL first, each with `file:line`, `Confidence: NN%`, the concrete attack scenario, and the fix. A finding that cannot cite a line is dropped or reported as a question, not a finding. End with a per-severity count and a verdict: **Block** on any CRITICAL, **Warning** on HIGH only, otherwise **Approve**. A review that finds nothing is valid; say so.
 
 <!-- Adapted from affaan-m/ecc (MIT) -->
