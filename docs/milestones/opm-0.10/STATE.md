@@ -1,15 +1,15 @@
 # OPM 0.10 State
 
 **Goal:** OPM protects the developer's judgment on long runs: human checks stay human, evidence says where it came from, rules are proven by evals.
-**Current focus:** Phase 3 - Evidence quality
+**Current focus:** Phase 4 - Prove OPM works, release 0.10.0
 
 ## Position
 
-Phase: 3 of 4 (Evidence quality)
-Plan: 0 of 2 in this phase
-Status: Ready to execute
-Last activity: 2026-11-03 - Phase 2 closed (5 plans incl. review fixes, 293 tests, review pack written); Phase 3 planned (2 plans, 2 waves)
-Progress: 9 / 11 plans planned so far (Phase 4 planned at Phase 3 close)
+Phase: 4 of 4 (Prove OPM works, release 0.10.0)
+Plan: 0 of 5 in this phase
+Status: Executing (wave 1: 04-01, 04-04); Phase 3 review pack pending its code review
+Last activity: 2026-11-03 - Phase 3 complete (2 plans, 309 tests); Phase 4 planned (5 plans, 4 waves)
+Progress: 11 / 16 plans
 
 ## Recent decisions
 
@@ -25,12 +25,12 @@ None.
 
 ## Deferred issues
 
-20 open - see ISSUES.md. Most relevant to the next phase:
+23 open - see ISSUES.md. Most relevant to the next phase:
 - ISS-016: about 100 tokens of headroom per core; Phase 3 rules go in references/
 - ISS-008: loose skill-text tests (Phase 4 evals)
 
 ## Session continuity
 
 Last session: 2026-11-03
-Stopped at: Phase 2 closed, Phase 3 planned
-Next: execute PLAN-03-01, then PLAN-03-02
+Stopped at: Phase 3 complete; Phase 4 wave 1 dispatched
+Next: merge 04-01 and 04-04, write Phase 3 review pack, run 04-02 (paid, cap $5)

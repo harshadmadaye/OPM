@@ -46,25 +46,26 @@ Status: Complete (2026-11-03). 293 tests green. Review pack: phases/02-person-in
 
 Goal: every check says where it ran, simulator-only claims about performance are called out, and reviewer blind spots are visible in numbers.
 
-- [ ] 03-01 `env:` label in the verification gate, "not judgeable" rule for simulator performance claims, optional real-environment pass in a milestone's definition of done (item 10)
-- [ ] 03-02 Reviewer calibration: confidence and cited line in every agent's output, finding counts by severity and outcome in the final reports (item 11)
+- [x] 03-01 `env:` label in the verification gate, "not judgeable" rule for simulator performance claims, optional real-environment pass in a milestone's definition of done (item 10)
+- [x] 03-02 Reviewer calibration: confidence and cited line in every agent's output, finding counts by severity and outcome in the final reports (item 11)
 
 Waves: 03-01 then 03-02 (both edit jump-start final-report.md).
 
-Status: Planned (2026-11-03)
+Status: Complete (2026-11-03). 309 tests green. Review pack: phases/03-evidence-quality/REVIEW-PACK.md
 
 ## Phase 4: Prove OPM works, release 0.10.0
 
 Goal: behaviour evals prove the rules above on small sample repos, the full trigger eval is measured, the outcome report comes from data, and 0.10.0 ships.
 
-Planned plans:
-- 04-01 Eval harness spike: `claude plugin eval` (present in Claude Code 2.1.317) against `scripts/evals/`, sample repo fixtures, `--yes` gate (item 12)
-- 04-02 Six behaviour evals, run once, results committed, failures logged as issues (item 12)
-- 04-03 Full 30-prompt trigger eval with `--max-turns 2`, hit-rate table in docs/evals.md (item 13, closes 0.9 ISS-016)
-- 04-04 Outcome report in `bin/status.js` from ledger and git (item 14)
-- 04-05 Release 0.10.0: README, docs/using-opm.md, CHANGELOG, versions in package.json and `.claude-plugin/*.json`
+- [ ] 04-01 Six behaviour evals on sample repos and a gated runner, nothing paid (item 12)
+- [ ] 04-02 Run the behaviour evals once, commit results, failures become issues (item 12)
+- [ ] 04-03 Full 30-prompt trigger eval with `--max-turns 2`, hit-rate table in docs/evals.md (item 13, closes 0.9 ISS-016)
+- [ ] 04-04 `status --report` outcome report from ledger and milestone files (item 14, ISS-009, ISS-013, ISS-022)
+- [ ] 04-05 Release 0.10.0: README, docs/using-opm.md, CHANGELOG, versions in package.json and `.claude-plugin/*.json`
 
-Status: Not planned
+Waves: 1 = 04-01 + 04-04 (parallel, worktrees); 2 = 04-02 (paid, cap $5); 3 = 04-03 (paid, about $0.70); 4 = 04-05 (local release, nothing pushed).
+
+Status: Planned (2026-11-03)
 
 ## Definition of done
 

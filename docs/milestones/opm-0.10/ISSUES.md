@@ -23,3 +23,5 @@ Deferred enhancements and known gaps found during execution, numbered ISS-NNN. R
 - ISS-019: the expected-commit-count rule ignores REVIEW-PACK and queue commits at phase close; it undercounts slightly (Phase 2 review, LOW)
 - ISS-020: review-pack.js `unquote` strips quotes but not C escapes, so paths git still quotes (tab, quote, backslash, newline) keep escapes and may miss path categories (found in 02-05, Task 3)
 - ISS-021: the VERIFICATION REPORT has no gate line for E2E or smoke runs, which are the checks that run in a simulator or on a device; every example line defaults to env: unit. Add an optional "Real-env" line (found in 03-01)
+- ISS-022: finishing.md counts findings "from reviewer reports and ledger", but the ledger has no line for a finding's outcome; define `Finding: <SEVERITY> <fixed|parked|dismissed> - <summary>` (found in 03-02; taken into 04-04)
+- ISS-023: the executing-plans reviewer prompt uses Critical / Important / Minor while the agents and report tables use CRITICAL / HIGH / MEDIUM / LOW; align or state the mapping (found in 03-02)
