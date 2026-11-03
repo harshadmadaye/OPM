@@ -413,6 +413,29 @@ test('stop-format-typecheck: each formatter runs from its file\'s project root o
   assert.match(message, /notes\.js/);
 });
 
+test('stop-format-typecheck: prettier runs only when the project opts in to it', () => {
+  const name = 'prettier-optin';
+  const bin = path.join(tmpRoot, `${name}-bin`);
+  const log = path.join(tmpRoot, `${name}-tools.log`);
+  writeFakeTool(bin, 'npx', LOGGING_TOOL);
+  writeFixture(`${name}/bare/package.json`, '{"name":"bare"}');
+  writeFixture(`${name}/keyed/package.json`, '{"name":"keyed","prettier":{"singleQuote":true}}');
+  writeFixture(`${name}/rc/package.json`, '{"name":"rc"}');
+  writeFixture(`${name}/rc/.prettierrc.json`, '{"printWidth":120}');
+  const bare = writeFixture(`${name}/bare/a.js`, 'const a = 1\n');
+  const keyed = writeFixture(`${name}/keyed/b.js`, 'const b = 1\n');
+  const rc = writeFixture(`${name}/rc/c.js`, 'const c = 1\n');
+  const env = envWithPath(bin, { OPM_FAKE_TOOL_LOG: log, OPM_SKIP_TYPECHECK: '1' });
+
+  const { status, stdout } = runStopIn(path.join(tmpRoot, name), name, [bare, keyed, rc], env);
+  assert.equal(status, 0);
+  const calls = readToolLog(log);
+  assert.deepEqual(toolCalls(calls, realDir(`${name}/bare`)), [], 'prettier ran with default style in a project with no prettier config');
+  assert.equal(toolCalls(calls, realDir(`${name}/keyed`)).length, 1, JSON.stringify(calls));
+  assert.equal(toolCalls(calls, realDir(`${name}/rc`)).length, 1, JSON.stringify(calls));
+  assert.match(parseOutput(stdout).systemMessage, /prettier: skipped \(no prettier config or local prettier\)/);
+});
+
 test('stop-format-typecheck: a later turn formats only that turn\'s files', () => {
   const repo = buildRootingRepo('turns');
   const env = envWithPath(repo.bin, { OPM_FAKE_TOOL_LOG: repo.log });

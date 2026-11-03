@@ -3,7 +3,8 @@
 // (from the post-edit-accumulator list), grouped by project root. Each tool
 // runs with its root as cwd so it reads that project's config; files with no
 // project marker above them are skipped and reported, never formatted.
-//   JS/TS : prettier --write (local bin or npx --no-install), then tsc --noEmit
+//   JS/TS : prettier --write (local bin, or npx --no-install when a prettier
+//           config applies), then tsc --noEmit
 //           when tsconfig.json + node_modules/.bin/tsc exist in the root.
 //   Python: ruff format + ruff check (when ruff is on PATH).
 //   Dart  : dart format (when dart is on PATH).
@@ -39,6 +40,8 @@ const SKIP_FORMAT_ENV = 'OPM_SKIP_FORMAT';
 const ROOT_MARKERS = ['package.json', 'pyproject.toml', 'ruff.toml', '.ruff.toml', 'pubspec.yaml'];
 const MAX_ROOT_SEARCH_DEPTH = 40;
 const MAX_LISTED_UNROOTED = 5;
+// .prettierrc, .prettierrc.<ext> and prettier.config.<ext>, the files prettier itself reads.
+const PRETTIER_CONFIG = /^(\.prettierrc(\.[a-z0-9]+)?|prettier\.config\.[a-z0-9]+)$/i;
 const JS_TS = /\.[cm]?[jt]sx?$/i;
 const PYTHON = /\.py$/i;
 const DART = /\.dart$/i;
@@ -137,13 +140,45 @@ function outcome(result, okText) {
   return result.ok ? `${okText} in ${seconds(result.ms)}` : `failed in ${seconds(result.ms)}`;
 }
 
+function listDir(dir) {
+  try {
+    return fs.readdirSync(dir);
+  } catch {
+    return []; // an unreadable parent folder cannot hold config we could use
+  }
+}
+
+function hasPrettierKey(packageJsonPath) {
+  try {
+    return Object.prototype.hasOwnProperty.call(JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')), 'prettier');
+  } catch {
+    return false; // unreadable or invalid package.json: treat as no prettier key
+  }
+}
+
+// Prettier resolves config upward from the file, so look from the root upward too.
+function hasPrettierConfig(root) {
+  let dir = root;
+  for (let depth = 0; depth < MAX_ROOT_SEARCH_DEPTH; depth++) {
+    if (listDir(dir).some((entry) => PRETTIER_CONFIG.test(entry))) return true;
+    const packageJson = path.join(dir, 'package.json');
+    if (fs.existsSync(packageJson) && hasPrettierKey(packageJson)) return true;
+    const parent = path.dirname(dir);
+    if (parent === dir) return false;
+    dir = parent;
+  }
+  return false;
+}
+
 // Each check returns { status, detail?, blocker? }; status is the one-line summary.
+// Without a local prettier or a prettier config the project has not opted in, and
+// npx would format it with prettier's default style.
 function checkPrettier(root, files) {
   if (process.env[SKIP_FORMAT_ENV] === '1') return { status: `skipped (${SKIP_FORMAT_ENV}=1)` };
   let command = localBin(root, 'prettier');
   let args = ['--write', '--ignore-unknown', ...files];
   if (!command) {
-    if (!fs.existsSync(path.join(root, 'package.json'))) return { status: 'skipped (no package.json or local prettier)' };
+    if (!hasPrettierConfig(root)) return { status: 'skipped (no prettier config or local prettier)' };
     command = IS_WINDOWS ? 'npx.cmd' : 'npx';
     args = ['--no-install', 'prettier', ...args];
   }
