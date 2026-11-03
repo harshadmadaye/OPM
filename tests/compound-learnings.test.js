@@ -82,3 +82,11 @@ test('the resolution template documents the optional component field', () => {
   assert.match(template, /component: opm/);
   assert.match(template, /otherwise omit/);
 });
+
+test('SKILL.md tags OPM lessons and offers them back only after a yes', () => {
+  const skill = fs.readFileSync(path.join(SKILL_DIR, 'SKILL.md'), 'utf8');
+  assert.match(skill, /component: opm/);
+  assert.match(skill, /gh issue create --repo harshadmadaye\/OPM/);
+  assert.match(skill, /\.opm\/opm-feedback\.md/);
+  assert.match(skill, /only after (a|the user's) yes/i);
+});
