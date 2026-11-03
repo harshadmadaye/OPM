@@ -44,9 +44,11 @@ function requireSection(file, heading, nextHeading) {
 }
 
 function implementerTemplate() {
-  const text = section(read(IMPLEMENTER_BRIEF), TEMPLATE_HEADING, /\n```\n/);
+  const text = section(read(IMPLEMENTER_BRIEF), TEMPLATE_HEADING);
   assert.ok(text, `${IMPLEMENTER_BRIEF}: missing "${TEMPLATE_HEADING}"`);
-  return flatten(text);
+  const block = text.match(/```\n([\s\S]*?)\n```/);
+  assert.ok(block, `${IMPLEMENTER_BRIEF}: no fenced prompt template under "${TEMPLATE_HEADING}"`);
+  return flatten(block[1]);
 }
 
 // Prompt builders in the workflow script are `function <name>Prompt(...)`; each body runs to its closing brace at column 0.
