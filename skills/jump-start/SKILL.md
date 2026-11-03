@@ -95,6 +95,8 @@ Then ask one confirmation question with these options and free text for
 preferences: time budget (default 4 hours), and for mobile the target
 (connected device, iOS simulator, Android emulator, or auto).
 
+Review cadence: after each phase (default; the run pauses at each phase close until the developer has read the review pack) or only at the end (no pauses; the reply says "about N commits will land before you review"). Log the choice in DECISIONS.md.
+
 Permission mode. Claude Code cannot change its own mode and OPM writes no permission rules. The developer picks a built-in option (auto mode via Shift+Tab is recommended; all three are in references/build-and-run.md) and replies when it is set.
 
 Wait for the developer's reply. Do not start Phase 5 before it. From here on:

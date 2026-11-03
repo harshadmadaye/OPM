@@ -177,7 +177,7 @@ the plan's `<objective>`.
 
 ## Lifecycle in one screen
 
-1. **Start**: write ROADMAP.md (phases as vertical slices), an empty STATE.md, an empty ISSUES.md.
+1. **Start**: write ROADMAP.md (phases as vertical slices), an empty STATE.md, an empty ISSUES.md. Ask the review cadence once: after each phase (default) or only at the end; log it in STATE.md Recent decisions with the expected commit count (estimate rules in references/executing-a-phase.md).
 2. **Plan a phase**: read STATE.md, ROADMAP.md, ISSUES.md, prior SUMMARY frontmatter, and
    `docs/solutions/`. Use `opm:brainstorming` if the approach is unclear. Write two to five
    PLAN files, compute waves, commit them. Close with the continuation block.

@@ -102,3 +102,7 @@ checkpoint's what and how to verify and links to the evidence, then continues. A
 not block the next plan unless a later plan depends on what it verifies; that plan waits. Only a
 person sets a row to passed or failed. STATE.md reads "complete, N human checks pending" while any
 row is pending. `checkpoint:decision` and `checkpoint:human-action` are unchanged.
+
+### Review cadence
+
+Ask once at Start: after each phase (default; pause at each phase close until the developer has read REVIEW-PACK.md) or only at the end (no pauses; review packs are still written). For "only at the end", show the expected commit count and log the choice as a decision. Expected commits: planned tasks plus one metadata commit per plan. Before plans exist, estimate phases x 3 plans x 4 commits and say it is an estimate.
