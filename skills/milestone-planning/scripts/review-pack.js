@@ -61,7 +61,7 @@ const CATEGORIES = [
     name: "secrets",
     weight: 3,
     path: /(^|\/)\.env|(secret|credential|\.pem$|\.key$)/i,
-    line: /\b(api[_-]?key|secret|token|private[_-]?key)\s*[:=]/i,
+    line: /\b(api[_-]?key|secret|token|private[_-]?key|passw(or)?d)\s*[:=]/i,
   },
   {
     name: "external calls",
@@ -84,7 +84,8 @@ class UsageError extends Error {}
 
 function git(args, cwd) {
   try {
-    return execFileSync("git", args, {
+    // quotePath=false keeps non-ASCII paths unquoted in --raw and diff headers.
+    return execFileSync("git", ["-c", "core.quotePath=false", ...args], {
       cwd,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
@@ -114,20 +115,41 @@ function parseCommit(sha, cwd) {
   const files = [];
   const added = [];
   let currentFile = "";
+  let inHunk = false;
   for (const line of rest.split("\n")) {
-    const header = /^\+\+\+ b\/(.+)$/.exec(line);
-    if (header) {
-      currentFile = header[1];
-      continue;
-    }
-    const status = /^:\d+ \d+ \w+ \w+ ([AMDTUXB])\t(.+)$/.exec(line);
-    if (status) {
-      files.push({ status: status[1], file: status[2] });
-    } else if (line.startsWith("+") && !isQuietFile(currentFile)) {
-      added.push(line.slice(1));
+    if (line.startsWith("diff --git ")) {
+      currentFile = fileFromDiffHeader(line);
+      inHunk = false;
+    } else if (!inHunk && line.startsWith("@@")) {
+      inHunk = true;
+    } else if (!inHunk && line.startsWith("+++ b/")) {
+      currentFile = unquote(line.slice("+++ ".length)).replace(/^b\//, "");
+    } else if (inHunk && line.startsWith("+")) {
+      if (!isQuietFile(currentFile)) added.push(line.slice(1));
+    } else if (!currentFile) {
+      const status = /^:\d+ \d+ \w+ \w+ ([AMDTUXB])\t(.+)$/.exec(line);
+      if (status) files.push({ status: status[1], file: unquote(status[2]) });
     }
   }
   return { sha, subject, files, added };
+}
+
+/** Git still quotes paths with tabs, quotes or newlines; strip the quotes, keep the rest. */
+function unquote(file) {
+  return file.length > 1 && file.startsWith('"') && file.endsWith('"') ? file.slice(1, -1) : file;
+}
+
+/** "diff --git a/<path> b/<path>": with --no-renames both sides name the same path. */
+function fileFromDiffHeader(line) {
+  const sides = line.slice("diff --git ".length);
+  const half = (sides.length - 1) / 2;
+  if (Number.isInteger(half)) {
+    const before = unquote(sides.slice(0, half)).replace(/^a\//, "");
+    const after = unquote(sides.slice(half + 1)).replace(/^b\//, "");
+    if (before === after) return after;
+  }
+  const match = / "?b\/(.+?)"?$/.exec(sides);
+  return match ? match[1] : sides;
 }
 
 function scoreCommit(commit) {

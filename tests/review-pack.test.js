@@ -46,6 +46,8 @@ test.before(() => {
   commit('payment', { 'src/payments/webhook.js': 'const res = await fetch("https://api.stripe.com/v1/charges");\n' }, 'feat: payment webhook');
   commit('delete', {}, 'refactor: drop old module', ['src/old.js']);
   commit('tests', { 'tests/thing.test.js': 'test("x", () => {});\n' }, 'test: add thing test');
+  commit('nonAscii', { 'README.md': '# demo\n\nNotes.\n', 'é/f.js': 'const password = "hunter22hunter22";\n' }, 'feat: non-ascii path');
+  commit('fakeHeader', { 'notes.md': '++ b/x\ntoken = "abcdefabcdef1234"\n' }, 'docs: notes that look like a diff header');
 });
 
 test.after(() => {
@@ -90,7 +92,7 @@ test('D: default shows at most five items', () => {
 });
 
 test('E: a range with no risky commits says so instead of padding', () => {
-  const out = run(`${shas.delete}..HEAD`);
+  const out = run(`${shas.delete}..${shas.tests}`);
   assert.equal(out.status, 0);
   assert.match(out.stdout, /no risky commits/i);
   assert.equal((out.stdout.match(/^## \d+\. /gm) || []).length, 0);
@@ -105,6 +107,18 @@ test('F: a bad range exits 1 with a clear message', () => {
   const noArg = run();
   assert.equal(noArg.status, 1);
   assert.equal(run(`${base}..HEAD`, '--max', 'abc').status, 1);
+});
+
+test('I: an added secret in a non-ASCII path ranks as secrets, attributed to that path', () => {
+  const items = rank(`${shas.tests}..${shas.nonAscii}`, { cwd: repo });
+  assert.equal(items.length, 1, 'the non-ASCII commit should rank');
+  assert.ok(items[0].files.some(({ file }) => file === 'é/f.js'), `files were ${JSON.stringify(items[0].files)}`);
+  assert.ok(items[0].categories.includes('secrets'), `categories were ${items[0].categories}`);
+});
+
+test('I: an added line reading "++ b/x" does not start a new file', () => {
+  const items = rank(`${shas.nonAscii}..${shas.fakeHeader}`, { cwd: repo });
+  assert.deepEqual(items.map((item) => item.subject), [], 'lines in notes.md must stay attributed to notes.md');
 });
 
 const fsRead = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8').replace(/\s+/g, ' ');
