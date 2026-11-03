@@ -170,6 +170,9 @@ const {
 
 test("behaviour-eval refuses without --yes, warns about cost and does not call claude", () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), "opm-no-claude-"));
+  const resultsDir = path.join(EVALS_DIR, "results");
+  const listResults = () => (fs.existsSync(resultsDir) ? fs.readdirSync(resultsDir).sort() : []);
+  const resultsBefore = listResults();
   try {
     // PATH holds only node's directory, so a stray claude call would fail loudly instead of spending.
     const env = { PATH: path.dirname(process.execPath), HOME: home };
@@ -181,11 +184,8 @@ test("behaviour-eval refuses without --yes, warns about cost and does not call c
     assert.match(result.stderr, /spends tokens/);
     assert.match(result.stderr, /--yes/);
     assert.equal(result.stdout, "");
-    assert.equal(
-      fs.existsSync(path.join(EVALS_DIR, "results")),
-      false,
-      "no results directory is created",
-    );
+    // Earlier paid runs may have left results (git-ignored); a refused run must add nothing.
+    assert.deepEqual(listResults(), resultsBefore, "a refused run writes no results");
   } finally {
     fs.rmSync(home, { recursive: true, force: true });
   }
