@@ -54,7 +54,8 @@ the review findings table and what went differently than planned, and commit it.
 cadence after each phase, wait for the developer to say they read it before planning the next
 phase (a stop for reading, not a question); with "only at the end", write it and continue without waiting.
 
-A milestone's definition of done may require a real-environment pass. Then phase or milestone close
+A milestone's definition of done may require a real-environment pass: ROADMAP.md's "Definition of done"
+says so in one line, `Real-environment pass: required (physical-device)` or `(prod-like)`. Then phase or milestone close
 needs at least one check labelled physical-device or prod-like (the `env:` in the verification report);
 with only unit or simulator checks the phase is not complete. An unlabelled check reads "env: not stated".
 

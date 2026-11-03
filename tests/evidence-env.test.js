@@ -56,6 +56,7 @@ test('D: jump-start evidence table has an Env column and Phase 8 labels the run'
 test('E: executing-a-phase requires a physical-device or prod-like check when the definition of done says so', () => {
   const text = flatten(read(EXECUTING_A_PHASE));
   assert.match(text, /definition of done[^.]*real-environment/i, `${EXECUTING_A_PHASE} must name the real-environment pass`);
+  assert.match(text, /Real-environment pass: required/, `${EXECUTING_A_PHASE} must say how ROADMAP.md declares it`);
   assert.match(text, /physical-device or prod-like/, `${EXECUTING_A_PHASE} must require physical-device or prod-like`);
   assert.match(text, /not complete/i, `${EXECUTING_A_PHASE} must say the phase is not complete without it`);
 });
