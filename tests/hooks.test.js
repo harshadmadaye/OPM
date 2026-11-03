@@ -28,6 +28,9 @@ function runHook(name, input, extraEnv = {}) {
     input: typeof input === 'string' ? input : JSON.stringify(input),
     encoding: 'utf8',
     env,
+    // Run outside the repo so a hook falling back to process.cwd() never sees
+    // this repo's own open plan ledgers.
+    cwd: tmpRoot,
     timeout: 20000,
   });
   return { status: result.status, stdout: result.stdout || '', stderr: result.stderr || '' };
@@ -203,10 +206,12 @@ test('post-edit-accumulator: writes deduped per-session list, no output', () => 
   });
   const lines = fs.readFileSync(accumulatorFile(), 'utf8').trim().split('\n');
   // The hook stores path.resolve()d paths, which gain a drive letter on Windows.
-  assert.deepEqual(lines, ['/tmp/a.ts', '/tmp/b.py', '/tmp/c.dart'].map((file) => path.resolve(file)));
+  // Resolve from tmpRoot, the hook's cwd, so the drive matches when the repo
+  // and the temp dir sit on different drives (C: and D: on Windows CI).
+  assert.deepEqual(lines, ['/tmp/a.ts', '/tmp/b.py', '/tmp/c.dart'].map((file) => path.resolve(tmpRoot, file)));
   const { stdout } = runHook('post-edit-accumulator.js', editInput('/tmp/d.js'), { OPM_HOOKS_DISABLED: '1' });
   assert.equal(stdout, '');
-  assert.equal(fs.readFileSync(accumulatorFile(), 'utf8').includes(path.resolve('/tmp/d.js')), false);
+  assert.equal(fs.readFileSync(accumulatorFile(), 'utf8').includes(path.resolve(tmpRoot, '/tmp/d.js')), false);
 });
 
 test('check-console-log: warns on console.log in an edited fixture, skips tests and allow-marker', () => {

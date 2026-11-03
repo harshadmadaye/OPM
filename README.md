@@ -51,7 +51,7 @@ rules. Details: [docs/using-opm.md](docs/using-opm.md).
 Four claims, each with its evidence. Token counts are bytes / 4 estimates from
 `npm run tokens`.
 
-**1. It costs 2,526 tokens per session.** That is every skill and agent
+**1. It costs 2,611 tokens per session.** That is every skill and agent
 description plus the using-opm skill injected at session start. The rules add
 1,401 tokens in repos that install them. CI fails if either grows past its
 ceiling. Evidence: [the cost table](docs/why-opm.md#what-opm-costs-per-session).
@@ -379,7 +379,7 @@ through edge-tts**; pick the local OS voice and nothing leaves your machine.
 ## Everything in the box
 
 <details>
-<summary><b>All 13 skills</b> — invoked as <code>/opm:&lt;name&gt;</code>, or picked up automatically when they match the task</summary>
+<summary><b>All 14 skills</b> — invoked as <code>/opm:&lt;name&gt;</code>, or picked up automatically when they match the task</summary>
 
 **The loop**
 
@@ -399,6 +399,7 @@ through edge-tts**; pick the local OS voice and nothing leaves your machine.
 |---|---|
 | `milestone-planning` | Multi-week work: roadmap, short STATE digest, phased plans with wave scheduling for parallel subagents. |
 | `jump-start` | A whole project from one prompt. |
+| `assess` | Assesses an existing project at the level you pick (architecture, code, one feature, or the whole project), verifies every finding, writes a ranked report, then routes the fixes you choose into the plan and TDD skills on a fix branch. |
 
 **Engineering**
 
@@ -422,8 +423,8 @@ through edge-tts**; pick the local OS voice and nothing leaves your machine.
 | Agent | Model | Use it for |
 |---|---|---|
 | `planner` | opus | Turning an agreed spec into an implementation plan |
-| `code-reviewer` | sonnet | Diff review with a confidence gate and an explicit false-positive list |
-| `typescript-reviewer` | sonnet | TypeScript and Node specifics: types, async pitfalls, merge readiness |
+| `code-reviewer` | sonnet | Diff review with a confidence gate and an explicit false-positive list; Sweep mode reviews whole files |
+| `typescript-reviewer` | sonnet | TypeScript and Node specifics: types, async pitfalls, merge readiness; Sweep mode reviews whole files |
 | `security-reviewer` | sonnet | OWASP checks, dependency audits for npm, Python and Dart, Firebase rules |
 | `silent-failure-hunter` | sonnet | Swallowed errors, empty catches, misleading fallbacks |
 
@@ -457,7 +458,7 @@ let through on purpose, and what is out of scope.
 ```
 .claude-plugin/   plugin.json, marketplace.json
 agents/           5 subagents
-skills/           13 skills (SKILL.md plus templates/scripts where needed)
+skills/           14 skills (SKILL.md plus templates/scripts where needed)
 plugins/          opm-video, the optional explainer-video plugin
 hooks/            hooks.json, 6 dependency-free Node scripts and mod/ (the hooks module)
 rules/            copied into <repo>/.claude/rules/opm/ by the installer

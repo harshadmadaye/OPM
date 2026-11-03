@@ -29,6 +29,7 @@ Then announce "Using opm:<name> to <purpose>" and follow the skill exactly. If i
 | multi-week | more than about a week or 8 tasks | `opm:milestone-planning` |
 | unattended | a whole new project from one brief | `opm:jump-start <project-name> <brief>` |
 | contested | the idea itself is unsettled | `opm:brew-idea <brief>` |
+| existing | assess, audit or review what is already built | `opm:assess [level]` |
 
 When no row fits, ask one question about size.
 

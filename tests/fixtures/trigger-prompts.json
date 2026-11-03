@@ -28,5 +28,9 @@
   { "prompt": "we keep disagreeing on whether to build sync or just export, have several agents debate it", "sizeClass": "contested", "expectedSkill": "brew-idea" },
   { "prompt": "/opm:brew-idea a browser extension that summarises pull requests", "sizeClass": "contested", "expectedSkill": "brew-idea" },
   { "prompt": "is a Python SDK for our API even worth it, or should we only ship OpenAPI docs?", "sizeClass": "contested", "expectedSkill": "brew-idea" },
-  { "prompt": "sortByDate in list_utils.dart returns oldest first, newest should come first", "sizeClass": "spike", "expectedSkill": "tdd-workflow" }
+  { "prompt": "sortByDate in list_utils.dart returns oldest first, newest should come first", "sizeClass": "spike", "expectedSkill": "tdd-workflow" },
+  {"prompt": "assess this codebase and tell me what we should improve", "sizeClass": "existing", "expectedSkill": "assess"},
+  {"prompt": "audit the architecture of this repo, it has grown messy over two years", "sizeClass": "existing", "expectedSkill": "assess"},
+  {"prompt": "review how well the checkout feature is built end to end and what is weak", "sizeClass": "existing", "expectedSkill": "assess"},
+  {"prompt": "/opm:assess project", "sizeClass": "existing", "expectedSkill": "assess"}
 ]

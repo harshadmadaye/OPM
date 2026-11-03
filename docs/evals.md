@@ -1,6 +1,6 @@
 # Skill-trigger evals
 
-`tests/routing.test.js` checks statically that the routing table in `skills/using-opm/SKILL.md` agrees with the 30-prompt fixture in `tests/fixtures/trigger-prompts.json`. It cannot show what a real model does with those prompts. This page records whether a headless Claude Code run shows which OPM skill a prompt triggers, and how to measure it.
+`tests/routing.test.js` checks statically that the routing table in `skills/using-opm/SKILL.md` agrees with the 34-prompt fixture in `tests/fixtures/trigger-prompts.json`. It cannot show what a real model does with those prompts. This page records whether a headless Claude Code run shows which OPM skill a prompt triggers, and how to measure it.
 
 ## Spike (2026-10-05)
 
@@ -52,14 +52,14 @@ The prompt `should our app be a Flutter mobile app or a web app first? argue it 
 
 ### Conclusion
 
-Headless triggering works and can be detected: a `Skill` tool_use event in stream-json names the skill. The static check stays the routing test in `npm test`. The behavioural eval is a manual run that costs money (about $0.02 per prompt on haiku, so about $0.70 for all 30).
+Headless triggering works and can be detected: a `Skill` tool_use event in stream-json names the skill. The static check stays the routing test in `npm test`. The behavioural eval is a manual run that costs money (about $0.02 per prompt on haiku, so about $0.70 for all 34).
 
 ## Running the trigger eval
 
 `scripts/evals/trigger-eval.js` runs the fixture prompts through the same headless command as the spike and prints a hit/miss table. It is a manual maintainer step. It is not part of `npm test` or CI, and it refuses to start without `--yes` because it spends tokens.
 
 ```sh
-npm run eval:triggers -- --yes                  # all 30 prompts, about $0.70 on haiku
+npm run eval:triggers -- --yes                  # all 34 prompts, about $0.70 on haiku
 npm run eval:triggers -- --yes --limit 5        # first 5 prompts
 npm run eval:triggers -- --yes --only bounded   # one size class
 ```
