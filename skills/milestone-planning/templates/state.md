@@ -1,7 +1,8 @@
 # State Template
 
-Save as `docs/milestones/<milestone>/STATE.md`. Read first in every session; update after every
-plan completes and at every phase boundary. Keep it under 100 lines: it is a digest, not a log.
+The orchestrator saves this as `docs/milestones/<milestone>/STATE.md`, from the text the executing
+subagent returns. Read first in every session; update after every plan completes and at every
+phase boundary. Keep it under 100 lines: it is a digest, not a log.
 
 ```markdown
 # <Milestone> State

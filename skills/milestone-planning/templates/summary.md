@@ -1,6 +1,7 @@
 # Summary Template
 
-Save as `docs/milestones/<milestone>/phases/NN-<name>/SUMMARY-NN-MM.md` when a plan completes.
+The orchestrator saves this as `docs/milestones/<milestone>/phases/NN-<name>/SUMMARY-NN-MM.md`
+when a plan completes, from the text the executing subagent returns.
 The frontmatter is scanned by future planning; keep it accurate and complete.
 
 ```markdown

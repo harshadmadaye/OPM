@@ -56,6 +56,8 @@ prompt: |
     beyond the task's intent, stop and report DONE_WITH_CONCERNS rather
     than splitting it on your own.
   - Do not restructure code outside your task. Follow existing patterns.
+  - Do not write or edit the ledger, SUMMARY, STATE or PROGRESS files;
+    the controller owns them.
   - It is always OK to stop and say this is too hard. Bad work is worse
     than no work. Escalate with BLOCKED or NEEDS_CONTEXT when: the task
     needs an architectural decision with several valid answers; you need

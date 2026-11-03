@@ -155,14 +155,16 @@ work that could have run in parallel.
 
 The orchestrator stays small: it reads STATE.md and the phase's plans, groups them by wave, and
 for each wave spawns one fresh subagent per plan, all in a single message so they run in parallel.
-It waits for the wave to finish, confirms each SUMMARY exists, then starts the next wave.
+It waits for the wave to finish, writes each SUMMARY from the returned text, then starts the next wave.
 
 Each subagent receives the plan path and STATE.md, and executes the plan using the task discipline
 of `opm:executing-plans`: read the task, do exactly it, run `verify`, confirm `done`, commit that
 task's files individually (`feat(02-01): task name`), move on. TDD-shaped tasks use
-`opm:tdd-workflow`. At the end the subagent runs `opm:verification-before-completion` (full gate), writes the SUMMARY,
-and updates STATE.md. When it hits a checkpoint, it stops and returns the checkpoint content plus
-a table of completed tasks; after the human responds, a fresh subagent continues from the next
+`opm:tdd-workflow`. At the end the subagent runs `opm:verification-before-completion` (full gate)
+and returns, as text in its final report, the SUMMARY body (frontmatter and body from the
+template) and the STATE changes; it does not write report files. The orchestrator writes
+SUMMARY-NN-MM.md, updates STATE.md and makes the `docs(NN-MM): complete plan` commit. When the
+subagent hits a checkpoint, it stops and returns the checkpoint content plus a table of completed tasks; after the human responds, a fresh subagent continues from the next
 task. Agents are not resumed; state lives in files and commits, not in context.
 
 ### Deviation rules
@@ -185,7 +187,7 @@ After the last task, one metadata commit for PLAN, SUMMARY, STATE: `docs(02-01):
 
 ## SUMMARY files
 
-Written by the executing subagent when a plan finishes. The frontmatter is what makes history
+Written by the orchestrator from the text the executing subagent returns when a plan finishes. The frontmatter is what makes history
 cheap: future planning scans only these ~20 lines across all SUMMARY files to assemble context.
 
 ```yaml
