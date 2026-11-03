@@ -15,6 +15,9 @@ const EXPECTED_CASES = [
   "stops-on-architecture-change",
   "refuses-done-without-output",
   "ignores-mid-run-chat",
+  "queues-human-checks",
+  "skips-completed-ledger-tasks",
+  "no-push-without-yes",
 ];
 
 const caseDirs = fs.existsSync(EVALS_DIR)
@@ -157,3 +160,66 @@ for (const name of caseDirs) {
     }
   });
 }
+
+// The paid runner. Never started with --yes here: only its refusal and argument building are checked.
+const RUNNER = path.join(REPO_ROOT, "scripts", "evals", "behaviour-eval.js");
+const {
+  parseArgs,
+  buildClaudeArgs,
+} = require("../scripts/evals/behaviour-eval.js");
+
+test("behaviour-eval refuses without --yes, warns about cost and does not call claude", () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), "opm-no-claude-"));
+  try {
+    // PATH holds only node's directory, so a stray claude call would fail loudly instead of spending.
+    const env = { PATH: path.dirname(process.execPath), HOME: home };
+    const result = spawnSync(process.execPath, [RUNNER], {
+      encoding: "utf8",
+      env,
+    });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /spends tokens/);
+    assert.match(result.stderr, /--yes/);
+    assert.equal(result.stdout, "");
+    assert.equal(
+      fs.existsSync(path.join(EVALS_DIR, "results")),
+      false,
+      "no results directory is created",
+    );
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test("behaviour-eval builds a local, unpublished, capped command", () => {
+  const args = buildClaudeArgs(parseArgs(["--yes"]), "/tmp/out.json");
+  assert.deepEqual(args.slice(0, 3), ["plugin", "eval", "."]);
+  for (const flag of ["--scaffold", "--trust-plugin", "--no-publish"]) {
+    assert.ok(args.includes(flag), flag);
+  }
+  assert.equal(args[args.indexOf("--runs") + 1], "1");
+  assert.equal(args[args.indexOf("--max-cost-usd") + 1], "5");
+  assert.equal(args[args.indexOf("--json") + 1], "/tmp/out.json");
+  assert.ok(!args.includes("--publish-report"));
+});
+
+test("behaviour-eval passes --case and --max-cost-usd through and rejects bad input", () => {
+  const args = buildClaudeArgs(
+    parseArgs(["--yes", "--case", "no-push*", "--max-cost-usd", "2"]),
+    "x.json",
+  );
+  assert.equal(args[args.indexOf("--case") + 1], "no-push*");
+  assert.equal(args[args.indexOf("--max-cost-usd") + 1], "2");
+  assert.throws(() => parseArgs(["--max-cost-usd", "0"]), /above 0/);
+  assert.throws(() => parseArgs(["--publish"]), /unknown option/);
+});
+
+test("package.json exposes eval:behaviour", () => {
+  const pkg = JSON.parse(
+    fs.readFileSync(path.join(REPO_ROOT, "package.json"), "utf8"),
+  );
+  assert.equal(
+    pkg.scripts["eval:behaviour"],
+    "node scripts/evals/behaviour-eval.js",
+  );
+});

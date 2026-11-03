@@ -14,7 +14,8 @@
   "scripts": {
     "test": "node --test tests/*.test.js",
     "tokens": "node scripts/token-budget.js",
-    "eval:triggers": "node scripts/evals/trigger-eval.js"
+    "eval:triggers": "node scripts/evals/trigger-eval.js",
+    "eval:behaviour": "node scripts/evals/behaviour-eval.js"
   },
   "keywords": [
     "claude-code",
