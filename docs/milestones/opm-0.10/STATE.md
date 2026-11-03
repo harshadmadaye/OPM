@@ -6,13 +6,14 @@
 ## Position
 
 Phase: 4 of 4 (Prove OPM works, release 0.10.0)
-Plan: 0 of 5 in this phase
-Status: Executing (wave 1: 04-01, 04-04); Phase 3 review pack pending its code review
-Last activity: 2026-11-03 - Phase 3 complete (2 plans, 309 tests); Phase 4 planned (5 plans, 4 waves)
-Progress: 11 / 16 plans
+Plan: 2 of 5 done, 2 deferred, 1 to go (04-05 release)
+Status: Executing 04-05
+Last activity: 2026-11-03 - 04-01 and 04-04 merged (349 tests); developer chose not to run the paid evals (04-02, 04-03 deferred)
+Progress: 13 / 16 plans done, 2 deferred
 
 ## Recent decisions
 
+- 04: no paid eval runs for 0.10.0 (developer, 2026-11-03: option 1); evals ship authored and gated; release notes say they are not run.
 - milestone: review cadence "only at the end" (developer, 2026-11-03: auto-approve every next step); packs are written at each phase close, not waited on.
 - 02-05: a run stops only for the four stop conditions (exposed secret under 2), human-action checkpoints, and the cadence pause; architecture changes in unattended runs are ruled, logged and queued.
 - 02-02: in unattended runs human-verify checkpoints go to REVIEW-QUEUE.md; only a person sets passed.
@@ -32,5 +33,5 @@ None.
 ## Session continuity
 
 Last session: 2026-11-03
-Stopped at: Phase 3 complete; Phase 4 wave 1 dispatched
-Next: merge 04-01 and 04-04, write Phase 3 review pack, run 04-02 (paid, cap $5)
+Stopped at: paid eval run stopped after one smoke case ($0.44)
+Next: execute PLAN-04-05 (local release, nothing pushed)

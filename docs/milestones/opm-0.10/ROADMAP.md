@@ -57,19 +57,19 @@ Status: Complete (2026-11-03). 309 tests green. Review pack: phases/03-evidence-
 
 Goal: behaviour evals prove the rules above on small sample repos, the full trigger eval is measured, the outcome report comes from data, and 0.10.0 ships.
 
-- [ ] 04-01 Six behaviour evals on sample repos and a gated runner, nothing paid (item 12)
-- [ ] 04-02 Run the behaviour evals once, commit results, failures become issues (item 12)
-- [ ] 04-03 Full 30-prompt trigger eval with `--max-turns 2`, hit-rate table in docs/evals.md (item 13, closes 0.9 ISS-016)
-- [ ] 04-04 `status --report` outcome report from ledger and milestone files (item 14, ISS-009, ISS-013, ISS-022)
+- [x] 04-01 Six behaviour evals on sample repos and a gated runner, nothing paid (item 12)
+- [ ] 04-02 Run the behaviour evals once (deferred 2026-11-03: the developer chose not to pay for eval runs; ISS-031)
+- [ ] 04-03 (deferred, ISS-032) Full 30-prompt trigger eval with `--max-turns 2`, hit-rate table in docs/evals.md (item 13, closes 0.9 ISS-016)
+- [x] 04-04 `status --report` outcome report from ledger and milestone files (item 14, ISS-009, ISS-013, ISS-022)
 - [ ] 04-05 Release 0.10.0: README, docs/using-opm.md, CHANGELOG, versions in package.json and `.claude-plugin/*.json`
 
-Waves: 1 = 04-01 + 04-04 (parallel, worktrees); 2 = 04-02 (paid, cap $5); 3 = 04-03 (paid, about $0.70); 4 = 04-05 (local release, nothing pushed).
+Waves: 1 = 04-01 + 04-04 (parallel, worktrees); 2 = 04-02 and 3 = 04-03 deferred (paid); 4 = 04-05 (local release, nothing pushed).
 
 Status: Planned (2026-11-03)
 
 ## Definition of done
 
 - `npm test` green, including new tests for items 1, 3, 4 and 6; `npm run tokens` within the ceiling.
-- Behaviour evals run once with results committed; every failure is an ISS entry.
+- Behaviour evals run once with results committed; every failure is an ISS entry. **Not met for 0.10.0**: evals are authored and gated but not run, by the developer's choice (ISS-031, ISS-032).
 - README, docs/using-opm.md and CHANGELOG updated; version 0.10.0.
 - Each phase ended with a review pack the developer read before the next phase started.

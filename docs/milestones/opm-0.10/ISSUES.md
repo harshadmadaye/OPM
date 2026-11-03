@@ -32,3 +32,5 @@ Deferred enhancements and known gaps found during execution, numbered ISS-NNN. R
 - ISS-028: `claude plugin eval` has no git-state or shell grader, so "no push" and "no re-dispatch" are proven only through tool inputs and file contents; re-check when custom graders exist (found in 04-01)
 - ISS-029: no mid-run user message injection in `claude plugin eval`; the mid-run chat rule is tested only as a quoted background message (found in 04-01)
 - ISS-030: tests/evals-structure.test.js validates grader `type` but not the shape of keys like `max`, `match`, `target` (found in 04-01, LOW)
+- ISS-031: the six behaviour evals are authored but not run; the developer chose not to pay for eval runs for 0.10.0. Run `npm run eval:behaviour -- --yes` (smoke one case first) and turn failures into issues (04-02, deferred)
+- ISS-032: the full 30-prompt trigger eval was not run for 0.10.0 (about $0.70); 0.9 ISS-016 stays open (04-03, deferred)
