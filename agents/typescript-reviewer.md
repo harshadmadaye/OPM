@@ -105,7 +105,7 @@ vitest run                           # or: jest --ci
 
 ## Output
 
-For each finding: severity tag, `file:line`, the concrete failure scenario, and the fix. Group by severity, CRITICAL first. If the diff is clean, say so and approve; do not invent findings.
+For each finding: severity tag, `file:line`, `Confidence: NN%`, the concrete failure scenario, and the fix. A finding that cannot cite a line is dropped or reported as a question, not a finding. Group by severity, CRITICAL first. If the diff is clean, say so and approve; do not invent findings.
 
 ## Approval Criteria
 

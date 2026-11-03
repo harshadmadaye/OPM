@@ -28,6 +28,9 @@ const REQUIRED_FIELDS = [
 
 const ARRAY_FIELDS = new Set(["symptoms", "tags", "related"]);
 
+/** Optional scalar fields: absent is fine, present must be a non-empty string. */
+const OPTIONAL_STRING_FIELDS = ["component"];
+
 const PROBLEM_TYPES = new Set([
   "build_error",
   "test_failure",
@@ -168,6 +171,11 @@ function validateFields(fields) {
 
   if (typeof fields.title === "string" && fields.title.trim() === "") errors.push("'title' is empty");
   if (typeof fields.root_cause === "string" && fields.root_cause.trim() === "") errors.push("'root_cause' is empty");
+  for (const field of OPTIONAL_STRING_FIELDS) {
+    if (typeof fields[field] === "string" && fields[field].trim() === "") {
+      errors.push(`'${field}' is empty; omit it or give a value such as 'opm'`);
+    }
+  }
 
   if (typeof fields.date === "string" && !DATE_PATTERN.test(fields.date)) {
     errors.push(`'date' must be YYYY-MM-DD, got '${fields.date}'`);

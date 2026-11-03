@@ -1,5 +1,45 @@
 # Changelog
 
+## 0.10.0 - 2026-11-03
+
+OPM 0.10 protects the developer's judgment on long runs. The numbers in brackets are the items in `docs/specs/2026-11-03-opm-0.10.md`.
+
+**Orchestration reliability**
+
+- (1) Report files are written by the orchestrator. Subagents return SUMMARY and STATE content as text; a test fails if any skill or agent tells a subagent to write report files.
+- (2) Every subagent and workflow brief opens by saying the plan is the task and other conversation messages are background. Before a long run OPM tells you that chatting mid-run can derail the agents.
+- (3) No commits means not done. An agent that reports success with no new commits is rerun once with a fresh brief, then escalated, never marked complete.
+- (4) Formatter hooks respect project config. Each formatter runs from its file's own project root on this turn's files only, and a JS project that never chose prettier is left alone.
+- (5) Lessons caused by OPM itself are tagged `component: opm`, and `compound-learnings` offers to open a gh issue on the OPM repo or append to `.opm/opm-feedback.md`. Nothing is sent without a yes.
+
+**A person in the loop**
+
+- (6) Unattended runs no longer pass human checks: a `checkpoint:human-verify` goes to `REVIEW-QUEUE.md` with its evidence and is never marked passed. STATE shows "complete, N human checks pending" until the queue is empty, and final reports list pending checks first.
+- (7) Each phase close writes `REVIEW-PACK.md`: the five riskiest changes ranked by category (auth, permissions, data deletion, migrations, payments, sync, secrets, external calls), each with a diff range and 2-3 "explain how X handles Y" questions, for about 20-30 minutes of reading.
+- (8) Review cadence is a choice: after each phase (default) or only at the end, which shows the expected commit count and is logged as a decision. "What stops a run" now reads the same in jump-start, milestone-planning and executing-plans.
+- (9) An exposed secret blocks right away as a blocking human-action checkpoint, raised when found rather than at a release checklist.
+
+**Evidence quality**
+
+- (10) The verification gate labels where each check ran (`env: unit | simulator | physical-device | prod-like`). Performance, startup, battery and network claims from a simulator read NOT JUDGEABLE, and a milestone's definition of done can require a real-environment pass.
+- (11) Reviewer agents state their confidence and the line they cite, and final reports count findings by severity and by fixed, parked or dismissed.
+
+**Proving OPM**
+
+- (12) Six behaviour evals on scaffolded sample repos (architecture-change stop, no "done" without fresh output, ignoring a mid-run chat message, queued human checks, no re-dispatch of ledger-complete tasks, no push or PR without a yes) and a gated runner, `npm run eval:behaviour -- --yes`. **Authored, not run.** The maintainer chose not to pay for eval runs for this release, so no behaviour result is claimed (ISS-031). One harness smoke run of one case scored 0.25 before a grader fix and says nothing about OPM's behaviour.
+- (13) The full 30-prompt trigger eval (`npm run eval:triggers -- --yes`). **Authored, not run** for this release; no hit-rate table is committed (ISS-032).
+- (14) `npx opm-core status --report` prints the project outcome from the ledgers and milestone files (no git or network): tasks done, reviewer findings by severity and outcome, fix rounds, items parked, human checks pending, issues opened and closed, rulings made and tasks escalated for no commits. Plain `status` is unchanged.
+
+**Fixed**
+
+- The Stop-hook formatter no longer restyles projects that have no prettier or ruff config (0.9.1 could rewrite quote style in such repos). Dart still always runs.
+
+**Upgrade notes**
+
+- All new plan, ledger and template fields are optional. Old plans and ledgers still run.
+- If 0.9.1 rewrote quote style in a project without prettier or ruff config, set `OPM_SKIP_FORMAT=1` until you upgrade to 0.10.0.
+- Always-on cost is unchanged at 2,526 tokens per session (ceiling 2,650). The `milestone-planning` and `jump-start` cores shrank to about 2,300 tokens, with detail loaded on demand from `references/`.
+
 ## 0.9.1 - 2026-10-05
 
 - `using-opm` scales the approach without being asked. A short "Scale the approach" ladder sends wide searches and reviews to subagents, runs independent pieces in parallel (in git worktrees when they edit files), moves to `writing-plans` or `milestone-planning` as the work grows, and offers a multi-agent Workflow with a rough agent count, starting it only after the user says yes. Every step up is announced in one line. The detail (when not to escalate, costs, the opt-in rule, collecting and verifying agent results) loads on demand from `skills/using-opm/references/orchestration.md`.

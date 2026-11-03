@@ -66,7 +66,7 @@ git diff --cached | grep -nE '^\+.*(console\.log|debugPrint\(|print\(|breakpoint
 git diff --cached --name-only | grep -E '(^|/)\.env($|\.)' 
 ```
 
-Any hit is a finding. A real secret means: stop, remove it, treat it as exposed, rotate it.
+Any hit is a finding. A real secret means: stop, remove it, treat it as exposed, rotate it. A finding that a secret reached git history, logs, or a client bundle is a blocking `checkpoint:human-action` raised when found, not at a release checklist: stop, name the secret and where it is used, give the rotation step, remove it from the code, and wait for the developer to confirm rotation. A subagent running this gate cannot stop the run: it returns the finding as a BLOCKING checkpoint to the orchestrator.
 
 ### 6. Diff review
 ```bash
@@ -83,10 +83,11 @@ and changes that widen scope beyond the task.
 VERIFICATION REPORT
 ===================
 Stack:     node (pnpm) | python (uv) | flutter
-Build:     PASS | FAIL | N/A
-Types:     PASS | FAIL  (N errors, M pre-existing)
-Lint:      PASS | FAIL  (N errors, M warnings)
-Tests:     PASS | FAIL  (X passed, Y failed, Z skipped, C% coverage)
+Build:     PASS | FAIL | N/A  env: unit
+Types:     PASS | FAIL  (N errors, M pre-existing)  env: unit
+Lint:      PASS | FAIL  (N errors, M warnings)  env: unit
+Tests:     PASS | FAIL  (X passed, Y failed, Z skipped, C% coverage)  env: unit
+E2E:       PASS | FAIL | NOT RUN | N/A  (flows or smoke routes checked)  env: simulator
 Secrets:   PASS | FAIL  (N findings)
 Diff:      N files, +A/-D lines, reviewed
 
@@ -95,6 +96,20 @@ Overall:   READY | NOT READY
 Findings:
 1. <gate>: <what>, <where>, <planned fix or why accepted>
 ```
+
+`env:` says where the check ran:
+- `unit`: automated tests or scripts with no app running, on the dev machine or in CI, including
+  integration tests against a local database or container.
+- `simulator`: a running app that is not the real target: iOS simulator, Android emulator, browser
+  devtools device mode, or a local dev server (Playwright or curl against localhost is simulator).
+- `physical-device`: a real phone, tablet or target hardware.
+- `prod-like`: a deployed staging or production-shaped environment (Playwright against staging is prod-like).
+
+A gate with no label, such as in an old report, reads as "env: not stated", not as a failure.
+Claims about performance, startup time, battery or network behaviour from a simulator or unit run
+are written `NOT JUDGEABLE (env: simulator)`, never PASS. Any NOT JUDGEABLE or NOT RUN line for a
+requirement the work claims to meet makes it `Overall: NOT READY`, unless the developer waived that
+requirement in writing (quote where). Secrets and Diff carry no `env:`; they do not depend on where they ran.
 
 Every line must come from a command that was actually run in this session. If a gate could not
 be run (tool missing, no network), write `NOT RUN: <reason>` rather than PASS.

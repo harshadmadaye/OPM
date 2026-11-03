@@ -97,6 +97,21 @@ test('all tasks complete per the plan makes the ledger complete', async () => {
   assert.equal(result.currentTask, null);
 });
 
+test('no-commit rerun and escalation lines do not count as complete', async () => {
+  const { parseLedger } = await loadLedger();
+  const text = [
+    '# OPM ledger - plan: docs/plans/x.md',
+    'Task 1: complete (commits a..b, review clean)',
+    'Task 2: no commits (rerun 1/1)',
+    'Task 2: escalated - no commits after rerun',
+  ].join('\n');
+  const result = parseLedger(text, PLAN_TEXT);
+  assert.equal(result.error, null);
+  assert.equal(result.tasksDone, 1);
+  assert.equal(result.isComplete, false);
+  assert.deepEqual(result.currentTask, { number: 2, title: 'Login route' });
+});
+
 test('CRLF line endings parse the same as LF', async () => {
   const { parseLedger } = await loadLedger();
   const lf = parseLedger(OPEN_LEDGER, PLAN_TEXT);
@@ -165,7 +180,106 @@ test('formatResumeLine gives one line for an open ledger and null otherwise', as
   assert.equal(formatResumeLine({ ledger: null }), null);
 });
 
+const OUTCOME_LEDGER = [
+  '# OPM ledger - plan: docs/plans/x.md',
+  'Ruling: tokens in memory - simplest - re-login',
+  'Task 1: complete (commits a..b, review clean)',
+  'Task 2: fix round 1/3 (1 addressed, 1 open - 401 path; commits b..c)',
+  'Task 2: fix round 2/3 (1 addressed; commits c..d)',
+  'Task 2: parked - naming nit - Ruling: code stands',
+  'Task 2: complete (commits b..d, 1 parked)',
+  'Task 2: complete (commits b..d, 1 parked)',
+  'Task 3: no commits (rerun 1/1)',
+  'Task 3: escalated - no commits after rerun',
+  'Finding: HIGH fixed - missing 401 path',
+  'Finding: LOW parked - naming nit',
+  'Finding: LOW dismissed - plan mandates it',
+  'Finding: BOGUS fixed - ignored',
+].join('\n');
+
+test('countLedgerOutcomes counts events from ledger text', async () => {
+  const { countLedgerOutcomes } = await loadLedger();
+  const counts = countLedgerOutcomes(OUTCOME_LEDGER);
+  assert.equal(counts.tasksDone, 2);
+  assert.equal(counts.fixRounds, 2);
+  assert.equal(counts.parked, 1);
+  assert.equal(counts.rulings, 2);
+  assert.deepEqual(counts.escalated, [3]);
+  assert.deepEqual(counts.findings.HIGH, { found: 1, fixed: 1, parked: 0, dismissed: 0 });
+  assert.deepEqual(counts.findings.LOW, { found: 2, fixed: 0, parked: 1, dismissed: 1 });
+  assert.deepEqual(counts.findings.CRITICAL, { found: 0, fixed: 0, parked: 0, dismissed: 0 });
+});
+
+test('countLedgerOutcomes gives zeros and null findings for empty or old ledgers', async () => {
+  const { countLedgerOutcomes } = await loadLedger();
+  for (const text of [null, undefined, '', '# OPM ledger - plan: p\nTask 1: complete']) {
+    const counts = countLedgerOutcomes(text);
+    assert.equal(counts.fixRounds, 0);
+    assert.equal(counts.parked, 0);
+    assert.equal(counts.rulings, 0);
+    assert.deepEqual(counts.escalated, []);
+    assert.equal(counts.findings, null);
+  }
+  assert.equal(countLedgerOutcomes('# OPM ledger - plan: p\nTask 1: complete').tasksDone, 1);
+});
+
+const ISSUES_TEXT = [
+  '# Issues',
+  '',
+  '- ISS-001: open one',
+  '- ~~ISS-002: struck through~~ closed in 04-04',
+  '- ISS-003: this text says closed and fixed but is not struck through',
+  '  - ~~ISS-099: indented continuation is not an entry~~',
+].join('\n');
+
+const QUEUE_TEXT = [
+  '# Q',
+  '| ID | Plan | What to check | How to check | Evidence | Status | Checked by |',
+  '|---|---|---|---|---|---|---|',
+  '| RQ-001 | 02-03 | a | 1. x | e | pending | |',
+  '| RQ-002 | 02-03 | b | 1. x | e | passed | Harshad |',
+  '| RQ-003 | 02-04 | c | 1. x | e | pending | |',
+].join('\n');
+
+const PACK_TEXT = [
+  '| Severity | Found | Fixed | Parked | Dismissed |',
+  '|---|---|---|---|---|',
+  '| CRITICAL | 0 | | | |',
+  '| HIGH | 1 | 1 (cadence, ffc160d) | | |',
+  '| MEDIUM | 3 | 3 (a, b) | | |',
+  '| LOW | 4 | 2 (x) | 2 (ISS-018, ISS-019) | |',
+].join('\n');
+
+test('countMilestoneOutcomes counts issues, pending checks and review-pack findings', async () => {
+  const { countMilestoneOutcomes } = await loadLedger();
+  const counts = countMilestoneOutcomes({ issuesText: ISSUES_TEXT, reviewQueueText: QUEUE_TEXT, reviewPackTexts: [PACK_TEXT, PACK_TEXT] });
+  assert.equal(counts.issuesOpen, 2);
+  assert.equal(counts.issuesClosed, 1);
+  assert.equal(counts.humanChecksPending, 2);
+  assert.deepEqual(counts.findings.HIGH, { found: 2, fixed: 2, parked: 0, dismissed: 0 });
+  assert.deepEqual(counts.findings.LOW, { found: 8, fixed: 4, parked: 4, dismissed: 0 });
+});
+
+test('countMilestoneOutcomes tolerates missing inputs', async () => {
+  const { countMilestoneOutcomes } = await loadLedger();
+  for (const input of [{}, { issuesText: null, reviewQueueText: null, reviewPackTexts: [] }, undefined]) {
+    assert.deepEqual(countMilestoneOutcomes(input), { issuesOpen: 0, issuesClosed: 0, humanChecksPending: 0, findings: null });
+  }
+  assert.equal(countMilestoneOutcomes({ reviewPackTexts: ['no tables here'] }).findings, null);
+});
+
 test('the parser module uses no Node APIs', () => {
   const source = fs.readFileSync(MODULE_PATH, 'utf8');
   assert.doesNotMatch(source, /\bimport\b[^;]*from|\brequire\(|\bprocess\.|\bfs\.|\bpath\./);
+});
+
+test('formatReport counts findings from ledgers when they have Finding lines, so packs do not double count', async () => {
+  const { countLedgerOutcomes, countMilestoneOutcomes, formatReport } = await loadLedger();
+  const ledgerText = '# OPM ledger - plan: docs/plans/x.md\nTask 1: complete (commits a..b, review clean)\nFinding: HIGH fixed - missing 401 path\n';
+  const pack = '| Severity | Found | Fixed | Parked | Dismissed |\n|---|---|---|---|---|\n| HIGH | 1 | 1 | | |\n';
+  const milestone = countMilestoneOutcomes({ issuesText: '', reviewQueueText: '', reviewPackTexts: [pack] });
+  const ledgers = [{ path: 'docs/plans/x.progress.md', outcomes: countLedgerOutcomes(ledgerText) }];
+  assert.match(formatReport({ ledgers, milestone })[1], /HIGH 1 \(1 fixed\)/);
+  const noFindingLines = [{ path: 'docs/plans/y.progress.md', outcomes: countLedgerOutcomes('# OPM ledger - plan: y.md\nTask 1: complete (x)\n') }];
+  assert.match(formatReport({ ledgers: noFindingLines, milestone })[1], /HIGH 1 \(1 fixed\)/, 'packs are the fallback');
 });

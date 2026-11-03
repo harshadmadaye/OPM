@@ -115,7 +115,7 @@ Verify context before flagging.
 
 1. Report it first, before any other finding, with the exploit path
 2. Provide the secure code or rule change
-3. If credentials were exposed: state that rotation is required and where the secret is used
+3. If credentials were exposed: state that rotation is required and where the secret is used. A finding that a secret reached git history, logs, or a client bundle is a blocking `checkpoint:human-action` raised when found, not at a release checklist: name the secret and where it is used, give the rotation step and how to remove it from the code, and mark the finding "BLOCKING: rotate <what>". You cannot stop the run yourself: report it first and return it as a BLOCKING checkpoint to the orchestrator, which stops for the developer to confirm rotation.
 4. Search the codebase for the same pattern elsewhere
 
 ## When to Run
@@ -124,6 +124,6 @@ New API endpoints or server actions, auth changes, user input handling, DB or ru
 
 ## Output
 
-Group findings by severity, CRITICAL first, each with `file:line`, the concrete attack scenario, and the fix. End with a per-severity count and a verdict: **Block** on any CRITICAL, **Warning** on HIGH only, otherwise **Approve**. A review that finds nothing is valid; say so.
+Group findings by severity, CRITICAL first, each with `file:line`, `Confidence: NN%`, the concrete attack scenario, and the fix. A finding that cannot cite a line is dropped or reported as a question, not a finding. End with a per-severity count and a verdict: **Block** on any CRITICAL, **Warning** on HIGH only, otherwise **Approve**. A review that finds nothing is valid; say so.
 
 <!-- Adapted from affaan-m/ecc (MIT) -->

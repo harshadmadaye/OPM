@@ -80,6 +80,8 @@ Frontmatter fields: `title`, `date`, `category`, `problem_type`, `symptoms[]`, `
 `severity`, `tags[]`, `related[]`. Symptoms are the strings someone would grep for: error
 messages, log lines, observable misbehaviour. Tags are lowercase-hyphenated technologies and concepts.
 Quote any YAML value containing `: ` or ` #`.
+Add `component: opm` only when the root cause or fix is clearly in OPM itself (a skill, hook,
+agent, template or CLI), not in the user's code; when unsure, omit it.
 
 ### 4. Validate the frontmatter
 
@@ -105,6 +107,11 @@ If it does not exist, skip this step; grep over frontmatter is the primary retri
 
 State the path written or updated, the one-sentence root cause, and the prevention added.
 If nothing was written, state which part of the durable bar failed.
+
+For a `component: opm` doc, ask one question: "Open an issue on harshadmadaye/OPM", "Append to
+`.opm/opm-feedback.md`", or "Neither". Nothing leaves the machine without a yes: for the issue,
+show the title and body, then run `gh issue create --repo harshadmadaye/OPM` only after a yes.
+For the file, create `.opm/` if missing and append the date, title, doc path and one-paragraph lesson.
 
 ## Retrieval: check the corpus before new work
 
