@@ -2,6 +2,7 @@
 type: tool_used
 tool: Write
 input_match: 'packages/'
+min: 0
 max: 0
 ---
 

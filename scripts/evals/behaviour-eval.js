@@ -47,7 +47,7 @@ function parseArgs(argv) {
 function buildClaudeArgs(options, resultsPath) {
   const args = [
     'plugin', 'eval', '.',
-    '--scaffold', '--trust-plugin', '--runs', '1', '--no-publish',
+    '--scaffold', '--trust-plugin', '--runs', '1', '--no-publish', '--ablation', 'none',
     '--allow-tools', ...GRANTED_TOOLS,
     '--max-cost-usd', String(options.maxCostUsd),
     '--json', resultsPath,
