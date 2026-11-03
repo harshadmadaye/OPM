@@ -12,9 +12,9 @@ const FIXTURE = path.join(ROOT, 'tests', 'fixtures', 'trigger-prompts.json');
 const SKILLS_DIR = path.join(ROOT, 'skills');
 
 const TABLE_HEADER = ['Size', 'Signal', 'Skill'];
-const SIZE_CLASSES = ['spike', 'bounded', 'multi-week', 'unattended', 'contested'];
-const FRONT_DOOR_SKILLS = ['tdd-workflow', 'brainstorming', 'milestone-planning', 'jump-start', 'brew-idea'];
-const FIXTURE_LENGTH = 30;
+const SIZE_CLASSES = ['spike', 'bounded', 'multi-week', 'unattended', 'contested', 'existing'];
+const FRONT_DOOR_SKILLS = ['tdd-workflow', 'brainstorming', 'milestone-planning', 'jump-start', 'brew-idea', 'assess'];
+const FIXTURE_LENGTH = 34;
 const MIN_PROMPTS_PER_CLASS = 4;
 const SKILL_REF = /opm:([a-z0-9-]+)/g;
 
@@ -60,7 +60,7 @@ function loadFixture() {
   return JSON.parse(fs.readFileSync(FIXTURE, 'utf8'));
 }
 
-test('fixture has 30 well-formed prompts with at least 4 per size class', () => {
+test('fixture has 34 well-formed prompts with at least 4 per size class', () => {
   const fixture = loadFixture();
   assert.equal(fixture.length, FIXTURE_LENGTH);
   for (const entry of fixture) {

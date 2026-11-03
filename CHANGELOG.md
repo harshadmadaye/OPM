@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- New `opm:assess` (`/opm:assess [architecture|code|feature|project] [target]`): assesses a project that already exists. It asks which level to assess (architecture, code, one feature or the whole project), maps the repo, runs the baseline gates read-only for code and project, runs parallel lens subagents, and has a verifier re-check every cited line before anything is reported. Findings get IDs, are ranked by severity and effort, and are grouped into bundles in `docs/assessments/YYYY-MM-DD-<level>.md` plus a private artifact page; a later run marks earlier findings Fixed, New or Still open. It then asks which bundles to fix and routes them on a `fix/assess-<date>-<level>` branch: small fixes to `tdd-workflow`, up to about 8 tasks to `writing-plans` and `executing-plans`, larger work to `milestone-planning`. The core loads about 1,100 tokens; level briefs load on demand from `skills/assess/references/`.
+- `code-reviewer` and `typescript-reviewer` gain a Sweep mode: given paths, they review whole files instead of a diff, and can return the assess finding format.
+- `using-opm` routes a new `existing` size class to `opm:assess`; the trigger fixture grows to 34 prompts.
+- Always-on cost rises from about 2,526 to 2,632 tokens per session, still under the 2,650 ceiling.
+- Hook tests run the hook scripts from a temp directory, so an open plan ledger in the OPM repo itself no longer fails the session-start test.
+
 ## 0.9.1 - 2026-10-05
 
 - `using-opm` scales the approach without being asked. A short "Scale the approach" ladder sends wide searches and reviews to subagents, runs independent pieces in parallel (in git worktrees when they edit files), moves to `writing-plans` or `milestone-planning` as the work grows, and offers a multi-agent Workflow with a rough agent count, starting it only after the user says yes. Every step up is announced in one line. The detail (when not to escalate, costs, the opt-in rule, collecting and verifying agent results) loads on demand from `skills/using-opm/references/orchestration.md`.

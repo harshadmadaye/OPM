@@ -25,6 +25,7 @@
 | multi-week | more than about a week or 8 tasks | milestone with phases |
 | unattended | a whole new project from one brief | `/opm:jump-start` |
 | contested | the idea itself is unsettled | `/opm:brew-idea` |
+| existing | assess, audit or review what is already built | `/opm:assess` |
 
 **Then, how far to scale:**
 
