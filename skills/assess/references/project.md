@@ -3,13 +3,17 @@
 Project is every level at once. It is the heaviest run; tell the developer the
 lens count before starting.
 
-1. Baseline: all gates (see `code.md`, "Baseline findings").
-2. Architecture: A1 to A4 from `architecture.md`.
-3. Code: C1 to C4 from `code.md` on the whole repo.
-4. Two more lenses below.
+The baseline (Phase 2) runs first with all gates; see `code.md`, "Baseline
+findings". Then the lenses:
 
-That is 10 lenses. Offer a Workflow with the agent count (lenses plus one
-verifier each); on no, run two waves: Architecture plus P1 and P2, then Code.
+1. Architecture: A1 to A4 from `architecture.md`.
+2. Code: C1 to C4 from `code.md` on the whole repo.
+3. P1 and P2 below.
+
+That is 10 lenses plus the baseline, so Project always gets the Workflow
+offer: give the agent count (lenses plus one verifier each). On no, or when
+the Workflow tool is not available (say so), run two waves: Architecture plus
+P1 and P2, then Code.
 
 ## P1 Dependencies
 

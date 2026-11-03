@@ -57,13 +57,15 @@ sheet, the scope and its brief, asking for the finding format in
 `references/verify.md`. Announce: "Using N parallel subagents to ...".
 
 Project level on more than about 500 source files or more than 6 lenses:
-offer a Workflow with the agent count; run it only on yes, else run two waves.
+offer a Workflow with the agent count; run it only on yes. On no, or with no
+Workflow tool (say so), run two waves.
 A lens that fails is noted in the report, not retried more than once.
 
 ## Phase 4: verify
 
 Read `references/verify.md`. One verifier per lens result re-reads each cited
-line. Drop what it cannot confirm. If nothing survives, say so and stop.
+line. Drop what it cannot confirm. If nothing survives, still write the
+report with zero findings, say so, and skip Phase 6.
 
 ## Phase 5: report
 

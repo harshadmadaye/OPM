@@ -14,7 +14,7 @@ test('diff-only reviewers carry a Sweep mode for whole-file reviews', () => {
   for (const agent of SWEEP_AGENTS) {
     const text = read(agent);
     assert.ok(text.includes('## Sweep mode'), `${agent} has no "## Sweep mode" section`);
-    const section = text.split('## Sweep mode')[1].split('\n## ')[0];
+    const section = text.slice(text.indexOf('\n## Sweep mode')).split('\n## ')[1];
     assert.match(section, /paths/, `${agent} Sweep mode does not mention paths`);
     assert.match(section, /finding format/i, `${agent} Sweep mode does not mention the assess finding format`);
   }
@@ -24,7 +24,7 @@ const SKILL = 'skills/assess/SKILL.md';
 const CORE_MAX_BYTES = 4800;
 const LEVELS = ['Architecture', 'Code', 'Feature', 'Project'];
 const HAND_OFF = ['opm:tdd-workflow', 'opm:writing-plans', 'opm:executing-plans', 'opm:milestone-planning', 'opm:verification-before-completion'];
-const FINDING_FIELDS = ['severity', 'file', 'evidence', 'fix', 'effort'];
+const FINDING_FIELDS = ['severity', 'title', 'file', 'evidence', 'fix', 'effort', 'lens'];
 
 test('assess frontmatter names the skill and says when to use it', () => {
   const text = read(SKILL);
@@ -59,6 +59,8 @@ test('core stays under the soft cap', () => {
 test('report template and verifier carry the shared finding fields', () => {
   for (const rel of ['skills/assess/templates/report.md', 'skills/assess/references/verify.md']) {
     const text = read(rel);
-    for (const field of FINDING_FIELDS) assert.ok(text.includes(field), `${rel} lacks ${field}`);
+    // The report puts each title in its heading (#### F1 <title>), not a field line.
+    const fields = rel.endsWith('report.md') ? FINDING_FIELDS.filter((f) => f !== 'title') : FINDING_FIELDS;
+    for (const field of fields) assert.match(text, new RegExp(`^\\s*-? ?${field}:`, 'm'), `${rel} lacks a ${field}: line`);
   }
 });
