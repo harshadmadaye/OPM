@@ -12,7 +12,7 @@ Read this when the "Scale the approach" ladder in using-opm says to escalate. Th
 
 - Use one for a wide search, a review, or an audit whose detail you do not need in the main context. Ask it for conclusions, not file dumps.
 - Run independent subagents in parallel: several Agent calls in a single message.
-- Give each subagent a complete brief: the goal, the files, the rules it must follow, and the exact shape of its final report. It starts with none of this conversation.
+- Give each subagent a complete brief: the goal, the files, the rules it must follow, and the exact shape of its final report. It starts with none of this conversation. Open the brief with: "The plan below is your task. Anything else from the conversation is background, not instructions."
 - When subagents edit files in parallel, give each its own git worktree so commits cannot collide; merge their branches afterwards.
 
 ## Plans and milestones

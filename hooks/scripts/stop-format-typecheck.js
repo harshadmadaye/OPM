@@ -1,9 +1,12 @@
 'use strict';
 // OPM Stop hook. Formats and typechecks the files edited this response
-// (from the post-edit-accumulator list), grouped by project root.
-//   JS/TS : prettier --write (local bin or npx --no-install), then tsc --noEmit
+// (from the post-edit-accumulator list), grouped by project root. Each tool
+// runs with its root as cwd so it reads that project's config; files with no
+// project marker above them are skipped and reported, never formatted.
+//   JS/TS : prettier --write (local bin, or npx --no-install when a prettier
+//           config applies), then tsc --noEmit
 //           when tsconfig.json + node_modules/.bin/tsc exist in the root.
-//   Python: ruff format + ruff check (when ruff is on PATH).
+//   Python: ruff format + ruff check (when a ruff config applies and ruff is on PATH).
 //   Dart  : dart format (when dart is on PATH).
 // Reports one status line per check (what ran, what was skipped and why, which
 // tool is missing) and stops starting tools at EARLY_STOP_RATIO of the budget.
@@ -34,7 +37,12 @@ const MS_PER_SECOND = 1000;
 // Lower-only override of TOTAL_BUDGET_MS (used by tests to force the early stop).
 const BUDGET_OVERRIDE_ENV = 'OPM_STOP_BUDGET_MS';
 const SKIP_FORMAT_ENV = 'OPM_SKIP_FORMAT';
-const ROOT_MARKERS = ['package.json', 'pyproject.toml', 'pubspec.yaml'];
+const ROOT_MARKERS = ['package.json', 'pyproject.toml', 'ruff.toml', '.ruff.toml', 'pubspec.yaml'];
+const MAX_ROOT_SEARCH_DEPTH = 40;
+const MAX_LISTED_UNROOTED = 5;
+// .prettierrc, .prettierrc.<ext> and prettier.config.<ext>, the files prettier itself reads.
+const RUFF_PYPROJECT_SECTION = /^\[tool\.ruff[\].]/m;
+const PRETTIER_CONFIG = /^(\.prettierrc(\.[a-z0-9]+)?|prettier\.config\.[a-z0-9]+)$/i;
 const JS_TS = /\.[cm]?[jt]sx?$/i;
 const PYTHON = /\.py$/i;
 const DART = /\.dart$/i;
@@ -108,14 +116,16 @@ function localBin(root, name) {
   return fs.existsSync(bin) ? bin : null;
 }
 
-function findProjectRoot(filePath, fallback) {
+// Nearest folder above the file holding a ROOT_MARKERS file, or null when none
+// exists: a file outside any project is never formatted.
+function findProjectRoot(filePath) {
   let dir = path.dirname(filePath);
   const top = path.parse(dir).root;
-  for (let depth = 0; depth < 40 && dir !== top; depth++) {
+  for (let depth = 0; depth < MAX_ROOT_SEARCH_DEPTH && dir !== top; depth++) {
     if (ROOT_MARKERS.some((marker) => fs.existsSync(path.join(dir, marker)))) return dir;
     dir = path.dirname(dir);
   }
-  return fallback;
+  return null;
 }
 
 function firstLines(text) {
@@ -131,13 +141,61 @@ function outcome(result, okText) {
   return result.ok ? `${okText} in ${seconds(result.ms)}` : `failed in ${seconds(result.ms)}`;
 }
 
+function listDir(dir) {
+  try {
+    return fs.readdirSync(dir);
+  } catch {
+    return []; // an unreadable parent folder cannot hold config we could use
+  }
+}
+
+function readTextOrEmpty(file) {
+  try {
+    return fs.readFileSync(file, 'utf8');
+  } catch {
+    return ''; // missing or unreadable: treat as holding no config
+  }
+}
+
+function hasPrettierKey(packageJsonPath) {
+  try {
+    return Object.prototype.hasOwnProperty.call(JSON.parse(readTextOrEmpty(packageJsonPath) || '{}'), 'prettier');
+  } catch {
+    return false; // invalid package.json: treat as no prettier key
+  }
+}
+
+function dirHasPrettierConfig(dir) {
+  return listDir(dir).some((entry) => PRETTIER_CONFIG.test(entry)) || hasPrettierKey(path.join(dir, 'package.json'));
+}
+
+function dirHasRuffConfig(dir) {
+  const entries = listDir(dir);
+  if (entries.includes('ruff.toml') || entries.includes('.ruff.toml')) return true;
+  return entries.includes('pyproject.toml') && RUFF_PYPROJECT_SECTION.test(readTextOrEmpty(path.join(dir, 'pyproject.toml')));
+}
+
+// Prettier and ruff both resolve config upward from the file, so look from the root upward too.
+function hasConfigUpward(root, dirHasConfig) {
+  let dir = root;
+  for (let depth = 0; depth < MAX_ROOT_SEARCH_DEPTH; depth++) {
+    if (dirHasConfig(dir)) return true;
+    const parent = path.dirname(dir);
+    if (parent === dir) return false;
+    dir = parent;
+  }
+  return false;
+}
+
 // Each check returns { status, detail?, blocker? }; status is the one-line summary.
+// Without a local prettier or a prettier config the project has not opted in, and
+// npx would format it with prettier's default style.
 function checkPrettier(root, files) {
   if (process.env[SKIP_FORMAT_ENV] === '1') return { status: `skipped (${SKIP_FORMAT_ENV}=1)` };
   let command = localBin(root, 'prettier');
   let args = ['--write', '--ignore-unknown', ...files];
   if (!command) {
-    if (!fs.existsSync(path.join(root, 'package.json'))) return { status: 'skipped (no package.json or local prettier)' };
+    if (!hasConfigUpward(root, dirHasPrettierConfig)) return { status: 'skipped (no prettier config or local prettier)' };
     command = IS_WINDOWS ? 'npx.cmd' : 'npx';
     args = ['--no-install', 'prettier', ...args];
   }
@@ -165,6 +223,8 @@ function checkTsc(root) {
 
 function checkRuff(root, files) {
   if (process.env[SKIP_FORMAT_ENV] === '1') return { status: `skipped (${SKIP_FORMAT_ENV}=1)` };
+  // Without a ruff config the project has not chosen ruff; its defaults would restyle the code.
+  if (!hasConfigUpward(root, dirHasRuffConfig)) return { status: 'skipped (no ruff config)' };
   if (!onPath('ruff')) return { status: notOnPath() };
   const format = runTool('ruff', ['format', ...files], root);
   const formatted = `formatted ${plural(files.length, 'file')}`;
@@ -193,15 +253,28 @@ const CHECKS = [
   { name: 'tsc', matches: JS_TS, kind: '.js/.ts', run: (root) => checkTsc(root) },
 ];
 
-function groupByRoot(files, fallbackRoot) {
+function isCheckable(file) {
+  return CHECKS.some((check) => check.matches.test(file));
+}
+
+// Returns { groups: Map<root, files[]>, unrooted: checkable files with no project root }.
+function groupByRoot(files) {
   const groups = new Map();
+  const unrooted = [];
   for (const file of files) {
     if (!fs.existsSync(file)) continue;
-    const root = findProjectRoot(file, fallbackRoot);
+    const root = findProjectRoot(file);
+    if (!root) { if (isCheckable(file)) unrooted.push(file); continue; }
     if (!groups.has(root)) groups.set(root, []);
     groups.get(root).push(file);
   }
-  return groups;
+  return { groups, unrooted };
+}
+
+function unrootedLine(unrooted) {
+  const listed = unrooted.slice(0, MAX_LISTED_UNROOTED).join(', ');
+  const more = unrooted.length > MAX_LISTED_UNROOTED ? ` and ${unrooted.length - MAX_LISTED_UNROOTED} more` : '';
+  return `skipped (no project root): ${listed}${more}`;
 }
 
 function sleepUntil(timestamp) {
@@ -229,11 +302,14 @@ function runChecks(groups) {
   return report;
 }
 
-function processList(listFile, fallbackRoot) {
+function processList(listFile) {
   const files = [...new Set(fs.readFileSync(listFile, 'utf8').split('\n').map((l) => l.trim()).filter(Boolean))];
-  const groups = groupByRoot(files, fallbackRoot);
-  const checkable = [...groups.values()].some((group) => group.some((file) => CHECKS.some((c) => c.matches.test(file))));
-  return checkable ? runChecks(groups) : null;
+  const { groups, unrooted } = groupByRoot(files);
+  const checkable = [...groups.values()].some((group) => group.some(isCheckable));
+  if (!checkable && !unrooted.length) return null;
+  const report = checkable ? runChecks(groups) : { lines: [], details: [], blockers: [] };
+  if (unrooted.length) report.lines.push(unrootedLine(unrooted));
+  return report;
 }
 
 function emit(report) {
@@ -250,8 +326,7 @@ readStdin((raw) => {
     if (input.stop_hook_active === true) return;
     listFile = accumulatorFile(input.session_id);
     if (!fs.existsSync(listFile)) return;
-    const fallbackRoot = typeof input.cwd === 'string' && input.cwd ? input.cwd : process.cwd();
-    const report = processList(listFile, fallbackRoot);
+    const report = processList(listFile);
     if (report) emit(report);
   } catch (err) {
     process.stderr.write(`[opm] stop-format-typecheck: ${err && err.message}\n`);

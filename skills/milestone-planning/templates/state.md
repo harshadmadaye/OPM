@@ -1,7 +1,8 @@
 # State Template
 
-Save as `docs/milestones/<milestone>/STATE.md`. Read first in every session; update after every
-plan completes and at every phase boundary. Keep it under 100 lines: it is a digest, not a log.
+The orchestrator saves this as `docs/milestones/<milestone>/STATE.md`, from the text the executing
+subagent returns. Read first in every session; update after every plan completes and at every
+phase boundary. Keep it under 100 lines: it is a digest, not a log.
 
 ```markdown
 # <Milestone> State
@@ -12,8 +13,8 @@ plan completes and at every phase boundary. Keep it under 100 lines: it is a dig
 ## Position
 
 Phase: [N] of [total] ([name])
-Plan: [A] of [B] in this phase
-Status: [Ready to plan | Planning | Ready to execute | Executing | Phase complete]
+Plan: [A] of [B] in this phase [, complete, N human checks pending - while REVIEW-QUEUE.md has pending rows]
+Status: [Ready to plan | Planning | Ready to execute | Executing | Phase complete | Phase complete, N human checks pending]
 Last activity: [YYYY-MM-DD] - [what happened]
 Progress: [completed plans] / [total plans]
 

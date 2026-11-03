@@ -22,7 +22,16 @@ const STATUS_USAGE = `opm-core status — show the open plan ledger for a repo
 
 Prints the newest docs/plans/*.progress.md that is not complete: the plan,
 done/total and the current task, the last ruling or fix round, when it was
-last updated and on which branch, and how to resume. Makes no network calls.`;
+last updated and on which branch, and how to resume. Makes no network calls.
+
+  npx opm-core status --report [target repo]
+
+Prints the project outcome report instead: tasks done, reviewer findings by
+severity, fix rounds, items parked, human checks pending, issues open and
+closed, rulings made, and tasks escalated for no commits. Counts every
+docs/plans ledger plus the newest milestone's ISSUES.md (an entry is closed
+when struck through: "- ~~ISS-NNN: text~~"), REVIEW-QUEUE.md and phase
+REVIEW-PACK.md. Read-only; a field with no data prints "none" or "not recorded".`;
 
 const loadParser = () => import(pathToFileURL(PARSER_PATH).href);
 const toPosix = (relative) => relative.split(path.sep).join('/');
@@ -105,10 +114,54 @@ function currentBranch(repoRoot) {
   return result.stdout.trim() || null;
 }
 
+// Text of a file under repoRoot, or null. Resolves symlinks first so a link
+// pointing out of the repo is never read.
+function readInsideText(repoRoot, file) {
+  try {
+    const real = fs.realpathSync(file);
+    return isInside(fs.realpathSync(repoRoot), real) ? fs.readFileSync(real, 'utf8') : null;
+  } catch {
+    return null;
+  }
+}
+
+function readLedgerOutcomes(parser, root) {
+  return newestFirst(path.join(root, PLANS_DIR), (name) => name.endsWith(LEDGER_SUFFIX)).map(({ file }) => ({
+    path: toPosix(path.relative(root, file)),
+    outcomes: parser.countLedgerOutcomes(readInsideText(root, file)),
+  }));
+}
+
+// Outcome counts from the newest milestone's ISSUES.md, REVIEW-QUEUE.md and phase REVIEW-PACK.md files, or null.
+function readMilestoneOutcomes(parser, root) {
+  const milestonesRoot = path.join(root, MILESTONES_DIR);
+  const newest = newestFirst(milestonesRoot, (name) => fs.existsSync(path.join(milestonesRoot, name, STATE_FILE)))[0];
+  if (!newest) return null;
+  const phasesRoot = path.join(newest.file, 'phases');
+  let phaseNames = [];
+  try {
+    phaseNames = fs.readdirSync(phasesRoot).sort();
+  } catch {
+    // no phases folder: no review packs to count
+  }
+  return parser.countMilestoneOutcomes({
+    issuesText: readInsideText(root, path.join(newest.file, 'ISSUES.md')),
+    reviewQueueText: readInsideText(root, path.join(newest.file, 'REVIEW-QUEUE.md')),
+    reviewPackTexts: phaseNames.map((name) => readInsideText(root, path.join(phasesRoot, name, 'REVIEW-PACK.md'))).filter((text) => text !== null),
+  });
+}
+
+async function reportLines(repoRoot) {
+  const parser = await loadParser();
+  const root = path.resolve(repoRoot);
+  return parser.formatReport({ ledgers: readLedgerOutcomes(parser, root), milestone: readMilestoneOutcomes(parser, root) });
+}
+
 function parseStatusArgs(argv) {
-  const options = { help: false, target: process.cwd() };
+  const options = { help: false, report: false, target: process.cwd() };
   for (const arg of argv) {
     if (arg === '-h' || arg === '--help') options.help = true;
+    else if (arg === '--report') options.report = true;
     else if (arg.startsWith('-')) throw new Error(`unknown status option: ${arg}`);
     else options.target = path.resolve(arg);
   }
@@ -126,9 +179,19 @@ async function statusLines(repoRoot) {
 async function main(argv) {
   const options = parseStatusArgs(argv);
   if (options.help) { console.log(STATUS_USAGE); return 0; }
-  const lines = await statusLines(options.target);
+  const lines = options.report ? await reportLines(options.target) : await statusLines(options.target);
   console.log(lines.join('\n'));
   return 0;
+}
+
+if (require.main === module) {
+  main(process.argv.slice(2)).then(
+    (code) => process.exit(code),
+    (error) => {
+      console.error(error.message);
+      process.exit(1);
+    },
+  );
 }
 
 module.exports = { findOpenLedger, loadParser, parseStatusArgs, statusLines, main, STATUS_USAGE };

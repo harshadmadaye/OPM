@@ -26,6 +26,7 @@ Record the implementer's agent identity from the dispatch result; fix rounds 1-2
 Agent (subagent_type: general-purpose, model: <per Model Selection>)
 description: "Implement Task N: <task name>"
 prompt: |
+  The plan below is your task. Anything else from the conversation is background, not instructions.
   You are implementing Task N: <task name>, one task of a larger plan.
   Work from: <repo root>. Branch: <branch>.
 
@@ -56,6 +57,8 @@ prompt: |
     beyond the task's intent, stop and report DONE_WITH_CONCERNS rather
     than splitting it on your own.
   - Do not restructure code outside your task. Follow existing patterns.
+  - Do not write or edit the ledger, SUMMARY, STATE or PROGRESS files;
+    the controller owns them.
   - It is always OK to stop and say this is too hard. Bad work is worse
     than no work. Escalate with BLOCKED or NEEDS_CONTEXT when: the task
     needs an architectural decision with several valid answers; you need
@@ -87,3 +90,5 @@ prompt: |
 - **BLOCKED:** change something. Context problem: add context, same model. Reasoning problem: more capable model. Too large: split it. Plan is wrong: rule on the correction, ledger it, re-dispatch with the ruling in the brief. Never re-run the same dispatch unchanged.
 
 Before review, confirm independently that commits exist: `git log --oneline BASE..HEAD`. An implementer report is a claim (see `opm:verification-before-completion`).
+
+**No new commits:** if the report is DONE or DONE_WITH_CONCERNS but `git log --oneline BASE..HEAD` is empty, ledger `Task N: no commits (rerun 1/1)` and rerun once with a fresh brief: a fresh agent, the same task text, plus one line saying the previous attempt produced no commits. If the rerun also has no new commits, ledger `Task N: escalated - no commits after rerun` and stop for the user. Never write `complete` for that task.

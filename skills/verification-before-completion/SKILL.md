@@ -52,6 +52,7 @@ Skip any step = lying, not verifying
 | Build succeeds | Build command: exit 0 | Linter passing, logs look good |
 | Bug fixed | Test of original symptom: passes | Code changed, assumed fixed |
 | Regression test works | Red-green cycle verified | Test passes once |
+| Fast / smooth / battery-friendly | Measured on physical-device or prod-like, env stated | A simulator or unit run: report NOT JUDGEABLE |
 | Subagent completed | `git diff` / `git log` shows the changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist against spec/plan | Tests passing |
 | Plan task complete | Task's own test steps run, output read | Implementer said DONE |

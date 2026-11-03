@@ -125,6 +125,21 @@ test('an enforced skill grown past 4,800 bytes fails check(), naming the skill',
   assert.ok(!result.warnings.some((w) => w.includes(ENFORCED_SKILL)));
 });
 
+test('a skill with a named ceiling fails check() once its core passes the ceiling', () => {
+  const ceiling = budget.SKILL_CEILING_TOKENS['jump-start'];
+  assert.equal(ceiling, 2400);
+  assert.equal(budget.SKILL_CEILING_TOKENS['milestone-planning'], 2400);
+  const root = makeFixture();
+  writeSkillOfSize(root, 'jump-start', ceiling * budget.BYTES_PER_TOKEN);
+  const open = { plugin: Infinity, rulesCommon: Infinity };
+  assert.equal(budget.check(budget.measure(root), open).isOk, true);
+  writeSkillOfSize(root, 'jump-start', ceiling * budget.BYTES_PER_TOKEN + 1);
+  const result = budget.check(budget.measure(root), open);
+  assert.equal(result.isOk, false);
+  assert.equal(result.failures.length, 1);
+  assert.match(result.failures[0], /jump-start.*over its ceiling of 2400/);
+});
+
 test('an enforced skill within the cap passes even with large references', () => {
   const root = makeFixture();
   writeSkillOfSize(root, ENFORCED_SKILL, CORE_SKILL_BYTES);

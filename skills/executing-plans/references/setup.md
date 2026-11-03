@@ -5,5 +5,6 @@
 3. **Read the plan once.** Note Goal, Global Constraints, and the Interfaces blocks. If the plan names a Spec, read that too: the spec is the authority the plan argues from, and conflicts inside the plan resolve against it. A plan with no reachable spec gets a ledger note saying so; rulings made without one are provisional.
 4. **Pre-flight conflict scan.** One row per pair of tasks that share a file or interface (what one produces vs. what the other consumes), and one row per task (do its tests agree with its code, do the files it creates match the files it later touches). Write the table to the ledger. Rule on each conflict before Task 1, spec as binding authority. "The scan is clean" without rows is not a scan you ran.
 5. **Create a todo per task.**
+6. **Mid-run notice.** Before a long run, tell the user that messages sent while it runs are read as background and can derail the agents, so to interrupt instead if they need to change course.
 
 Conversation memory does not survive compaction. Controllers that lost their place have re-dispatched entire completed task sequences, the single most expensive failure observed. After compaction, trust the ledger and `git log` over your own recollection.

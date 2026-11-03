@@ -51,7 +51,9 @@ prompt: |
   Separation of concerns; explicit error handling (no swallowed errors);
   DRY without premature abstraction; edge cases; tests verify behavior,
   not mocks; each file has one responsibility; new files not already
-  large. Cite file:line for every finding.
+  large. For every finding give `File: path:line` and `Confidence: NN%`
+  (your estimate it is real). A finding that cannot cite a line is a
+  question, not a finding.
 
   ## Calibration
   Critical: broken, insecure, or data-losing. Important: cannot be trusted

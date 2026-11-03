@@ -63,14 +63,14 @@ step needs them.
 
 | Skill | Core, per run (tokens) | References, on demand (bytes) |
 |---|---|---|
-| `executing-plans` | 1,056 | 18,567 |
+| `executing-plans` | 1,056 | 21,227 |
 | `flutter-patterns` | 856 | 10,754 |
 | `react-patterns` | 828 | 8,849 |
 | `python-patterns` | 797 | 10,166 |
-| `verification-before-completion` | 1,371 | 4,814 |
+| `verification-before-completion` | 1,406 | 6,424 |
 
-The other skills are not split yet. The largest, `milestone-planning`, loads
-2,911 tokens. Evidence: [the per-skill table](docs/why-opm.md#what-opm-costs-per-session).
+The other skills are not split yet. The largest, `tdd-workflow`, loads
+2,784 tokens. Evidence: [the per-skill table](docs/why-opm.md#what-opm-costs-per-session).
 
 **3. CI runs on macOS, Linux and Windows, with Node 18, 20 and 22.** Nine test
 jobs, then a gate that validates the manifests with the Claude Code CLI.
@@ -182,6 +182,37 @@ It ends by handing you a running app and a URL, or launching it on a connected
 device. For the build to run unattended, switch Claude Code to auto mode with
 Shift+Tab when it asks. OPM never changes your permission mode itself.
 
+### Long runs keep you in the loop (0.10)
+
+Unattended runs used to be able to finish with nobody having read the risky
+code. From 0.10:
+
+- **Human checks stay human.** In an unattended run a `checkpoint:human-verify`
+  goes to `REVIEW-QUEUE.md` with its evidence and the run carries on. The agent
+  never marks it passed. `STATE.md` reads "complete, N human checks pending"
+  until you empty the queue, and final reports list pending checks first.
+- **A review pack at each phase close.** `REVIEW-PACK.md` ranks the five riskiest
+  changes (auth, permissions, data deletion, migrations, payments, sync,
+  secrets, external calls), each with its diff range and a few "explain how X
+  handles Y" questions. About 20-30 minutes of reading.
+- **You choose the cadence.** After each phase (the default) or only at the end.
+  "Only at the end" shows the expected commit count and is logged as a decision.
+- **What stops a run is short and the same everywhere.** Four stop conditions
+  (an exposed secret is one, and stops it at once as a blocking human-action
+  checkpoint), steps only you can do, and the cadence pause. In unattended
+  runs an architecture change is ruled, logged and queued for review. An agent that reports success with no new
+  commits is rerun once, then escalated, never marked complete.
+- **Evidence says where it ran.** The verification gate labels each check
+  `env: unit | simulator | physical-device | prod-like`. A performance, startup,
+  battery or network claim from a simulator reads NOT JUDGEABLE. A milestone
+  can require a real-environment pass.
+- **Reviewers state confidence and the line they cite**, and final reports
+  count findings by severity and by fixed, parked or dismissed.
+
+`npx opm-core status --report` prints the outcome from the ledgers and milestone files: tasks
+done, findings by severity, fix rounds, items parked, human checks pending,
+issues opened and closed, rulings made.
+
 ---
 
 ## How the whole loop fits together
@@ -245,6 +276,18 @@ WSL only.
 
 OPM is tested with Claude Code 2.1.273 - 2.1.289. The mod features below need
 2.1.287 or later; `npx opm-core doctor` tells you whether yours has them.
+
+---
+
+## Behaviour evals (0.10): authored, not yet run
+
+Six evals under `evals/` check OPM's own rules on small sample repos (stops on
+an architecture change, refuses "done" without fresh output, ignores a mid-run
+chat message, queues human checks, skips ledger-complete tasks, no push without
+a yes). They are paid, so they run by hand with
+`npm run eval:behaviour -- --yes`, and **they have not been run**: OPM's
+behaviour under them is unmeasured. The full 30-prompt trigger eval has not
+been run either. See [docs/evals.md](docs/evals.md).
 
 ---
 
@@ -396,7 +439,7 @@ through edge-tts**; pick the local OS voice and nothing leaves your machine.
 | PreToolUse on Bash | Denies `git commit --no-verify` and other hook bypasses |
 | PreToolUse on Edit/Write | Asks before editing lint, format, typecheck or `.husky` config |
 | PostToolUse on Edit/Write | Records edited files for the Stop hooks |
-| Stop | Formats edited files, runs tsc, ruff or dart, blocks on type errors |
+| Stop | Formats edited files in projects that configure prettier or ruff (dart always), runs tsc, ruff or dart, blocks on type errors |
 | Stop | Warns about leftover `console.log`, `print` or `debugPrint` |
 
 Set `OPM_HOOKS_DISABLED=1` to turn them all off. Per-hook switches are

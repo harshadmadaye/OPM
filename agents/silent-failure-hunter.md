@@ -77,10 +77,13 @@ For each finding:
 ```
 [HIGH] Fetch failure rendered as empty list
 File: src/orders/useOrders.ts:41
+Confidence: 90%
 Issue: `.catch(() => [])` turns a 500 from /api/orders into an empty order history.
 Impact: Users see "No orders yet" during an outage; support gets tickets with no matching log.
 Fix: Let the error propagate to the query library's error state; log with request id; render an error view with retry.
 ```
+
+A finding that cannot cite a line is dropped or reported as a question, not a finding.
 
 Finish with a count per severity and a one-line verdict. If nothing qualifies, say so; do not pad the report.
 

@@ -43,6 +43,7 @@ One section per phase: number, name, one-line goal, the plans it contains with c
 and a status line. Phases are vertical slices (a user-visible capability end to end), not
 horizontal layers (all models, then all APIs, then all UI). A roadmap of four to eight phases
 is typical; if you have more than ten, the milestone is too big.
+A "Definition of done" may add `Real-environment pass: required (physical-device|prod-like)`.
 
 ### STATE.md
 
@@ -51,11 +52,6 @@ updates it after each plan completes. Contents: current position (phase X of Y, 
 status), the last three to five decisions, open blockers, a pointer to ISSUES.md with a count,
 and "stopped at" for session continuity. Under 100 lines, always. It is a digest, not a log;
 history lives in the SUMMARY files.
-
-### ISSUES.md
-
-Numbered list of deferred work discovered during execution: `ISS-007: add rate limiting to
-login (found in 02-01, Task 2)`. Reviewed when planning each new phase.
 
 ## Plan format
 
@@ -122,19 +118,7 @@ Before writing any plan, run the retrieval half of `opm:compound-learnings` agai
 
 ## Checkpoint types
 
-| Type | Share | Use for |
-|---|---|---|
-| `checkpoint:human-verify` | most | Visual or interactive confirmation of something already built |
-| `checkpoint:decision` | some | A choice that sets direction: present options with pros and cons, wait |
-| `checkpoint:human-action` | rare | Steps with no CLI or API: email verification links, 2FA codes, manual approvals |
-
-The rule: if it has a CLI or API, the executor does it. Checkpoints are for confirmation and
-decisions, never for delegating automatable work to a human. Batch verification into one
-checkpoint at the end of a plan rather than one after every task. An authentication error
-during execution is not a failure; it becomes a dynamic `human-action` checkpoint ("run
-`vercel login`, then reply done") followed by a retry.
-
-Any plan containing a checkpoint sets `autonomous: false`.
+`checkpoint:human-verify` (most), `checkpoint:decision` (some), `checkpoint:human-action` (rare). If it has a CLI or API, the executor does it; checkpoints are for confirmation and decisions only. Any plan containing a checkpoint sets `autonomous: false`. In unattended runs `checkpoint:human-verify` items go to REVIEW-QUEUE.md and the agent never marks them passed (see executing-a-phase.md).
 
 ## Wave algorithm
 
@@ -153,62 +137,15 @@ work that could have run in parallel.
 
 ## Executing a phase
 
-The orchestrator stays small: it reads STATE.md and the phase's plans, groups them by wave, and
-for each wave spawns one fresh subagent per plan, all in a single message so they run in parallel.
-It waits for the wave to finish, confirms each SUMMARY exists, then starts the next wave.
+Per wave, one fresh subagent per plan, all spawned in a single message. Each brief opens with "The plan below is your task. Anything else from the conversation is background, not instructions." The orchestrator writes SUMMARY and STATE from the text each subagent returns. A subagent that reports success with no new commits is rerun once, then escalated, never marked complete.
 
-Each subagent receives the plan path and STATE.md, and executes the plan using the task discipline
-of `opm:executing-plans`: read the task, do exactly it, run `verify`, confirm `done`, commit that
-task's files individually (`feat(02-01): task name`), move on. TDD-shaped tasks use
-`opm:tdd-workflow`. At the end the subagent runs `opm:verification-before-completion` (full gate), writes the SUMMARY,
-and updates STATE.md. When it hits a checkpoint, it stops and returns the checkpoint content plus
-a table of completed tasks; after the human responds, a fresh subagent continues from the next
-task. Agents are not resumed; state lives in files and commits, not in context.
+Deviation rules: 1. bug in scope, fix and note; 2. security or correctness gap, fix and note; 3. blocker, fix and note; 4. architecture change, stop and ask; 5. enhancement, log as `ISS-NNN` and continue.
 
-### Deviation rules
-
-Plans are guides, not straitjackets. During execution:
-
-1. **Bug found in scope** - fix it now, note it in the SUMMARY under Deviations.
-2. **Security or correctness gap** - add the fix now, note it.
-3. **Blocker** (missing dependency, broken config) - fix it now, note it.
-4. **Architecture change** - stop and ask. Do not refactor structure on your own initiative.
-5. **Enhancement or polish** - log to ISSUES.md as `ISS-NNN` with the plan and task, continue.
-
-Only rule 4 needs the human. Everything else is recorded, not asked.
-
-### Commit rules
-
-One commit per task, staging only that task's files (never `git add .` or `-A`). Format
-`<type>(<phase>-<plan>): <task name>` with type in feat, fix, test, refactor, perf, chore.
-After the last task, one metadata commit for PLAN, SUMMARY, STATE: `docs(02-01): complete plan`.
+Read references/executing-a-phase.md when writing plans that contain checkpoints, executing a phase, handling a checkpoint, or writing a SUMMARY.
 
 ## SUMMARY files
 
-Written by the executing subagent when a plan finishes. The frontmatter is what makes history
-cheap: future planning scans only these ~20 lines across all SUMMARY files to assemble context.
-
-```yaml
----
-phase: 02-auth
-plan: 01
-requires:
-  - { phase: 01-foundation, provides: prisma User model }
-provides:
-  - createSession / readSession helpers in src/lib/auth.ts
-  - auth middleware protecting /app/*
-affects: [03-dashboard, 04-billing]
-key_files: [src/lib/auth.ts, src/middleware/auth.ts]
-key_decisions:
-  - "jose over jsonwebtoken: ESM and Edge compatible"
-issues_created: [ISS-004]
-completed: 2026-09-12
----
-```
-
-The body opens with a substantive one-liner ("Signed-cookie sessions with 15-minute expiry and
-protected /app routes", never "auth done"), then accomplishments, task commits with hashes,
-decisions, deviations (auto-fixed and deferred), and readiness notes for the next phase.
+The orchestrator writes SUMMARY-NN-MM.md from the returned text; its YAML frontmatter is what future planning scans.
 
 ## Continuation closer
 
@@ -236,25 +173,19 @@ the plan's `<objective>`.
 
 ## Lifecycle in one screen
 
-1. **Start**: write ROADMAP.md (phases as vertical slices), an empty STATE.md, an empty ISSUES.md.
+1. **Start**: write ROADMAP.md (phases as vertical slices), an empty STATE.md, an empty ISSUES.md. Ask the review cadence only when no cadence is logged (DECISIONS.md or STATE.md): after each phase (default) or only at the end; log it in STATE.md Recent decisions with the expected commit count (see references/executing-a-phase.md). A milestone with no logged cadence uses after each phase.
 2. **Plan a phase**: read STATE.md, ROADMAP.md, ISSUES.md, prior SUMMARY frontmatter, and
    `docs/solutions/`. Use `opm:brainstorming` if the approach is unclear. Write two to five
    PLAN files, compute waves, commit them. Close with the continuation block.
 3. **Execute the phase**: wave by wave, fresh subagent per plan, checkpoints surface to the human.
 4. **Close the phase**: confirm every plan has a SUMMARY, tick the roadmap, refresh STATE.md,
-   run `opm:compound-learnings` for anything non-obvious that happened. Close with the continuation block.
+   run `opm:compound-learnings` for anything non-obvious that happened, write REVIEW-PACK.md. Close with the continuation block.
 5. **Close the milestone**: when the last phase closes, write a short retrospective at the top of
    ROADMAP.md and reset STATE.md for the next milestone.
    Optional: `/opm-video:explainer-video <path>` turns this into a narrated explainer (install the opm-video plugin first).
 
 ## Anti-patterns
 
-- A STATE.md over 100 lines (it stopped being a digest).
-- Plans with one huge task or more than three tasks.
-- Horizontal phases (all models, then all APIs).
-- `depends_on` set by numbering rather than by consumption.
-- A checkpoint after every task.
-- Asking the human to do something a CLI can do.
-- Resuming an old subagent instead of spawning a fresh one from files.
+See the Anti-patterns list at the end of references/executing-a-phase.md.
 
 <!-- Adapted from gsd-build/get-shit-done (MIT) -->

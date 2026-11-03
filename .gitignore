@@ -5,3 +5,6 @@ node_modules/
 
 # Maintainer-only helper, kept locally and out of the shipped repo
 scripts/push-via-api.sh
+
+# Paid behaviour-eval output
+evals/results/

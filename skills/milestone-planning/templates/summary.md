@@ -1,6 +1,7 @@
 # Summary Template
 
-Save as `docs/milestones/<milestone>/phases/NN-<name>/SUMMARY-NN-MM.md` when a plan completes.
+The orchestrator saves this as `docs/milestones/<milestone>/phases/NN-<name>/SUMMARY-NN-MM.md`
+when a plan completes, from the text the executing subagent returns.
 The frontmatter is scanned by future planning; keep it accurate and complete.
 
 ```markdown
@@ -51,8 +52,8 @@ expiry and protected /app routes". Never "plan complete".]**
 
 ## Verification
 
-- Tests: [command] -> [X passed, Y failed, Z skipped]
-- Build / types / lint: [PASS or details]
+- Tests: [command] -> [X passed, Y failed, Z skipped] env: [unit|simulator|physical-device|prod-like]
+- Build / types / lint: [PASS or details] env: [unit|simulator|physical-device|prod-like]
 
 ## Next-phase readiness
 

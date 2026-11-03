@@ -11,8 +11,9 @@
 | Parallel work by default | Independent pieces run at the same time in parallel subagents, each in its own git worktree when it edits files, then get merged. |
 | The big tools, offered not hidden | When a job would clearly benefit from many agents at once (a debate, a sweep across modules), Claude offers a multi-agent run with a rough agent count and starts it only after you say yes. |
 | You always know what is happening | Every step up is announced in one line, such as "Using 3 parallel subagents to audit the forms", so you can stop or redirect it. |
-| Fewer "done" claims that are not | Subagent reports are verified, tests are actually run, and nothing is called finished without fresh command output. |
-| Work that survives a reset | Plans and milestones keep their progress on disk, so a compacted or new session picks up where the last one stopped. |
+| Fewer "done" claims that are not | Subagent reports are verified, tests are actually run, and nothing is called finished without fresh command output. Each check says where it ran (`unit`, `simulator`, `physical-device`, `prod-like`); a simulator cannot vouch for performance. |
+| Work that survives a reset | Plans and milestones keep their progress on disk, so a compacted or new session picks up where the last one stopped. `npx opm-core status --report` summarises the outcome. |
+| Your judgment stays yours | In unattended runs, human checks go to `REVIEW-QUEUE.md` and are never passed by the agent. Each phase close writes a review pack of the five riskiest changes, and you choose whether to review after each phase or only at the end. |
 
 ## How it decides
 
@@ -35,6 +36,8 @@
 - Weeks of work: a milestone with waves of parallel plans.
 - Many agents at once: an offer of a multi-agent run, which starts only after your yes.
 
+Before a long run it tells you that chatting mid-run can derail the agents. A run stops only for OPM's four stop conditions (an exposed secret is one), a step only you can do such as a login, or the review pause you chose. In unattended runs an architecture change is ruled, logged and queued for you to review.
+
 It does not scale up for small jobs, when the answer is in a file it can read directly, or when the pieces depend on each other.
 
 ## Why some things are offered, not automatic
@@ -48,6 +51,10 @@ It loads on its own, but running it at the start of a session is useful when:
 - a long session was compacted and you want the rules back in full,
 - your editor or integration did not run the session-start hook,
 - you want to read the rules Claude is following.
+
+## Evals
+
+OPM 0.10 ships six behaviour evals that test these rules on sample repos. They are paid, gated behind `npm run eval:behaviour -- --yes`, and have not been run, so none of the above is measured by them yet. See [evals.md](evals.md).
 
 ## What it costs
 

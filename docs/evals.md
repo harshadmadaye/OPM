@@ -76,3 +76,22 @@ How a prompt is scored:
 The runner uses `--max-turns 2` rather than the spike's 1, so a run that first reloads using-opm (spike run 2) can still reach its real pick. That second turn has not been measured yet, so the first full run should confirm it.
 
 Output: one row per prompt (fixture id, size class, expected, observed, hit or miss), then `Hit rate: H/N (P%)`. Paste the table into the PR or issue that asks to merge or split the front-door skills; per the spec, those results decide it.
+
+## Behaviour evals (0.10): authored, not yet run
+
+Six cases under `evals/` check that OPM follows its own rules on small scaffolded sample repos: it stops on an architecture change, refuses "done" without fresh output, ignores a mid-run chat message, queues human checks in unattended runs, does not re-dispatch tasks the ledger marks complete, and does not push or open a PR without a yes. Each case's `README.md` names the rule, the file and section it proves, and its limitation.
+
+They are paid: each case is a real headless Claude Code session on your account plus LLM graders. For 0.10.0 the maintainer chose not to run them, so **no behaviour result is claimed yet**. One harness smoke run of `no-push-without-yes` (2026-11-03, Claude Code 2.1.317, $0.44) scored 0.25; it ran before the grader fix in `fix(04-02): tool_used graders need min 0`, so the score says nothing about OPM's behaviour.
+
+To run them:
+
+```sh
+npm run eval:behaviour -- --yes --case no-push-without-yes --max-cost-usd 1   # smoke one case first
+npm run eval:behaviour -- --yes --max-cost-usd 5                              # all six, one run each
+```
+
+The runner refuses without `--yes`, never publishes the report, and stops at the cost cap. Raw output goes to the git-ignored `evals/results/`.
+
+## Full trigger eval (0.10): not yet run
+
+The 30-prompt run (`npm run eval:triggers -- --yes`, about $0.70 on haiku, 2 turns per prompt) was not run for 0.10.0, for the same reason. 0.9 ISS-016 stays open.
