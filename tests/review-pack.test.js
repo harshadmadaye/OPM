@@ -106,3 +106,35 @@ test('F: a bad range exits 1 with a clear message', () => {
   assert.equal(noArg.status, 1);
   assert.equal(run(`${base}..HEAD`, '--max', 'abc').status, 1);
 });
+
+const fsRead = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8').replace(/\s+/g, ' ');
+
+test('G: review-pack template has the Phase 1 pack shape', () => {
+  const file = 'skills/milestone-planning/templates/review-pack.md';
+  assert.ok(fs.existsSync(path.join(ROOT, file)), `${file} must exist`);
+  const text = fsRead(file);
+  assert.match(text, /20 to 30 minutes/);
+  assert.match(text, /explain how/i);
+  assert.match(text, /\| Severity \| Found \| Fixed \| Parked \| Dismissed \|/);
+  assert.match(text, /Things that went differently than planned/);
+});
+
+test('H: phase close in both skills writes REVIEW-PACK.md with review-pack.js', () => {
+  for (const file of [
+    'skills/milestone-planning/SKILL.md',
+    'skills/milestone-planning/references/executing-a-phase.md',
+    'skills/jump-start/references/build-and-run.md',
+  ]) {
+    assert.match(fsRead(file), /REVIEW-PACK\.md/, `${file} must mention REVIEW-PACK.md`);
+  }
+  for (const file of [
+    'skills/milestone-planning/references/executing-a-phase.md',
+    'skills/jump-start/references/build-and-run.md',
+  ]) {
+    assert.match(fsRead(file), /review-pack\.js/, `${file} must name the script`);
+  }
+  assert.match(
+    fsRead('skills/milestone-planning/references/executing-a-phase.md'),
+    /wait for the developer to say they read it/i,
+  );
+});

@@ -17,6 +17,7 @@ For each phase, for each wave:
 3. If the Workflow tool is available, the developer opted in to orchestration by invoking jump-start, so a wave may run as a workflow instead of parallel Agent calls.
 4. After the wave: run build and tests. If red, dispatch one fix subagent with the failing output and the files involved. Do not start the next wave on red.
 5. After the phase: the orchestrator writes the SUMMARY files from the returned text, updates STATE.md, appends to `docs/milestones/v0.1/PROGRESS.md` and commits. Subagents write no report files.
+6. At each phase close, run `node skills/milestone-planning/scripts/review-pack.js <base>..<head>`, fill 2 or 3 questions per item from the diff using `skills/milestone-planning/templates/review-pack.md`, and save REVIEW-PACK.md in the phase folder; unattended runs continue without waiting for it to be read.
 
 A subagent that returns a `checkpoint:human-verify` does not stop the run: append a row to `docs/milestones/v0.1/REVIEW-QUEUE.md` (template in `skills/milestone-planning/templates/review-queue.md`) with the evidence, then continue. A queued check does not block the next plan unless a later plan depends on what it verifies. Never mark a row passed; only the developer does. STATE.md reads "complete, N human checks pending" until the queue is clear.
 

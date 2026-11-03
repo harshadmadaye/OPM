@@ -40,6 +40,15 @@ One commit per task, staging only that task's files (never `git add .` or `-A`).
 `<type>(<phase>-<plan>): <task name>` with type in feat, fix, test, refactor, perf, chore.
 After the last task, one metadata commit for PLAN, SUMMARY, STATE: `docs(02-01): complete plan`.
 
+### Closing the phase: review pack
+
+At phase close the orchestrator writes REVIEW-PACK.md in the phase folder (template:
+`templates/review-pack.md`). Run `node skills/milestone-planning/scripts/review-pack.js <base>..<head>`
+on the phase's range, fill 2 or 3 "explain how X handles Y" questions per item from the diff, add
+the review findings table and what went differently than planned, and commit it. With review
+cadence after each phase, wait for the developer to say they read it before planning the next
+phase; with "only at the end", write it and continue.
+
 ## SUMMARY files
 
 Written by the orchestrator from the text the executing subagent returns when a plan finishes. The frontmatter is what makes history
