@@ -15,6 +15,9 @@ const RULES_COMMON_CEILING_TOKENS = 1550; // measured 1,401
 const SKILL_SOFT_CAP_TOKENS = 1200; // fits a 4.5 KB SKILL.md core
 // Split skills keep their core under the soft cap as a hard limit; others only warn.
 const ENFORCED_SOFT_CAP_SKILLS = ['executing-plans', 'react-patterns', 'python-patterns', 'flutter-patterns'];
+// Hard ceilings for skills that stay over the soft cap. Core size after 02-01 (about
+// 2,300) plus headroom for the Phase 2 rules, so execution detail goes to references/.
+const SKILL_CEILING_TOKENS = { 'milestone-planning': 2400, 'jump-start': 2400 };
 const REFERENCES_DIR = 'references';
 const LARGEST_SKILLS_SHOWN = 10;
 
@@ -126,6 +129,9 @@ function check(report, ceilings = DEFAULT_CEILINGS) {
   const capMessage = (s) => `skill ${s.name} is ${s.tokens} tokens, over the soft cap of ${SKILL_SOFT_CAP_TOKENS}`;
   const isEnforced = (s) => ENFORCED_SOFT_CAP_SKILLS.includes(s.name);
   failures.push(...overCap.filter(isEnforced).map((s) => `${capMessage(s)} (enforced for split skills)`));
+  const overCeiling = report.skills.filter((s) => s.tokens > (SKILL_CEILING_TOKENS[s.name] ?? Infinity));
+  failures.push(...overCeiling.map((s) =>
+    `skill ${s.name} is ${s.tokens} tokens, over its ceiling of ${SKILL_CEILING_TOKENS[s.name]} (move detail to ${REFERENCES_DIR}/)`));
   const warnings = overCap.filter((s) => !isEnforced(s)).map(capMessage);
   return { isOk: failures.length === 0, failures, warnings };
 }
@@ -213,6 +219,7 @@ module.exports = {
   RULES_COMMON_CEILING_TOKENS,
   SKILL_SOFT_CAP_TOKENS,
   ENFORCED_SOFT_CAP_SKILLS,
+  SKILL_CEILING_TOKENS,
   START_MARKER,
   END_MARKER,
   stripFrontmatter,

@@ -42,13 +42,13 @@ Skills load only when invoked. The 10 largest, soft cap 1200 tokens each:
 
 | Skill | Tokens |
 |---|---|
-| milestone-planning | 2911 |
-| jump-start | 2904 |
 | tdd-workflow | 2784 |
 | brainstorming | 2690 |
 | brew-idea | 2557 |
+| milestone-planning | 2300 |
+| jump-start | 2295 |
+| compound-learnings | 1868 |
 | writing-plans | 1808 |
-| compound-learnings | 1730 |
 | verification-before-completion | 1371 |
 | executing-plans | 1056 |
 | using-opm | 1030 |
