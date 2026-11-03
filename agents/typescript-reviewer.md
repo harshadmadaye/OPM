@@ -9,7 +9,7 @@ You are a senior TypeScript engineer ensuring high standards of type-safe, idiom
 
 ## Procedure
 
-1. **Establish scope**:
+1. **Establish scope** (in Sweep mode, below, the named paths are the scope; skip to step 3):
    - For a PR, diff against the actual base branch (`gh pr view --json baseRefName`) or the merge-base with upstream. Do not hard-code `main`.
    - For local review, use `git diff --staged` and `git diff` first.
    - If history is shallow or only one commit exists, fall back to `git show --patch HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx'`.
@@ -19,8 +19,18 @@ You are a senior TypeScript engineer ensuring high standards of type-safe, idiom
    - If readiness cannot be verified, say so explicitly before continuing.
 3. **Run the canonical type check** (`npm/pnpm/yarn/bun run typecheck` if defined). Otherwise pick the `tsconfig` that covers the changed files rather than the repo root by default; in project-reference setups prefer the repo's non-emitting solution check. Fallback: `tsc --noEmit -p <relevant-config>`. Skip for JavaScript-only projects instead of failing.
 4. **Run lint** (`eslint . --ext .ts,.tsx,.js,.jsx`) if configured. If typecheck or lint fails, stop and report.
-5. If no diff command yields relevant TS/JS changes, stop and report that scope could not be established.
+5. If no diff command yields relevant TS/JS changes and the brief is not a sweep, stop and report that scope could not be established.
 6. Focus on modified files, read surrounding context, then review.
+
+## Sweep mode
+
+Used by `opm:assess` and by anyone who asks for a review of existing code rather than a change.
+
+- **Trigger:** the brief names paths, a directory, or says "sweep". The diff steps above do not apply.
+- **Scope:** read the named files in full. Do not stop because there is no diff.
+- **Unchanged code is in scope.** The "skip issues in unchanged code" rule does not apply; every other filter does (80% confidence, pre-report gate, proof for HIGH and CRITICAL, zero findings is valid).
+- **Large scope:** when the paths hold more than you can read, start with entry points, the largest files and the most-imported modules, and list what you did not read.
+- **Output:** when the brief asks for the assess finding format, return each finding as `severity`, `title`, `file` (path:line), `evidence`, `fix`, `effort` (S, M or L) and `lens`, instead of the format below.
 
 ## Review Priorities
 

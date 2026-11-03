@@ -28,6 +28,9 @@ function runHook(name, input, extraEnv = {}) {
     input: typeof input === 'string' ? input : JSON.stringify(input),
     encoding: 'utf8',
     env,
+    // Run outside the repo so a hook falling back to process.cwd() never sees
+    // this repo's own open plan ledgers.
+    cwd: tmpRoot,
     timeout: 20000,
   });
   return { status: result.status, stdout: result.stdout || '', stderr: result.stderr || '' };
