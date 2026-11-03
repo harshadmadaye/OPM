@@ -6,7 +6,7 @@
 //   JS/TS : prettier --write (local bin, or npx --no-install when a prettier
 //           config applies), then tsc --noEmit
 //           when tsconfig.json + node_modules/.bin/tsc exist in the root.
-//   Python: ruff format + ruff check (when ruff is on PATH).
+//   Python: ruff format + ruff check (when a ruff config applies and ruff is on PATH).
 //   Dart  : dart format (when dart is on PATH).
 // Reports one status line per check (what ran, what was skipped and why, which
 // tool is missing) and stops starting tools at EARLY_STOP_RATIO of the budget.
@@ -41,6 +41,7 @@ const ROOT_MARKERS = ['package.json', 'pyproject.toml', 'ruff.toml', '.ruff.toml
 const MAX_ROOT_SEARCH_DEPTH = 40;
 const MAX_LISTED_UNROOTED = 5;
 // .prettierrc, .prettierrc.<ext> and prettier.config.<ext>, the files prettier itself reads.
+const RUFF_PYPROJECT_SECTION = /^\[tool\.ruff[\].]/m;
 const PRETTIER_CONFIG = /^(\.prettierrc(\.[a-z0-9]+)?|prettier\.config\.[a-z0-9]+)$/i;
 const JS_TS = /\.[cm]?[jt]sx?$/i;
 const PYTHON = /\.py$/i;
@@ -148,21 +149,37 @@ function listDir(dir) {
   }
 }
 
-function hasPrettierKey(packageJsonPath) {
+function readTextOrEmpty(file) {
   try {
-    return Object.prototype.hasOwnProperty.call(JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')), 'prettier');
+    return fs.readFileSync(file, 'utf8');
   } catch {
-    return false; // unreadable or invalid package.json: treat as no prettier key
+    return ''; // missing or unreadable: treat as holding no config
   }
 }
 
-// Prettier resolves config upward from the file, so look from the root upward too.
-function hasPrettierConfig(root) {
+function hasPrettierKey(packageJsonPath) {
+  try {
+    return Object.prototype.hasOwnProperty.call(JSON.parse(readTextOrEmpty(packageJsonPath) || '{}'), 'prettier');
+  } catch {
+    return false; // invalid package.json: treat as no prettier key
+  }
+}
+
+function dirHasPrettierConfig(dir) {
+  return listDir(dir).some((entry) => PRETTIER_CONFIG.test(entry)) || hasPrettierKey(path.join(dir, 'package.json'));
+}
+
+function dirHasRuffConfig(dir) {
+  const entries = listDir(dir);
+  if (entries.includes('ruff.toml') || entries.includes('.ruff.toml')) return true;
+  return entries.includes('pyproject.toml') && RUFF_PYPROJECT_SECTION.test(readTextOrEmpty(path.join(dir, 'pyproject.toml')));
+}
+
+// Prettier and ruff both resolve config upward from the file, so look from the root upward too.
+function hasConfigUpward(root, dirHasConfig) {
   let dir = root;
   for (let depth = 0; depth < MAX_ROOT_SEARCH_DEPTH; depth++) {
-    if (listDir(dir).some((entry) => PRETTIER_CONFIG.test(entry))) return true;
-    const packageJson = path.join(dir, 'package.json');
-    if (fs.existsSync(packageJson) && hasPrettierKey(packageJson)) return true;
+    if (dirHasConfig(dir)) return true;
     const parent = path.dirname(dir);
     if (parent === dir) return false;
     dir = parent;
@@ -178,7 +195,7 @@ function checkPrettier(root, files) {
   let command = localBin(root, 'prettier');
   let args = ['--write', '--ignore-unknown', ...files];
   if (!command) {
-    if (!hasPrettierConfig(root)) return { status: 'skipped (no prettier config or local prettier)' };
+    if (!hasConfigUpward(root, dirHasPrettierConfig)) return { status: 'skipped (no prettier config or local prettier)' };
     command = IS_WINDOWS ? 'npx.cmd' : 'npx';
     args = ['--no-install', 'prettier', ...args];
   }
@@ -206,6 +223,8 @@ function checkTsc(root) {
 
 function checkRuff(root, files) {
   if (process.env[SKIP_FORMAT_ENV] === '1') return { status: `skipped (${SKIP_FORMAT_ENV}=1)` };
+  // Without a ruff config the project has not chosen ruff; its defaults would restyle the code.
+  if (!hasConfigUpward(root, dirHasRuffConfig)) return { status: 'skipped (no ruff config)' };
   if (!onPath('ruff')) return { status: notOnPath() };
   const format = runTool('ruff', ['format', ...files], root);
   const formatted = `formatted ${plural(files.length, 'file')}`;

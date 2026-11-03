@@ -281,7 +281,7 @@ const SLEEP_ON_FORMAT = (ms) =>
   `if (process.argv[2] === 'format') Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ${ms});\n`;
 
 test('stop-format-typecheck: missing tool warns, unchanged language says skipped', () => {
-  writeFixture('nopath/pyproject.toml', '[project]\nname = "x"\n');
+  writeFixture('nopath/pyproject.toml', '[project]\nname = "x"\n\n[tool.ruff]\nline-length = 88\n');
   const py = writeFixture('nopath/app.py', 'x = 1\n');
   const dart = writeFixture('nopath/lib/a.dart', 'void main() {}\n');
   const emptyBin = path.join(tmpRoot, 'empty-bin');
@@ -297,7 +297,7 @@ test('stop-format-typecheck: missing tool warns, unchanged language says skipped
 test('stop-format-typecheck: a working tool reports what it did', () => {
   const bin = path.join(tmpRoot, 'ok-bin');
   writeFakeTool(bin, 'ruff', 'process.exit(0);\n');
-  writeFixture('okpy/pyproject.toml', '[project]\nname = "x"\n');
+  writeFixture('okpy/pyproject.toml', '[project]\nname = "x"\n\n[tool.ruff]\nline-length = 88\n');
   const py = writeFixture('okpy/app.py', 'x = 1\n');
   const message = parseOutput(runStop('okpy', [py], envWithPath(bin)).stdout).systemMessage;
   assert.match(message, /ruff: formatted 1 file, check passed in /);
@@ -308,7 +308,7 @@ test('stop-format-typecheck: a slow tool triggers the stopped-early line', () =>
   const bin = path.join(tmpRoot, 'slow-bin');
   writeFakeTool(bin, 'ruff', SLEEP_ON_FORMAT(3000));
   writeFakeTool(bin, 'dart', 'process.exit(0);\n');
-  writeFixture('slow/pyproject.toml', '[project]\nname = "x"\n');
+  writeFixture('slow/pyproject.toml', '[project]\nname = "x"\n\n[tool.ruff]\nline-length = 88\n');
   const py = writeFixture('slow/app.py', 'x = 1\n');
   const dart = writeFixture('slow/lib/a.dart', 'void main() {}\n');
   const { status, stdout } = runStop('slow', [py, dart], envWithPath(bin, { OPM_STOP_BUDGET_MS: '2000' }));
@@ -434,6 +434,28 @@ test('stop-format-typecheck: prettier runs only when the project opts in to it',
   assert.equal(toolCalls(calls, realDir(`${name}/keyed`)).length, 1, JSON.stringify(calls));
   assert.equal(toolCalls(calls, realDir(`${name}/rc`)).length, 1, JSON.stringify(calls));
   assert.match(parseOutput(stdout).systemMessage, /prettier: skipped \(no prettier config or local prettier\)/);
+});
+
+test('stop-format-typecheck: ruff runs only when the project has a ruff config', () => {
+  const name = 'ruff-optin';
+  const bin = path.join(tmpRoot, `${name}-bin`);
+  const log = path.join(tmpRoot, `${name}-tools.log`);
+  writeFakeTool(bin, 'ruff', LOGGING_TOOL);
+  writeFixture(`${name}/plain/pyproject.toml`, '[project]\nname = "plain"\n');
+  writeFixture(`${name}/jsroot/package.json`, '{"name":"jsroot"}');
+  writeFixture(`${name}/tooled/pyproject.toml`, '[project]\nname = "tooled"\n\n[tool.ruff]\nline-length = 100\n');
+  const plain = writeFixture(`${name}/plain/a.py`, 'a = 1\n');
+  const script = writeFixture(`${name}/jsroot/scripts/b.py`, 'b = 1\n');
+  const tooled = writeFixture(`${name}/tooled/c.py`, 'c = 1\n');
+  const env = envWithPath(bin, { OPM_FAKE_TOOL_LOG: log });
+
+  const { status, stdout } = runStopIn(path.join(tmpRoot, name), name, [plain, script, tooled], env);
+  assert.equal(status, 0);
+  const calls = readToolLog(log);
+  assert.deepEqual(toolCalls(calls, realDir(`${name}/plain`)), [], 'ruff ran in a project with no ruff config');
+  assert.deepEqual(toolCalls(calls, realDir(`${name}/jsroot`)), [], 'ruff ran on a script under a JS root');
+  assert.equal(toolCalls(calls, realDir(`${name}/tooled`)).length, 2, JSON.stringify(calls));
+  assert.match(parseOutput(stdout).systemMessage, /ruff: skipped \(no ruff config\)/);
 });
 
 test('stop-format-typecheck: a later turn formats only that turn\'s files', () => {
