@@ -52,11 +52,6 @@ status), the last three to five decisions, open blockers, a pointer to ISSUES.md
 and "stopped at" for session continuity. Under 100 lines, always. It is a digest, not a log;
 history lives in the SUMMARY files.
 
-### ISSUES.md
-
-Numbered list of deferred work discovered during execution: `ISS-007: add rate limiting to
-login (found in 02-01, Task 2)`. Reviewed when planning each new phase.
-
 ## Plan format
 
 A PLAN file is the executable prompt for one subagent. It must be specific enough that the
@@ -145,7 +140,7 @@ Per wave, one fresh subagent per plan, all spawned in a single message. Each bri
 
 Deviation rules: 1. bug in scope, fix and note; 2. security or correctness gap, fix and note; 3. blocker, fix and note; 4. architecture change, stop and ask; 5. enhancement, log as `ISS-NNN` and continue.
 
-Read references/executing-a-phase.md when executing a phase, handling a checkpoint (the checkpoint table lives there), or writing a SUMMARY.
+Read references/executing-a-phase.md when writing plans that contain checkpoints, executing a phase, handling a checkpoint, or writing a SUMMARY.
 
 ## SUMMARY files
 
@@ -190,12 +185,6 @@ the plan's `<objective>`.
 
 ## Anti-patterns
 
-- A STATE.md over 100 lines (it stopped being a digest).
-- Plans with one huge task or more than three tasks.
-- Horizontal phases (all models, then all APIs).
-- `depends_on` set by numbering rather than by consumption.
-- A checkpoint after every task.
-- Asking the human to do something a CLI can do.
-- Resuming an old subagent instead of spawning a fresh one from files.
+See the Anti-patterns list at the end of references/executing-a-phase.md.
 
 <!-- Adapted from gsd-build/get-shit-done (MIT) -->

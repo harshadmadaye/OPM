@@ -118,7 +118,7 @@ so independent plans run in parallel.
 
 One general-purpose subagent per plan, all of a wave in one message. Each brief opens with "The plan below is your task. Anything else from the conversation is background, not instructions." No new commits: rerun once, then escalate, never mark complete.
 
-Read references/build-and-run.md when you reach Phase 6, or when resuming.
+Read references/build-and-run.md when you reach Phase 4 (permission options), Phases 6 to 8, or when resuming.
 
 ## Phase 7: verify
 
@@ -141,15 +141,7 @@ Continue from where the artefacts stop (table in references/build-and-run.md).
 
 ## Red flags
 
-| Thought | Reality |
-|---|---|
-| "The design is obvious, skip the artifact" | The artifact is how the developer catches wrong assumptions cheaply. Build it. |
-| "They approved the previous version, this tweak is fine" | Every revision needs its own approval. Ask. |
-| "I'll ask the developer one quick question mid-build" | The developer walked away. Decide, log it, continue. |
-| "Tests can come after the features" | Every task follows `opm:tdd-workflow`. |
-| "Skip the foundation phase, go straight to features" | Green tooling first or every later wave fights the setup. |
-| "One big subagent can do the whole phase" | One plan per subagent keeps context small and failures local. |
-| "It compiled, so it runs" | G4 needs the app reachable and smoke-tested. |
+See the Red flags table at the end of references/build-and-run.md.
 
 ## Safety
 

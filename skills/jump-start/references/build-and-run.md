@@ -1,4 +1,4 @@
-## Phase 4: permission mode options
+## Phase 4: permission options
 
 Permission mode. Claude Code cannot change its own permission mode and OPM does
 not write permission rules on the developer's behalf. Tell the developer to pick
@@ -61,3 +61,15 @@ from the right point instead of starting over:
 | A design mirror in `docs/specs/` but no `docs/milestones/` | Phase 4 |
 | `docs/milestones/v0.1/STATE.md` | Read STATE.md and PROGRESS.md, then Phase 6 at the first incomplete wave |
 | All phases complete in STATE.md | Phase 7 |
+
+## Red flags
+
+| Thought | Reality |
+|---|---|
+| "The design is obvious, skip the artifact" | The artifact is how the developer catches wrong assumptions cheaply. Build it. |
+| "They approved the previous version, this tweak is fine" | Every revision needs its own approval. Ask. |
+| "I'll ask the developer one quick question mid-build" | The developer walked away. Decide, log it, continue. |
+| "Tests can come after the features" | Every task follows `opm:tdd-workflow`. |
+| "Skip the foundation phase, go straight to features" | Green tooling first or every later wave fights the setup. |
+| "One big subagent can do the whole phase" | One plan per subagent keeps context small and failures local. |
+| "It compiled, so it runs" | G4 needs the app reachable and smoke-tested. |

@@ -34,6 +34,11 @@ Plans are guides, not straitjackets. During execution:
 
 Only rule 4 needs the human. Everything else is recorded, not asked.
 
+### ISSUES.md
+
+Numbered list of deferred work discovered during execution: `ISS-007: add rate limiting to
+login (found in 02-01, Task 2)`. Reviewed when planning each new phase.
+
 ### Commit rules
 
 One commit per task, staging only that task's files (never `git add .` or `-A`). Format
@@ -106,3 +111,13 @@ row is pending. `checkpoint:decision` and `checkpoint:human-action` are unchange
 ### Review cadence
 
 Ask once at Start: after each phase (default; pause at each phase close until the developer has read REVIEW-PACK.md) or only at the end (no pauses; review packs are still written). For "only at the end", show the expected commit count and log the choice as a decision. Expected commits: planned tasks plus one metadata commit per plan. Before plans exist, estimate phases x 3 plans x 4 commits and say it is an estimate.
+
+## Anti-patterns
+
+- A STATE.md over 100 lines (it stopped being a digest).
+- Plans with one huge task or more than three tasks.
+- Horizontal phases (all models, then all APIs).
+- `depends_on` set by numbering rather than by consumption.
+- A checkpoint after every task.
+- Asking the human to do something a CLI can do.
+- Resuming an old subagent instead of spawning a fresh one from files.
