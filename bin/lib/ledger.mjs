@@ -249,6 +249,46 @@ function sumPackFindings(reviewPackTexts) {
   return rows ? findings : null;
 }
 
+const OUTCOMES = ['fixed', 'parked', 'dismissed'];
+const countOrNone = (n) => (n ? String(n) : 'none');
+
+function mergeSeverityCounts(...sources) {
+  const present = sources.filter(Boolean);
+  if (!present.length) return null;
+  const merged = emptySeverityCounts();
+  for (const source of present) {
+    for (const severity of SEVERITIES) for (const key of ['found', ...OUTCOMES]) merged[severity][key] += source[severity][key];
+  }
+  return merged;
+}
+
+function severityText(severity, counts) {
+  if (!counts.found) return `${severity} none`;
+  const parts = OUTCOMES.filter((key) => counts[key]).map((key) => `${counts[key]} ${key}`);
+  return `${severity} ${counts.found}${parts.length ? ` (${parts.join(', ')})` : ''}`;
+}
+
+// formatReport({ ledgers: [{ path, outcomes }], milestone }) -> eight lines, one per outcome field.
+// outcomes come from countLedgerOutcomes, milestone from countMilestoneOutcomes (or null).
+export function formatReport({ ledgers = [], milestone = null } = {}) {
+  const sum = (key) => ledgers.reduce((total, ledger) => total + ledger.outcomes[key], 0);
+  const findings = mergeSeverityCounts(...ledgers.map((ledger) => ledger.outcomes.findings), milestone && milestone.findings);
+  const escalated = ledgers.flatMap(({ path, outcomes }) => outcomes.escalated.map((task) => `Task ${task} (${path})`));
+  const issuesOpen = milestone ? milestone.issuesOpen : 0;
+  const issuesClosed = milestone ? milestone.issuesClosed : 0;
+  const tasksDone = sum('tasksDone');
+  return [
+    tasksDone ? `tasks done: ${tasksDone} (across ${ledgers.length} ledger${ledgers.length === 1 ? '' : 's'})` : 'tasks done: none',
+    `reviewer findings: ${findings ? SEVERITIES.map((s) => severityText(s, findings[s])).join(', ') : 'not recorded'}`,
+    `fix rounds: ${countOrNone(sum('fixRounds'))}`,
+    `items parked: ${countOrNone(sum('parked'))}`,
+    `human checks pending: ${countOrNone(milestone ? milestone.humanChecksPending : 0)}`,
+    issuesOpen + issuesClosed ? `issues: ${issuesOpen} open, ${issuesClosed} closed` : 'issues: none',
+    `rulings made: ${countOrNone(sum('rulings'))}`,
+    `escalated (no commits): ${escalated.length ? escalated.join(', ') : 'none'}`,
+  ];
+}
+
 // countMilestoneOutcomes({ issuesText, reviewQueueText, reviewPackTexts }) ->
 // { issuesOpen, issuesClosed, humanChecksPending, findings | null }. Missing inputs give zeros or null.
 export function countMilestoneOutcomes({ issuesText, reviewQueueText, reviewPackTexts } = {}) {

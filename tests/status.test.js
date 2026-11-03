@@ -91,6 +91,92 @@ test('status --help prints usage and an unknown option fails clearly', () => {
   assert.match(bad.stderr, /unknown status option: --bogus/);
 });
 
+const REPORT_LEDGER_OPEN = [
+  '# OPM ledger - plan: docs/plans/2026-10-01-auth.md',
+  'Ruling: tokens live in memory - simplest - costs a re-login',
+  'Task 1: complete (commits a..b, review clean)',
+  'Task 2: fix round 1/3 (1 addressed, 1 open - 401 path; commits b..c)',
+  'Task 2: parked - naming nit - Ruling: code stands',
+  'Task 3: no commits (rerun 1/1)',
+  'Task 3: escalated - no commits after rerun',
+  'Finding: HIGH fixed - missing 401 path',
+  'Finding: LOW parked - naming nit',
+].join('\n');
+const REPORT_ISSUES = '# Issues\n\n- ISS-001: open\n- ~~ISS-002: done~~ closed in 04-04\n- ISS-003: open too\n';
+const REPORT_QUEUE = [
+  '| ID | Plan | What | How | Evidence | Status | Checked by |',
+  '|---|---|---|---|---|---|---|',
+  '| RQ-001 | 02-03 | a | 1. x | e | pending | |',
+  '| RQ-002 | 02-03 | b | 1. x | e | passed | Harshad |',
+].join('\n');
+const REPORT_PACK = [
+  '| Severity | Found | Fixed | Parked | Dismissed |',
+  '|---|---|---|---|---|',
+  '| CRITICAL | 0 | | | |',
+  '| HIGH | 1 | 1 (x) | | |',
+  '| MEDIUM | 0 | | | |',
+  '| LOW | 2 | 1 | 1 | |',
+].join('\n');
+
+test('status --report prints every outcome field from ledgers and milestone files', () => {
+  const repo = makeRepo('report', {
+    'docs/plans/2026-10-01-auth.md': PLAN,
+    'docs/plans/2026-10-01-auth.progress.md': REPORT_LEDGER_OPEN,
+    'docs/plans/2026-09-01-old.progress.md': DONE_LEDGER,
+    'docs/milestones/m1/STATE.md': 'Phase: 1 of 1 (Core)\nPlan: 1 of 1\nStatus: done\n',
+    'docs/milestones/m1/ISSUES.md': REPORT_ISSUES,
+    'docs/milestones/m1/REVIEW-QUEUE.md': REPORT_QUEUE,
+    'docs/milestones/m1/phases/01-core/REVIEW-PACK.md': REPORT_PACK,
+  });
+  const { status, lines } = runStatus(repo, ['--report']);
+  assert.equal(status, 0, lines.join('\n'));
+  assert.deepEqual(lines, [
+    'tasks done: 2 (across 2 ledgers)',
+    'reviewer findings: CRITICAL none, HIGH 2 (2 fixed), MEDIUM none, LOW 3 (1 fixed, 2 parked)',
+    'fix rounds: 1',
+    'items parked: 1',
+    'human checks pending: 1',
+    'issues: 2 open, 1 closed',
+    'rulings made: 2',
+    'escalated (no commits): Task 3 (docs/plans/2026-10-01-auth.progress.md)',
+  ]);
+});
+
+test('status --report on a repo without ledgers or milestone files says none or not recorded', () => {
+  const repo = makeRepo('report-empty', { 'README.md': '# x\n' });
+  const { status, lines } = runStatus(repo, ['--report']);
+  assert.equal(status, 0);
+  assert.deepEqual(lines, [
+    'tasks done: none',
+    'reviewer findings: not recorded',
+    'fix rounds: none',
+    'items parked: none',
+    'human checks pending: none',
+    'issues: none',
+    'rulings made: none',
+    'escalated (no commits): none',
+  ]);
+});
+
+test('status --report never reads a milestone file that links outside the repo', () => {
+  const outside = path.join(tmpRoot, 'outside-issues.md');
+  fs.writeFileSync(outside, '- ISS-001: leaked\n');
+  const repo = makeRepo('report-escape', { 'docs/milestones/m1/STATE.md': 'Phase: 1 of 1 (Core)\n' });
+  fs.symlinkSync(outside, path.join(repo, 'docs/milestones/m1/ISSUES.md'));
+  const { lines } = runStatus(repo, ['--report']);
+  assert.equal(lines.find((line) => line.startsWith('issues:')), 'issues: none');
+});
+
+test('plain status output has no report fields', () => {
+  const repo = makeRepo('report-plain', {
+    'docs/plans/2026-10-01-auth.md': PLAN,
+    'docs/plans/2026-10-01-auth.progress.md': REPORT_LEDGER_OPEN,
+  });
+  const { lines } = runStatus(repo);
+  assert.equal(lines[0], 'plan: docs/plans/2026-10-01-auth.md (ledger docs/plans/2026-10-01-auth.progress.md)');
+  assert.ok(lines.every((line) => !/^(tasks done|issues):/.test(line)));
+});
+
 test('findOpenLedger returns null outside a repo and never reads a plan outside the repo', async () => {
   const { findOpenLedger } = require('../bin/status');
   assert.equal(await findOpenLedger(path.join(tmpRoot, 'does-not-exist')), null);
