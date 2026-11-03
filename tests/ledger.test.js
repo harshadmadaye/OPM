@@ -97,6 +97,21 @@ test('all tasks complete per the plan makes the ledger complete', async () => {
   assert.equal(result.currentTask, null);
 });
 
+test('no-commit rerun and escalation lines do not count as complete', async () => {
+  const { parseLedger } = await loadLedger();
+  const text = [
+    '# OPM ledger - plan: docs/plans/x.md',
+    'Task 1: complete (commits a..b, review clean)',
+    'Task 2: no commits (rerun 1/1)',
+    'Task 2: escalated - no commits after rerun',
+  ].join('\n');
+  const result = parseLedger(text, PLAN_TEXT);
+  assert.equal(result.error, null);
+  assert.equal(result.tasksDone, 1);
+  assert.equal(result.isComplete, false);
+  assert.deepEqual(result.currentTask, { number: 2, title: 'Login route' });
+});
+
 test('CRLF line endings parse the same as LF', async () => {
   const { parseLedger } = await loadLedger();
   const lf = parseLedger(OPEN_LEDGER, PLAN_TEXT);
