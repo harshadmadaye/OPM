@@ -11,3 +11,6 @@ Deferred enhancements and known gaps found during execution, numbered ISS-NNN. R
 - ISS-007: stop hook runTool uses `shell: true` on Windows with unquoted file paths; a space breaks the call and `&`/`^` reach cmd.exe. Quote args or avoid the shell (Phase 1 review, LOW; pre-existing)
 - ISS-008: skill-text tests are loose: run-discipline A/B/C match anywhere in a section (preamble need not open the brief; "background" alone half-satisfies B); report-ownership exempts any sentence naming the orchestrator; compound-learnings consent test does not check for "Neither". Phase 4 behaviour evals should prove these (Phase 1 review, LOW)
 - ISS-009: after a no-commit escalation, resuming from the ledger shows the task as current with no "escalated" marker in status output; bin/status.js should surface it (Phase 1 review, LOW; fits 04-04)
+- ISS-010: tdd-workflow (2784), brainstorming (2690) and brew-idea (2557) are over the soft cap and unenforced; split into references/ and add to SKILL_CEILING_TOKENS (found in 02-01)
+- ISS-011: token-budget.js has ENFORCED_SOFT_CAP_SKILLS and SKILL_CEILING_TOKENS for the same job; merge into one per-skill ceiling map (found in 02-01)
+- ISS-012: milestone-planning's mid-run chat notice now lives only in references/executing-a-phase.md; consider a one-line mention in the core (found in 02-01)
