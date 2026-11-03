@@ -4,7 +4,8 @@ The orchestrator saves this as `docs/milestones/<milestone>/phases/NN-<name>/REV
 every phase close. Subagents never write it. Start from the output of
 `node skills/milestone-planning/scripts/review-pack.js <base>..<head>`, which ranks the phase's
 commits by risk and prints the five riskiest with their `git show` ranges and files. Then add the
-reasons and the questions from the diff.
+reasons and the questions from the diff. The script only sees its eight categories: when a change
+it cannot see is riskier (a rule in prose, a changed default), swap it in by hand.
 
 ```markdown
 # Phase N review pack: [phase name]

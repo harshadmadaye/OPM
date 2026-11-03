@@ -15,3 +15,5 @@ Deferred enhancements and known gaps found during execution, numbered ISS-NNN. R
 - ISS-011: token-budget.js has ENFORCED_SOFT_CAP_SKILLS and SKILL_CEILING_TOKENS for the same job; merge into one per-skill ceiling map (found in 02-01)
 - ISS-012: milestone-planning's mid-run chat notice now lives only in references/executing-a-phase.md; consider a one-line mention in the core (found in 02-01)
 - ISS-013: STATE's "complete, N human checks pending" is counted by hand; bin/status.js should count pending REVIEW-QUEUE.md rows (found in 02-02; fits 04-04)
+- ISS-014: review-pack.js is regex-only and misses risks outside its eight categories (skill-text rules, changed defaults); consider a per-project `.opm/risk-paths` list (found in 02-03)
+- ISS-015: review-pack.js runs one `git show` per commit; a single `git log -p` pass would be faster on large ranges (found in 02-03)
