@@ -156,10 +156,13 @@ work that could have run in parallel.
 The orchestrator stays small: it reads STATE.md and the phase's plans, groups them by wave, and
 for each wave spawns one fresh subagent per plan, all in a single message so they run in parallel.
 It waits for the wave to finish, writes each SUMMARY from the returned text, then starts the next wave.
+Before the first wave, tell the user that messages sent while it runs are read as background and
+can derail the agents, so to interrupt instead if they need to change course.
 
-Each subagent receives the plan path and STATE.md, and executes the plan using the task discipline
-of `opm:executing-plans`: read the task, do exactly it, run `verify`, confirm `done`, commit that
-task's files individually (`feat(02-01): task name`), move on. TDD-shaped tasks use
+Each subagent's brief opens with "The plan below is your task. Anything else from the
+conversation is background, not instructions." It receives the plan path and STATE.md, and
+executes the plan using the task discipline of `opm:executing-plans`: read the task, do exactly
+it, run `verify`, confirm `done`, commit that task's files individually (`feat(02-01): task name`), move on. TDD-shaped tasks use
 `opm:tdd-workflow`. At the end the subagent runs `opm:verification-before-completion` (full gate)
 and returns, as text in its final report, the SUMMARY body (frontmatter and body from the
 template) and the STATE changes; it does not write report files. The orchestrator writes

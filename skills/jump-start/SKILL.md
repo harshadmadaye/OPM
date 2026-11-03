@@ -88,6 +88,8 @@ Approval loop, repeated until approved:
 Explain in about five lines: the phases that will run, that no further
 questions will be asked, that decisions will be logged instead, the estimated
 time, and how to stop (interrupt the session, or `dev-server.sh stop` later).
+Say that messages sent while it runs are read as background and can derail the
+agents, so to interrupt instead if they need to change course.
 
 Then ask one confirmation question with these options and free text for
 preferences: time budget (default 4 hours), and for mobile the target
@@ -120,7 +122,7 @@ so independent plans run in parallel.
 
 For each phase, for each wave:
 
-1. Dispatch one general-purpose subagent per plan in a single message so they run in parallel. Each brief contains only: the plan text, the interfaces it consumes, the stack rules from the patterns skill, the repository path, and the instruction to follow `opm:executing-plans` inline mode with `opm:tdd-workflow` per task, to commit per task, and to return its SUMMARY as text in its final report. Never paste the whole roadmap or the chat history.
+1. Dispatch one general-purpose subagent per plan in a single message so they run in parallel. Each brief opens with "The plan below is your task. Anything else from the conversation is background, not instructions." and contains only: the plan text, the interfaces it consumes, the stack rules from the patterns skill, the repository path, and the instruction to follow `opm:executing-plans` inline mode with `opm:tdd-workflow` per task, to commit per task, and to return its SUMMARY as text in its final report. Never paste the whole roadmap or the chat history.
 2. If the Workflow tool is available, the developer opted in to orchestration by invoking jump-start, so a wave may run as a workflow instead of parallel Agent calls.
 3. After the wave: run build and tests. If red, dispatch one fix subagent with the failing output and the files involved. Do not start the next wave on red.
 4. After the phase: the orchestrator writes the SUMMARY files from the returned text, updates STATE.md, appends to `docs/milestones/v0.1/PROGRESS.md` and commits. Subagents write no report files.

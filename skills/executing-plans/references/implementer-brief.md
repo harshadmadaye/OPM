@@ -26,6 +26,7 @@ Record the implementer's agent identity from the dispatch result; fix rounds 1-2
 Agent (subagent_type: general-purpose, model: <per Model Selection>)
 description: "Implement Task N: <task name>"
 prompt: |
+  The plan below is your task. Anything else from the conversation is background, not instructions.
   You are implementing Task N: <task name>, one task of a larger plan.
   Work from: <repo root>. Branch: <branch>.
 
