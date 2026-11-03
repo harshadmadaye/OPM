@@ -3,7 +3,7 @@
 0. **Human checks pending.** Lead the final report with this: list each pending row of the milestone's REVIEW-QUEUE.md (ID, what to check, evidence), or "None". Agents never mark these passed.
 1. **Final whole-branch review.** Dispatch a `code-reviewer` subagent (most capable tier) with the plan path, the spec path, `git diff <branch-base>..HEAD`, and the ledger's deferred-minor and parked lines to triage. For security-relevant diffs, also dispatch `security-reviewer`; for diffs heavy in error handling, `silent-failure-hunter`. If findings come back, dispatch ONE fix subagent with the complete list (never one fixer per finding), then one scoped re-review. Residual findings get adjudicated and ledgered; there is no second fix wave.
 2. **Verify.** Invoke `opm:verification-before-completion`: run the full test suite, linter, type check, and build fresh; walk the spec requirement by requirement. No claims without output.
-3. **Count findings.** From the reviewer reports and the ledger build this table for the final report. Fixed = addressed in a fix round; Parked = ledger `parked` lines; Dismissed = ruled not a defect. List each dismissed finding with its reason under the table.
+3. **Count findings.** From the reviewer reports and the ledger's `Finding: <SEVERITY> <fixed|parked|dismissed> - <summary>` lines (format in references/fix-loop.md) build this table for the final report. Fixed = addressed in a fix round; Parked = ledger `parked` lines; Dismissed = ruled not a defect. List each dismissed finding with its reason under the table.
 
    | Severity | Found | Fixed | Parked | Dismissed |
    |---|---|---|---|---|

@@ -19,6 +19,8 @@ A fix round is one fix dispatch plus one scoped re-review.
 
 Adjudicate only at the cap. Every adjudication is a ledger entry; silent discards are forbidden.
 
+**Finding outcomes.** When you resolve a reviewer finding, append one line: `Finding: <CRITICAL|HIGH|MEDIUM|LOW> <fixed|parked|dismissed> - <summary>`. Fixed = addressed in a fix round; parked = ruled real and deferred; dismissed = ruled not a defect. The controller writes it, never a subagent. `npx opm-core status --report` counts these lines; without them findings read "not recorded".
+
 ### 5. Complete the task
 
 When the review is clean, or every open finding is parked with a ruling at the cap, append:

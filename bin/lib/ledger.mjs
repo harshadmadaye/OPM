@@ -157,3 +157,100 @@ export function formatResumeLine({ ledger, ledgerPath } = {}) {
   const where = ledgerPath || ledger.planPath;
   return `OPM: open ledger ${where}, ${ledger.tasksDone} of ${total} tasks done, next ${currentTaskText(ledger.currentTask)}. Ask Claude to resume the plan with opm:executing-plans.`;
 }
+
+// ---- Outcome counts (project report). Pure: callers pass file text in. ----
+
+const SEVERITIES = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
+const FINDING_LINE = /^Finding: (CRITICAL|HIGH|MEDIUM|LOW) (fixed|parked|dismissed)\b/;
+const PARKED_LINE = /^Task \d+: parked\b/;
+const ESCALATED_LINE = /^Task (\d+): escalated\b/;
+const RULING_ANYWHERE = /(^|\s)Ruling:/;
+// An ISSUES.md entry is closed when its line is struck through: "- ~~ISS-NNN: text~~".
+const ISSUE_ENTRY = /^- (~~)?ISS-\d+/;
+const FINDINGS_ROW = /^\|\s*(CRITICAL|HIGH|MEDIUM|LOW)\s*\|(.*)\|\s*$/;
+const QUEUE_ID = /^RQ-\d+$/;
+
+const emptySeverityCounts = () => Object.fromEntries(SEVERITIES.map((s) => [s, { found: 0, fixed: 0, parked: 0, dismissed: 0 }]));
+const leadingCount = (cell) => {
+  const match = (cell || '').trim().match(/^(\d+)/);
+  return match ? Number(match[1]) : 0;
+};
+const tableCells = (line) => line.trim().replace(/^\||\|$/g, '').split('|').map((cell) => cell.trim());
+
+// countLedgerOutcomes(text) -> { tasksDone, fixRounds, parked, rulings, escalated: number[], findings | null }
+// findings is null when the ledger has no `Finding:` lines ("not recorded").
+export function countLedgerOutcomes(text) {
+  const counts = { tasksDone: 0, fixRounds: 0, parked: 0, rulings: 0, escalated: [], findings: null };
+  if (typeof text !== 'string') return counts;
+  const done = new Set();
+  const findings = emptySeverityCounts();
+  let findingLines = 0;
+  for (const raw of toLines(text)) {
+    const line = raw.trim();
+    const task = line.match(TASK_LINE);
+    if (task && TASK_COMPLETE.test(task[2])) done.add(Number(task[1]));
+    if (FIX_ROUND.test(line)) counts.fixRounds++;
+    if (PARKED_LINE.test(line)) counts.parked++;
+    if (RULING_ANYWHERE.test(line)) counts.rulings++;
+    const escalated = line.match(ESCALATED_LINE);
+    if (escalated) counts.escalated.push(Number(escalated[1]));
+    const finding = line.match(FINDING_LINE);
+    if (finding) {
+      findings[finding[1]].found++;
+      findings[finding[1]][finding[2]]++;
+      findingLines++;
+    }
+  }
+  return { ...counts, tasksDone: done.size, findings: findingLines ? findings : null };
+}
+
+function countIssues(issuesText) {
+  let issuesOpen = 0;
+  let issuesClosed = 0;
+  for (const line of typeof issuesText === 'string' ? toLines(issuesText) : []) {
+    const match = line.match(ISSUE_ENTRY);
+    if (!match) continue;
+    if (match[1]) issuesClosed++;
+    else issuesOpen++;
+  }
+  return { issuesOpen, issuesClosed };
+}
+
+function countPendingChecks(reviewQueueText) {
+  if (typeof reviewQueueText !== 'string') return 0;
+  let statusColumn = -1;
+  let pending = 0;
+  for (const line of toLines(reviewQueueText)) {
+    if (!line.trim().startsWith('|')) continue;
+    const cells = tableCells(line);
+    if (cells[0] === 'ID') statusColumn = cells.indexOf('Status');
+    else if (QUEUE_ID.test(cells[0]) && statusColumn >= 0 && cells[statusColumn] === 'pending') pending++;
+  }
+  return pending;
+}
+
+function sumPackFindings(reviewPackTexts) {
+  const findings = emptySeverityCounts();
+  let rows = 0;
+  for (const text of Array.isArray(reviewPackTexts) ? reviewPackTexts : []) {
+    if (typeof text !== 'string') continue;
+    for (const line of toLines(text)) {
+      const row = line.trim().match(FINDINGS_ROW);
+      if (!row) continue;
+      const [found, fixed, parked, dismissed] = tableCells(`|${row[2]}|`).map(leadingCount);
+      const target = findings[row[1]];
+      target.found += found;
+      target.fixed += fixed;
+      target.parked += parked;
+      target.dismissed += dismissed;
+      rows++;
+    }
+  }
+  return rows ? findings : null;
+}
+
+// countMilestoneOutcomes({ issuesText, reviewQueueText, reviewPackTexts }) ->
+// { issuesOpen, issuesClosed, humanChecksPending, findings | null }. Missing inputs give zeros or null.
+export function countMilestoneOutcomes({ issuesText, reviewQueueText, reviewPackTexts } = {}) {
+  return { ...countIssues(issuesText), humanChecksPending: countPendingChecks(reviewQueueText), findings: sumPackFindings(reviewPackTexts) };
+}
