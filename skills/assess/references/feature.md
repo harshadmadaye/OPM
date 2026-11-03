@@ -21,7 +21,7 @@ Run in one message, each with the trace and the finding format:
 
 | Lens | Agent | Looks for |
 |---|---|---|
-| T1 Flow correctness | `opm:code-reviewer` (Sweep mode, traced paths) | Wrong behaviour across the layers: mismatched shapes between client and server, missing states (loading, empty, error), race conditions |
+| T1 Flow correctness | `opm:code-reviewer`, brief starting "Sweep mode. Paths: <traced files>." | Wrong behaviour across the layers: mismatched shapes between client and server, missing states (loading, empty, error), race conditions |
 | T2 Errors | `opm:silent-failure-hunter` (traced paths) | Failures in this flow that the user never sees |
 | T3 Test gaps | `general-purpose` | Behaviours in the trace with no test; tests that mock the part that breaks. List each missing case as one finding with effort |
 | T4 Security | `opm:security-reviewer` (traced paths) | Only when the feature takes user input, handles auth, money or personal data |

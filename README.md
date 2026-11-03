@@ -51,7 +51,7 @@ rules. Details: [docs/using-opm.md](docs/using-opm.md).
 Four claims, each with its evidence. Token counts are bytes / 4 estimates from
 `npm run tokens`.
 
-**1. It costs 2,632 tokens per session.** That is every skill and agent
+**1. It costs 2,611 tokens per session.** That is every skill and agent
 description plus the using-opm skill injected at session start. The rules add
 1,401 tokens in repos that install them. CI fails if either grows past its
 ceiling. Evidence: [the cost table](docs/why-opm.md#what-opm-costs-per-session).

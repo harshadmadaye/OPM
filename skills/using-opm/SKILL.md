@@ -52,8 +52,6 @@ Read references/orchestration.md when you are about to escalate.
 4. `opm:verification-before-completion` - fresh evidence before any "done", commit, or PR.
 5. `opm:compound-learnings` - capture anything non-obvious learned along the way.
 
-Already built: `opm:assess` reviews it, then routes chosen fixes into steps 1-5.
-
 Optional: `/opm-video:explainer-video <path>` turns this into a narrated explainer (install the opm-video plugin first).
 
 ## Red Flags

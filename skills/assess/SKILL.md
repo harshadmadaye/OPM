@@ -72,8 +72,8 @@ report with zero findings, say so, and skip Phase 6.
 IDs F1..Fn, sorted by severity then effort. Bundle: Critical fixes, Quick
 wins, Refactors, Test gaps, Other. Fill `templates/report.md` into
 `docs/assessments/YYYY-MM-DD-<level>[-<target>].md`. With an earlier report,
-fill Fixed / New / Still open. Publish the same content as a private
-artifact page and give the link. Show the top five findings in chat.
+fill Fixed / New / Still open. Show the top five findings in chat. Ask before
+publishing the same content as a private artifact page; publish only on yes.
 
 ## Phase 6: fix hand-off
 
@@ -81,15 +81,15 @@ Read `references/fix-routing.md`. In short:
 
 1. Ask, multi-select: the non-empty bundles with counts; "Other" takes IDs
    (`F3 F7`) or "none".
-2. Branch: on the default branch, create `fix/assess-<date>-<level>`;
-   otherwise ask whether to use the current one. Commit the report first,
-   with the repo's own git identity.
-3. Route the picked findings as one batch:
-   - only S-effort, about one file each -> `opm:tdd-workflow` per finding;
-   - up to about 8 tasks -> `opm:writing-plans` with the report as the spec,
-     then `opm:executing-plans`;
-   - more, or an L architecture change -> `opm:milestone-planning`.
-   Put the finding ID in each task title.
+2. Ask before creating the branch: new `fix/assess-<date>-<level>`, the
+   current branch, or no commit. On yes, commit the report first with the
+   repo's own git identity.
+3. Route the picked findings as one batch; the first rule that matches wins:
+   - more than 8 tasks, or an L architecture finding -> `opm:milestone-planning`;
+   - all S-effort and at most 3 tasks -> `opm:tdd-workflow` per finding;
+   - otherwise -> `opm:writing-plans` with the report as the spec, then
+     `opm:executing-plans`.
+   Put the finding ID in each task title and commit.
 4. `opm:verification-before-completion` before anything is called done.
 
 "none": offer to commit the report; stop.

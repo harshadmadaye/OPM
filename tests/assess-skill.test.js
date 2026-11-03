@@ -64,3 +64,41 @@ test('report template and verifier carry the shared finding fields', () => {
     for (const field of fields) assert.match(text, new RegExp(`^\\s*-? ?${field}:`, 'm'), `${rel} lacks a ${field}: line`);
   }
 });
+
+// Review of PR #7: every side effect of an assessment needs a yes, and the
+// fix step must not trip over the report it just wrote.
+const FIX_ROUTING = 'skills/assess/references/fix-routing.md';
+const section = (text, heading) => text.slice(text.indexOf(heading)).split('\n## ')[0];
+
+test('Sweep mode starts only on the words "Sweep mode", not on named paths', () => {
+  for (const agent of SWEEP_AGENTS) {
+    const trigger = read(agent).split('\n').find((line) => line.includes('**Trigger:**'));
+    assert.ok(trigger, `${agent} has no Trigger line`);
+    assert.match(trigger, /"Sweep mode"/, `${agent} trigger must require the words "Sweep mode"`);
+    assert.match(trigger, /paths alone/i, `${agent} trigger must say naming paths alone is not a sweep`);
+  }
+});
+
+test('publishing the report as a page needs a yes and never quotes secrets', () => {
+  const report = section(read(SKILL), '## Phase 5');
+  assert.match(report, /ask\s+before\s+publishing/i, 'Phase 5 publishes the artifact page without asking');
+  assert.match(read('skills/assess/references/verify.md'), /never\s+quote\s+a\s+secret/i, 'finding rules must forbid quoting secret values');
+});
+
+test('the branch and the report commit need a yes, and the report never blocks the fix step', () => {
+  const handOff = section(read(SKILL), '## Phase 6');
+  assert.match(handOff, /ask\s+before\s+creating\s+the\s+branch/i, 'Phase 6 creates a branch and commits without asking');
+  const branch = section(read(FIX_ROUTING), '## Branch');
+  assert.match(branch, /other\s+than\s+the\s+new\s+report/i, 'the uncommitted-changes stop would fire on the report itself');
+});
+
+test('fix routing uses tdd-workflow commit messages and non-overlapping, ordered rules', () => {
+  const routing = read(FIX_ROUTING);
+  assert.doesNotMatch(routing, /fix\(<area>\)/, 'tdd-workflow does not use fix(<area>) commits');
+  assert.match(routing, /test: add failing test for <behaviour> \(F<n>\)/);
+  assert.match(routing, /first\s+rule\s+that\s+matches/i, 'sizing rules must be ordered so they cannot overlap');
+});
+
+test('no open plan ledger for assess is committed', () => {
+  assert.ok(!fs.existsSync(path.join(ROOT, 'docs', 'plans', '2026-11-03-opm-assess.progress.md')), 'remove the assess plan ledger');
+});

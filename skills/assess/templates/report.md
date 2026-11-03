@@ -33,7 +33,7 @@ Date: YYYY-MM-DD. Commit: <short sha>. Scope: <whole repo | path | feature>.
 
 - severity: HIGH
 - file: path/to/file.ts:42
-- evidence: <what the code does>
+- evidence: <what the code does; never a secret value, only its kind>
 - fix: <the change>
 - effort: S
 - lens: C1 Correctness

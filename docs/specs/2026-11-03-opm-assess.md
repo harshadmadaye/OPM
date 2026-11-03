@@ -77,7 +77,7 @@ Model-invocable (not slash-only), so "review this project" can reach it.
    MEDIUM, LOW) then effort (S, M, L). Bundles: Critical fixes, Quick wins
    (S effort, MEDIUM+), Refactors (M/L), Test gaps, Other.
 6. **Report.** `docs/assessments/YYYY-MM-DD-<level>[-<target>].md` from the
-   template, plus a private artifact page with the same content. When an
+   template, plus, after a yes, a private artifact page with the same content. Secret values are never quoted, only their location and kind. When an
    earlier report for the same level exists, add Fixed / New / Still open.
 
 ## Finding format (shared)
@@ -99,16 +99,18 @@ Every lens returns findings as:
 7. **Ask what to fix.** One AskUserQuestion, multi-select, options are the
    non-empty bundles with their counts (max 4; "Other" accepts finding IDs
    like `F3 F7` or "none").
-8. **Branch.** If anything was picked: when on the default branch, create
-   `fix/assess-<date>-<level>`; otherwise ask whether to use the current
-   branch. The report is the first commit on it. Commits use the repo's git
+8. **Branch.** If anything was picked, ask first: a new
+   `fix/assess-<date>-<level>` branch, the current branch, or no commit. On
+   yes, the report is the first commit. The untracked report never counts as
+   an uncommitted change that blocks the switch. Commits use the repo's git
    identity; the skill never changes it.
-9. **Route.** Size the picked findings as one batch:
-   - only S-effort items, each about one file -> `opm:tdd-workflow` per item,
-     in order;
-   - up to about 8 tasks -> `opm:writing-plans` with the findings as the spec
-     (the report path is the spec), then `opm:executing-plans`;
-   - more, or any L item touching architecture -> `opm:milestone-planning`.
+9. **Route.** Size the picked findings as one batch; the first rule that
+   matches wins:
+   - more than 8 tasks, or any L architecture finding -> `opm:milestone-planning`;
+   - all S-effort and at most 3 tasks -> `opm:tdd-workflow` per item, using
+     its own checkpoint commits with the finding ID appended;
+   - otherwise -> `opm:writing-plans` (the report path is the spec), then
+     `opm:executing-plans`.
    Each finding's ID goes in its task title so the next assessment can mark it
    fixed.
 10. **Close.** `opm:verification-before-completion` runs before anything is
@@ -119,7 +121,7 @@ No pick: the report is still offered as a commit; nothing else happens.
 ## Agent changes
 
 - `code-reviewer`, `typescript-reviewer`: add **Sweep mode**. When the brief
-  names paths (or says sweep), review those files in full instead of a diff;
+  contains the words "Sweep mode" (naming paths alone is not enough), review those files in full instead of a diff;
   the "skip unchanged code" rule does not apply. Output uses the shared
   finding format when the brief asks for it.
 - `silent-failure-hunter` already sweeps a module; `security-reviewer` already
@@ -128,7 +130,7 @@ No pick: the report is still offered as a commit; nothing else happens.
 ## Integration
 
 - `using-opm` size table gains a row: `existing | assess, audit or review what
-  is already built | opm:assess`. Workflow Map gains one line.
+  is already built | opm:assess`.
 - `tests/fixtures/trigger-prompts.json` gains prompts for `existing`;
   `tests/routing.test.js` adds the size class and front-door skill.
 - README: skill list (14 skills), the routing summary, installer next-steps

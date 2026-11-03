@@ -14,7 +14,9 @@ Every lens returns a list in this shape. Give it to each lens verbatim.
   lens: <lens id and name>
 ```
 
-Rules for lenses: cite a real line; no finding without a concrete failure or
+Rules for lenses: never quote a secret value (key, token, password,
+connection string); give its file:line and kind, e.g. "AWS key", and nothing
+more. Cite a real line; no finding without a concrete failure or
 cost; zero findings is a valid answer; group repeats ("12 handlers lack input
 validation") into one finding with the locations listed.
 

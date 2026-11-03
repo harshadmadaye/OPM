@@ -17,23 +17,36 @@ developer can type it under "Other". "Other" also takes IDs or "none".
 
 ## Branch
 
-- On the default branch (`main`, `master`, or `git symbolic-ref
-  refs/remotes/origin/HEAD`): `git checkout -b fix/assess-<YYYY-MM-DD>-<level>`.
-- On another branch: ask "Fix on <branch>, or a new fix/assess branch?"
-- Uncommitted changes present: stop and ask before switching.
+Ask before creating the branch or committing anything, in one
+AskUserQuestion:
+
+- "New branch `fix/assess-<YYYY-MM-DD>-<level>` and commit the report there"
+  (recommended on the default branch: `main`, `master`, or `git symbolic-ref
+  refs/remotes/origin/HEAD`);
+- "Use the current branch <branch>" (recommended on any other branch);
+- "Do not commit; just fix" (the report stays uncommitted).
+
+The new report file is untracked, so it carries over when the branch is
+created; it never counts as a reason to stop. Uncommitted changes other than
+the new report: stop and ask before switching.
+
 - Never change `git config`. Commits use the identity the repo already has.
 - First commit: the report, `docs(assess): <level> assessment <date>`.
 
 ## Sizing the batch
 
 Count tasks: one per finding, except grouped findings in the same file, which
-are one task.
+are one task. Apply the first rule that matches, top to bottom:
 
-| Picked | Route |
-|---|---|
-| Only S-effort, each about one file | `opm:tdd-workflow` per finding, in ID order; commit each as `fix(<area>): <title> (F<n>)` |
-| Up to about 8 tasks, or any M | `opm:writing-plans`, Spec: the report path, scope: the picked IDs. Then `opm:executing-plans` |
-| More than about 8 tasks, or an L architecture change | `opm:milestone-planning`, one phase per bundle |
+| # | When | Route |
+|---|---|---|
+| 1 | More than 8 tasks, or any L-effort finding from an architecture lens | `opm:milestone-planning`, one phase per bundle |
+| 2 | Every finding S-effort, and at most 3 tasks | `opm:tdd-workflow` per finding, in ID order |
+| 3 | Anything else | `opm:writing-plans`, Spec: the report path, scope: the picked IDs. Then `opm:executing-plans` |
+
+Under rule 2, use tdd-workflow's own checkpoint commits with the finding ID
+appended: `test: add failing test for <behaviour> (F<n>)`, then
+`fix: <bug> (F<n>)`, then `refactor: <what> (F<n>)` if anything changed.
 
 When a fix needs a design choice the report cannot settle (two reasonable
 fixes, a public interface changes), run `opm:brainstorming` for that finding
