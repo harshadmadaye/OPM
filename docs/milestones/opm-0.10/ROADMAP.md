@@ -17,27 +17,29 @@ Decisions taken at milestone start (2026-11-03):
 
 Goal: unattended runs stop losing work. The orchestrator owns report files, briefs cannot be hijacked by chat, an agent with no commits is never marked done, and formatters follow the project's own config.
 
-- [ ] 01-01 Report files are written by the orchestrator (item 1)
-- [ ] 01-02 Self-contained briefs and "no commits means not done" (items 2, 3)
-- [ ] 01-03 Formatter hook respects project config and only the turn's files (item 4)
-- [ ] 01-04 OPM learnings flow back to OPM (item 5)
+- [x] 01-01 Report files are written by the orchestrator (item 1)
+- [x] 01-02 Self-contained briefs and "no commits means not done" (items 2, 3)
+- [x] 01-03 Formatter hook respects project config and only the turn's files (item 4)
+- [x] 01-04 OPM learnings flow back to OPM (item 5)
 
 Waves: 01-01, 01-03 and 01-04 in wave 1; 01-02 in wave 2 (it edits the same skill files as 01-01).
 
 Phase close: review pack (5 riskiest changes, diff ranges, questions), read by the developer before Phase 2 is planned.
 
-Status: Planned (2026-11-03)
+Status: Complete (2026-11-03). 260 tests green, always-on 2526 / 2650. Review pack: phases/01-orchestration-reliability/REVIEW-PACK.md
 
 ## Phase 2: A person in the loop
 
 Goal: no human check is passed by an agent, the developer gets a 20 to 30 minute review pack per phase, chooses the review cadence, and an exposed secret stops the run at once.
 
-Planned plans (written in full when Phase 1 closes):
-- 02-01 Review queue: REVIEW-QUEUE.md template, `checkpoint:human-verify` routes there in unattended runs, STATE shows "complete, N human checks pending", final reports list pending checks first; test (item 6)
-- 02-02 Review pack at phase close: risk ranking, diff range per change, "explain how X handles Y" questions (item 7)
-- 02-03 Review cadence question in jump-start and milestone-planning, logged as a decision with the expected commit count; exposed secrets become a blocking human-action checkpoint (items 8, 9)
+- [ ] 02-01 Slim milestone-planning and jump-start into references/, cap their size (ISS-002)
+- [ ] 02-02 Review queue for human checks in unattended runs (item 6)
+- [ ] 02-03 Review pack at every phase close, with a risk-ranking script (item 7)
+- [ ] 02-04 Review cadence choice and the exposed-secret gate (items 8, 9)
 
-Status: Not planned
+Waves: 1, 2, 3, 4 in order (all edit milestone-planning and jump-start), run in the main checkout.
+
+Status: Planned (2026-11-03)
 
 ## Phase 3: Evidence quality
 
