@@ -9,7 +9,8 @@ disable-model-invocation: true
 
 One prompt in, a running project out. The developer is involved at exactly
 three points: the brief, the design approval loop, and the go-ahead for the
-unattended build. Everything after the go-ahead runs without questions.
+unattended build. Everything after the go-ahead runs without questions
+outside the Phase 4 stop list.
 
 Invocation text is in `$ARGUMENTS`. Helper script:
 `sh "${CLAUDE_PLUGIN_ROOT}/scripts/dev-server.sh"` (start, stop, status).
@@ -85,9 +86,11 @@ Approval loop, repeated until approved:
 
 ## Phase 4: authorise the unattended build
 
-Explain in about five lines: the phases that will run, that no further
-questions will be asked, that decisions will be logged instead, the estimated
-time, and how to stop (interrupt the session, or `dev-server.sh stop` later).
+Explain in about five lines: the phases that will run; that the run stops only
+for the four stop conditions in `opm:executing-plans` (an exposed secret is one),
+a `checkpoint:human-action` such as an auth login, and the review pause at each
+phase close if the cadence is after each phase; that nothing else is asked and
+decisions are logged instead; the estimated time; and how to stop (interrupt the session, or `dev-server.sh stop` later).
 Say that messages sent while it runs are read as background and can derail the
 agents, so to interrupt instead if they need to change course.
 
@@ -100,7 +103,7 @@ Review cadence: after each phase (default; the run pauses at each phase close un
 Permission mode. Claude Code cannot change its own mode and OPM writes no permission rules. The developer picks a built-in option (auto mode via Shift+Tab is recommended; all three are in references/build-and-run.md) and replies when it is set.
 
 Wait for the developer's reply. Do not start Phase 5 before it. From here on:
-no questions. Decisions go to `docs/milestones/<milestone>/DECISIONS.md`
+no questions outside that list. Decisions go to `docs/milestones/<milestone>/DECISIONS.md`
 (`templates/decisions.md`) under the `opm:milestone-planning` deviation rules.
 
 ## Phase 5: plan
@@ -147,6 +150,6 @@ See the Red flags table at the end of references/build-and-run.md.
 
 - Nothing leaves the machine: no deploys, no publishing, no pushes to a remote, unless the brief asked for it explicitly.
 - Secrets only in `.env`, never committed; `.env.example` documents the keys.
-- An exposed secret that must be rotated is the one case where the build stops to ask: a blocking `checkpoint:human-action` (references/build-and-run.md).
+- An exposed secret that must be rotated is stop condition 2: the build stops at once with a blocking `checkpoint:human-action` (references/build-and-run.md).
 - The build stays inside the project directory. Global installs need a logged decision.
 - The developer chooses the permission mode. Do not suggest ways around prompts beyond the three built-in options.

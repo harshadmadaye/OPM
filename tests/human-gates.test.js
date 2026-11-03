@@ -1,7 +1,8 @@
 'use strict';
 // Human-gate checks: the developer chooses the review cadence (after each phase by
 // default, or only at the end with an expected commit count, logged as a decision),
-// and an exposed secret that must be rotated blocks the run at once.
+// an exposed secret that must be rotated blocks the run at once, and every skill gives
+// the same list of what stops a run.
 // Run with: node --test tests/human-gates.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -69,11 +70,77 @@ test('B: jump-start (SKILL.md or build-and-run.md) blocks at once on a secret th
   assert.match(text, /release checklist/i, 'jump-start must say it does not wait for a release checklist');
 });
 
-test('C: jump-start names the exposed secret as the one case where the build stops to ask', () => {
-  const text = flatten(read(JUMP_START) + ' ' + read(BUILD_AND_RUN));
-  assert.match(
-    text,
-    /(one|only) (case|exception)[^.]*(stops?|ask)|(stops?|ask)[^.]*(one|only) (case|exception)/i,
-    'jump-start must say this is the one case where the run stops to ask during the build',
-  );
+const MILESTONE_EXECUTING = 'skills/milestone-planning/references/executing-a-phase.md';
+const STOP_LIST_HEADING = /^#{2,3} What stops a run$/m;
+
+function stopListSection(file) {
+  const text = read(file);
+  const start = text.search(STOP_LIST_HEADING);
+  assert.notEqual(start, -1, `${file} has no "What stops a run" heading`);
+  const body = text.slice(text.indexOf('\n', start) + 1);
+  const end = body.search(/^#{2,3} /m);
+  return end === -1 ? body : body.slice(0, end);
+}
+
+function numberedItems(text) {
+  return text.split('\n').filter((line) => /^\d+\. /.test(line)).map((line) => line.trim());
+}
+
+for (const file of [BUILD_AND_RUN, MILESTONE_EXECUTING]) {
+  test(`A: ${file} states the three-part stop list`, () => {
+    const text = flatten(stopListSection(file));
+    assert.match(text, /stops only for/i, `${file} must say a run stops only for the listed cases`);
+    assert.match(text, /four stop conditions[^.]*rulings-and-models\.md/i, `${file} must point to the four stop conditions`);
+    assert.match(text, /stop condition 2[^.]*exposed secret[^.]*rotated/i, `${file} must place the exposed secret under stop condition 2`);
+    assert.match(text, /`checkpoint:human-action`[^.]*no CLI or API/i, `${file} must list checkpoint:human-action`);
+    assert.match(text, /review-cadence pause[^.]*phase close[^.]*after each phase/i, `${file} must list the review-cadence pause`);
+    assert.match(text, /pause is a stop for reading, not a question/i, `${file} must say a pause is not a question`);
+    assert.match(text, /`checkpoint:human-verify`[^.]*REVIEW-QUEUE\.md/, `${file} must route human-verify to the review queue`);
+    assert.match(text, /`checkpoint:decision`[^.]*ruled by the orchestrator[^.]*logged/i, `${file} must say decisions are ruled and logged`);
+    assert.match(text, /Nothing else stops the run/, `${file} must close the list`);
+  });
+}
+
+test('A: the stop list is the same in jump-start and milestone-planning', () => {
+  const jumpStart = numberedItems(stopListSection(BUILD_AND_RUN));
+  const milestone = numberedItems(stopListSection(MILESTONE_EXECUTING));
+  assert.equal(jumpStart.length, 3, 'build-and-run.md stop list must have three items');
+  assert.deepEqual(jumpStart, milestone);
+});
+
+test('B: jump-start Phase 4 names the stops in its explanation', () => {
+  const phase4 = flatten(section(read(JUMP_START), /^## Phase 4/m, /^## Phase 5/m));
+  assert.match(phase4, /stop conditions/i, 'Phase 4 must name the stop conditions');
+  assert.match(phase4, /`checkpoint:human-action`/, 'Phase 4 must name checkpoint:human-action');
+  assert.match(phase4, /phase close/i, 'Phase 4 must name the phase-close review pause');
+  assert.match(phase4, /no questions outside/i, 'Phase 4 must say no questions outside the list');
+});
+
+test('C: milestone-planning Start asks the cadence only when none is logged and states the default', () => {
+  const step1 = flatten(section(read(MILESTONE), /^1\. \*\*Start\*\*/m, /^2\. \*\*Plan a phase/m));
+  assert.match(step1, /only when no cadence is logged/i, 'Start must ask only when no cadence is logged');
+  assert.match(step1, /DECISIONS\.md/, 'Start must check jump-start\'s DECISIONS.md');
+  assert.match(step1, /no logged cadence[^.]*after each phase/i, 'Start must state the default for a milestone with no logged cadence');
+});
+
+test('D: a subagent returns an exposed secret as a BLOCKING checkpoint; running plans finish, nothing new starts', () => {
+  const reviewer = flatten(read(SECURITY_REVIEWER));
+  assert.match(reviewer, /return[^.]*BLOCKING checkpoint to the orchestrator/i, 'security-reviewer must return a BLOCKING checkpoint to the orchestrator');
+  const orchestration = flatten(read(MILESTONE_EXECUTING) + ' ' + read(BUILD_AND_RUN));
+  assert.match(orchestration, /plans already running[^.]*finish/i, 'running plans must be allowed to finish');
+  assert.match(orchestration, /starts nothing new/i, 'nothing new may start');
+});
+
+function listMarkdownFiles(dir) {
+  return fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap((entry) => {
+    const rel = path.join(dir, entry.name);
+    if (entry.isDirectory()) return listMarkdownFiles(rel);
+    return entry.name.endsWith('.md') ? [rel] : [];
+  });
+}
+
+test('E: no skill or agent calls the secret gate "the one case"', () => {
+  const offenders = [...listMarkdownFiles('skills'), ...listMarkdownFiles('agents')]
+    .filter((file) => /the one case/i.test(read(file)));
+  assert.deepEqual(offenders, []);
 });

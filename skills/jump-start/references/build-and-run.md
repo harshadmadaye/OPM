@@ -17,15 +17,24 @@ For each phase, for each wave:
 3. If the Workflow tool is available, the developer opted in to orchestration by invoking jump-start, so a wave may run as a workflow instead of parallel Agent calls.
 4. After the wave: run build and tests. If red, dispatch one fix subagent with the failing output and the files involved. Do not start the next wave on red.
 5. After the phase: the orchestrator writes the SUMMARY files from the returned text, updates STATE.md, appends to `docs/milestones/v0.1/PROGRESS.md` and commits. Subagents write no report files.
-6. At each phase close, run `node skills/milestone-planning/scripts/review-pack.js <base>..<head>`, fill 2 or 3 questions per item from the diff using `skills/milestone-planning/templates/review-pack.md`, and save REVIEW-PACK.md in the phase folder; unattended runs continue without waiting for it to be read.
+6. At each phase close, run `node skills/milestone-planning/scripts/review-pack.js <base>..<head>`, fill 2 or 3 questions per item from the diff using `skills/milestone-planning/templates/review-pack.md`, and save REVIEW-PACK.md in the phase folder. With cadence "after each phase" (logged in DECISIONS.md), pause until the developer says they have read it; with "only at the end", continue without waiting.
 
 A subagent that returns a `checkpoint:human-verify` does not stop the run: append a row to `docs/milestones/v0.1/REVIEW-QUEUE.md` (template in `skills/milestone-planning/templates/review-queue.md`) with the evidence, then continue. A queued check does not block the next plan unless a later plan depends on what it verifies. Never mark a row passed; only the developer does. STATE.md reads "complete, N human checks pending" until the queue is clear.
 
 Subagents may not ask the developer anything. If a plan is blocked, the
-orchestrator decides, logs the decision, and moves on. Only stop the run for
-the four stop conditions in `opm:executing-plans`.
+orchestrator decides, logs the decision, and moves on.
 
-The one case where the run stops to ask during the build is an exposed secret that must be rotated. A finding that a secret reached git history, logs, or a client bundle is a blocking `checkpoint:human-action` raised when found, not at a release checklist: stop, name the secret and where it is used, give the rotation step, remove it from the code, and wait for the developer to confirm rotation.
+### What stops a run
+
+A run stops only for:
+
+1. One of the four stop conditions in skills/executing-plans/references/rulings-and-models.md; stop condition 2 (security-sensitive) includes an exposed secret that must be rotated.
+2. A `checkpoint:human-action`: a step with no CLI or API, such as an auth login.
+3. The review-cadence pause at a phase close when the cadence is "after each phase". A pause is a stop for reading, not a question.
+
+In unattended runs, a `checkpoint:human-verify` goes to REVIEW-QUEUE.md and a `checkpoint:decision` is ruled by the orchestrator and logged (DECISIONS.md in jump-start, STATE.md in milestones). Nothing else stops the run.
+
+An exposed secret blocks at once. A finding that a secret reached git history, logs, or a client bundle is a blocking `checkpoint:human-action` raised when found, not at a release checklist: stop, name the secret and where it is used, give the rotation step, remove it from the code, and wait for the developer to confirm rotation. A subagent that finds an exposed secret cannot stop the run itself: it returns a BLOCKING checkpoint to the orchestrator. The orchestrator lets plans already running in the wave finish, starts nothing new, and stops for the developer.
 
 ## Phase 7: verify
 

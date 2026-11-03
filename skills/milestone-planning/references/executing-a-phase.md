@@ -52,7 +52,7 @@ At phase close the orchestrator writes REVIEW-PACK.md in the phase folder (templ
 on the phase's range, fill 2 or 3 "explain how X handles Y" questions per item from the diff, add
 the review findings table and what went differently than planned, and commit it. With review
 cadence after each phase, wait for the developer to say they read it before planning the next
-phase; with "only at the end", write it and continue.
+phase (a stop for reading, not a question); with "only at the end", write it and continue without waiting.
 
 ## SUMMARY files
 
@@ -106,11 +106,25 @@ ticked by an agent. The orchestrator appends a row to
 checkpoint's what and how to verify and links to the evidence, then continues. A queued check does
 not block the next plan unless a later plan depends on what it verifies; that plan waits. Only a
 person sets a row to passed or failed. STATE.md reads "complete, N human checks pending" while any
-row is pending. `checkpoint:decision` and `checkpoint:human-action` are unchanged.
+row is pending. `checkpoint:decision` and `checkpoint:human-action` follow What stops a run below.
+
+### What stops a run
+
+A run stops only for:
+
+1. One of the four stop conditions in skills/executing-plans/references/rulings-and-models.md; stop condition 2 (security-sensitive) includes an exposed secret that must be rotated.
+2. A `checkpoint:human-action`: a step with no CLI or API, such as an auth login.
+3. The review-cadence pause at a phase close when the cadence is "after each phase". A pause is a stop for reading, not a question.
+
+In unattended runs, a `checkpoint:human-verify` goes to REVIEW-QUEUE.md and a `checkpoint:decision` is ruled by the orchestrator and logged (DECISIONS.md in jump-start, STATE.md in milestones). Nothing else stops the run.
+
+In an attended run, `checkpoint:human-verify` and `checkpoint:decision` also wait for the developer.
+
+A subagent that finds an exposed secret cannot stop the run itself: it returns a BLOCKING checkpoint to the orchestrator. The orchestrator lets plans already running in the wave finish, starts nothing new, and stops for the developer.
 
 ### Review cadence
 
-Ask once at Start: after each phase (default; pause at each phase close until the developer has read REVIEW-PACK.md) or only at the end (no pauses; review packs are still written). For "only at the end", show the expected commit count and log the choice as a decision. Expected commits: planned tasks plus one metadata commit per plan. Before plans exist, estimate phases x 3 plans x 4 commits and say it is an estimate.
+Asked at Start only when no cadence is logged yet (jump-start logs it in DECISIONS.md, a plain milestone in STATE.md Recent decisions). A milestone with no logged cadence uses "after each phase". Options: after each phase (default; pause at each phase close until the developer has read REVIEW-PACK.md) or only at the end (no pauses; review packs are still written). For "only at the end", show the expected commit count and log the choice as a decision. Expected commits: planned tasks plus one metadata commit per plan. Before plans exist, estimate phases x 3 plans x 4 commits and say it is an estimate.
 
 ## Anti-patterns
 
