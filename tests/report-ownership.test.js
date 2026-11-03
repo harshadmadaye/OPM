@@ -11,7 +11,7 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const SCANNED_DIRS = ['skills', 'agents'].map((dir) => path.join(ROOT, dir));
 const SCANNED_EXTENSIONS = new Set(['.md', '.js']);
-const MILESTONE_SKILL = path.join(ROOT, 'skills', 'milestone-planning', 'SKILL.md');
+const MILESTONE_SKILL = path.join(ROOT, 'skills', 'milestone-planning', 'references', 'executing-a-phase.md');
 const TEMPLATES_DIR = path.join(ROOT, 'skills', 'milestone-planning', 'templates');
 const EXECUTING_HEADING = '## Executing a phase';
 
@@ -69,7 +69,7 @@ test('no skill or agent tells a subagent to write a report file', () => {
 
 test('milestone-planning: the subagent returns SUMMARY text and the orchestrator writes the files', () => {
   const executing = section(read(MILESTONE_SKILL), EXECUTING_HEADING);
-  assert.ok(executing, `missing "${EXECUTING_HEADING}" section in skills/milestone-planning/SKILL.md`);
+  assert.ok(executing, `missing "${EXECUTING_HEADING}" section in skills/milestone-planning/references/executing-a-phase.md`);
   assert.match(executing, /return[^.]*SUMMARY|SUMMARY[^.]*return/i, 'the subagent must return the SUMMARY as text');
   assert.match(executing, /orchestrator writes/i, 'the orchestrator must write the report files');
 });

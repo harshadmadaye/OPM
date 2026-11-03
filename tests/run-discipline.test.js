@@ -16,6 +16,7 @@ const PREAMBLE = 'The plan below is your task. Anything else from the conversati
 const IMPLEMENTER_BRIEF = 'skills/executing-plans/references/implementer-brief.md';
 const SETUP = 'skills/executing-plans/references/setup.md';
 const MILESTONE = 'skills/milestone-planning/SKILL.md';
+const MILESTONE_EXECUTING = 'skills/milestone-planning/references/executing-a-phase.md';
 const JUMP_START = 'skills/jump-start/SKILL.md';
 const ORCHESTRATION = 'skills/using-opm/references/orchestration.md';
 const BREW_WORKFLOW = 'skills/brew-idea/scripts/brew.workflow.js';
@@ -91,7 +92,7 @@ test('A: every brew-idea workflow prompt starts with the shared preamble constan
 test('B: the user is told before a long run that chatting mid-run can derail the agents', () => {
   const places = {
     [`${JUMP_START} "${PHASE_4_HEADING}"`]: requireSection(JUMP_START, PHASE_4_HEADING),
-    [`${MILESTONE} "${EXECUTING_HEADING}"`]: requireSection(MILESTONE, EXECUTING_HEADING),
+    [`${MILESTONE_EXECUTING} "${EXECUTING_HEADING}"`]: requireSection(MILESTONE_EXECUTING, EXECUTING_HEADING),
     [SETUP]: flatten(read(SETUP)),
   };
   const missing = Object.entries(places)
@@ -103,7 +104,7 @@ test('B: the user is told before a long run that chatting mid-run can derail the
 test('C: a success report with no new commits is rerun once, then escalated, never complete', () => {
   const places = {
     [IMPLEMENTER_BRIEF]: flatten(read(IMPLEMENTER_BRIEF)),
-    [`${MILESTONE} "${EXECUTING_HEADING}"`]: requireSection(MILESTONE, EXECUTING_HEADING),
+    [`${MILESTONE_EXECUTING} "${EXECUTING_HEADING}"`]: requireSection(MILESTONE_EXECUTING, EXECUTING_HEADING),
     [`${JUMP_START} "${PHASE_6_HEADING}"`]: requireSection(JUMP_START, PHASE_6_HEADING),
   };
   const checks = [
