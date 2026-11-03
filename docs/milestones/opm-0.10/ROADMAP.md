@@ -1,5 +1,16 @@
 # OPM 0.10 Roadmap
 
+## Retrospective (2026-11-03)
+
+Shipped locally as 0.10.0 in one session: 16 plans planned, 14 done (including two review-fix plans the reviews called for), 2 deferred. Tests 241 -> 350; always-on tokens unchanged at 2526 / 2650; milestone-planning and jump-start cores cut from about 3100 to about 2300 tokens.
+
+- Worked: a code review at every phase close found real contradictions (Phase 2's stop rules, Phase 3's env legend, Phase 4's double count) that the plan-level tests passed straight through. Keep the per-phase review.
+- Worked: the orchestrator writing every report file; no SUMMARY was lost.
+- Cost us: the installed 0.9.1 Stop hook restyled files in this repo on most turns; fixed in this release (prettier and ruff opt-in).
+- Cost us: agent worktrees start at main, not the current branch; briefs must name the base sha.
+- Missed: the definition of done asked for behaviour evals run once. They are authored and gated but not run, because the developer chose not to pay for eval runs; paid steps need an explicit yes even under auto-approve.
+- Open: 26 issues in ISSUES.md; most relevant next are ISS-031/032 (run the evals), ISS-008 (loose text tests), ISS-010/011 (other skills over the soft cap).
+
 Source spec: [docs/specs/2026-11-03-opm-0.10.md](../../specs/2026-11-03-opm-0.10.md). Item numbers below match the spec.
 
 Goal: OPM protects the developer's judgment on long runs. A person checks what only a person can judge, every piece of evidence says where it came from, and OPM's own rules are proven by evals, without slowing the default flow.
@@ -61,11 +72,11 @@ Goal: behaviour evals prove the rules above on small sample repos, the full trig
 - [ ] 04-02 Run the behaviour evals once (deferred 2026-11-03: the developer chose not to pay for eval runs; ISS-031)
 - [ ] 04-03 (deferred, ISS-032) Full 30-prompt trigger eval with `--max-turns 2`, hit-rate table in docs/evals.md (item 13, closes 0.9 ISS-016)
 - [x] 04-04 `status --report` outcome report from ledger and milestone files (item 14, ISS-009, ISS-013, ISS-022)
-- [ ] 04-05 Release 0.10.0: README, docs/using-opm.md, CHANGELOG, versions in package.json and `.claude-plugin/*.json`
+- [x] 04-05 Release 0.10.0: README, docs/using-opm.md, CHANGELOG, versions in package.json and `.claude-plugin/*.json`
 
 Waves: 1 = 04-01 + 04-04 (parallel, worktrees); 2 = 04-02 and 3 = 04-03 deferred (paid); 4 = 04-05 (local release, nothing pushed).
 
-Status: Planned (2026-11-03)
+Status: Complete (2026-11-03) with 04-02 and 04-03 deferred. 350 tests green, 0.10.0 committed locally. Review pack: phases/04-prove-and-release/REVIEW-PACK.md
 
 ## Definition of done
 
