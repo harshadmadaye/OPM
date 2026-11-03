@@ -12,6 +12,8 @@ Do not pause to check in between tasks. "Should I continue?" prompts and progres
 
 For those, stop and ask. For everything else, rule and ledger.
 
+Stop condition 2 is immediate for exposed secrets. A finding that a secret reached git history, logs, or a client bundle is a blocking `checkpoint:human-action` raised when found, not at a release checklist: stop, name the secret and where it is used, give the rotation step, remove it from the code, and wait for the developer to confirm rotation.
+
 ## Model Selection
 
 Always specify the model when dispatching; an omitted model inherits your session's (usually the most expensive).

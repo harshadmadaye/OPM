@@ -115,7 +115,7 @@ Verify context before flagging.
 
 1. Report it first, before any other finding, with the exploit path
 2. Provide the secure code or rule change
-3. If credentials were exposed: state that rotation is required and where the secret is used
+3. If credentials were exposed: state that rotation is required and where the secret is used. A finding that a secret reached git history, logs, or a client bundle is a blocking `checkpoint:human-action` raised when found, not at a release checklist: stop, name the secret and where it is used, give the rotation step, remove it from the code, and wait for the developer to confirm rotation. Mark the finding "BLOCKING: rotate <what>".
 4. Search the codebase for the same pattern elsewhere
 
 ## When to Run

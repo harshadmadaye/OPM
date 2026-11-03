@@ -66,7 +66,7 @@ git diff --cached | grep -nE '^\+.*(console\.log|debugPrint\(|print\(|breakpoint
 git diff --cached --name-only | grep -E '(^|/)\.env($|\.)' 
 ```
 
-Any hit is a finding. A real secret means: stop, remove it, treat it as exposed, rotate it.
+Any hit is a finding. A real secret means: stop, remove it, treat it as exposed, rotate it. A finding that a secret reached git history, logs, or a client bundle is a blocking `checkpoint:human-action` raised when found, not at a release checklist: stop, name the secret and where it is used, give the rotation step, remove it from the code, and wait for the developer to confirm rotation.
 
 ### 6. Diff review
 ```bash

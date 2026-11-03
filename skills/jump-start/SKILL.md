@@ -155,5 +155,6 @@ Continue from where the artefacts stop (table in references/build-and-run.md).
 
 - Nothing leaves the machine: no deploys, no publishing, no pushes to a remote, unless the brief asked for it explicitly.
 - Secrets only in `.env`, never committed; `.env.example` documents the keys.
+- An exposed secret that must be rotated is the one case where the build stops to ask: a blocking `checkpoint:human-action` (references/build-and-run.md).
 - The build stays inside the project directory. Global installs need a logged decision.
 - The developer chooses the permission mode. Do not suggest ways around prompts beyond the three built-in options.

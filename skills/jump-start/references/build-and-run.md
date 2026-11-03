@@ -25,6 +25,8 @@ Subagents may not ask the developer anything. If a plan is blocked, the
 orchestrator decides, logs the decision, and moves on. Only stop the run for
 the four stop conditions in `opm:executing-plans`.
 
+The one case where the run stops to ask during the build is an exposed secret that must be rotated. A finding that a secret reached git history, logs, or a client bundle is a blocking `checkpoint:human-action` raised when found, not at a release checklist: stop, name the secret and where it is used, give the rotation step, remove it from the code, and wait for the developer to confirm rotation.
+
 ## Phase 7: verify
 
 1. Run `opm:verification-before-completion` (full gate) on the whole project.
