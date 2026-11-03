@@ -55,9 +55,11 @@ cadence after each phase, wait for the developer to say they read it before plan
 phase (a stop for reading, not a question); with "only at the end", write it and continue without waiting.
 
 A milestone's definition of done may require a real-environment pass: ROADMAP.md's "Definition of done"
-says so in one line, `Real-environment pass: required (physical-device)` or `(prod-like)`. Then phase or milestone close
-needs at least one check labelled physical-device or prod-like (the `env:` in the verification report);
-with only unit or simulator checks the phase is not complete. An unlabelled check reads "env: not stated".
+says so in one line, `Real-environment pass: required (physical-device)` or `(prod-like)`. It applies at
+milestone close: only a check labelled with that env satisfies it (a staging run does not satisfy
+`physical-device`), and with only unit or simulator checks the milestone is not complete. Phases that
+change what runs on the target should carry such a check too; a docs-only phase need not. An
+unlabelled check reads "env: not stated" and does not count.
 
 ## SUMMARY files
 

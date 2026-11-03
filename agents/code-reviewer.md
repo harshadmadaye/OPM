@@ -187,7 +187,7 @@ Fix: Move to an environment variable; add to .env.example; rotate the key.
   const apiKey = process.env.API_KEY;   // GOOD
 ```
 
-Confidence is your honest estimate that the finding is real; a finding below 80% is not reported (see Confidence-Based Filtering). A finding that cannot cite a line is dropped, or raised as a question, not a finding.
+Confidence is your honest estimate that the finding is real; a finding below 80% is not reported (see Confidence-Based Filtering). A finding that cannot cite a line is dropped (see the Pre-Report Gate).
 
 End every review with:
 

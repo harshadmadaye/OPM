@@ -57,6 +57,29 @@ test('E: executing-a-phase requires a physical-device or prod-like check when th
   const text = flatten(read(EXECUTING_A_PHASE));
   assert.match(text, /definition of done[^.]*real-environment/i, `${EXECUTING_A_PHASE} must name the real-environment pass`);
   assert.match(text, /Real-environment pass: required/, `${EXECUTING_A_PHASE} must say how ROADMAP.md declares it`);
-  assert.match(text, /physical-device or prod-like/, `${EXECUTING_A_PHASE} must require physical-device or prod-like`);
+  assert.match(text, /staging run does not satisfy `physical-device`/, `${EXECUTING_A_PHASE} must say a prod-like check does not satisfy physical-device`);
   assert.match(text, /not complete/i, `${EXECUTING_A_PHASE} must say the phase is not complete without it`);
+});
+
+test('F: NOT JUDGEABLE or NOT RUN forces Overall NOT READY; Secrets and Diff carry no env', () => {
+  const text = read(FULL_LOOP);
+  const block = text.slice(text.indexOf('VERIFICATION REPORT'), text.indexOf('Findings:'));
+  assert.doesNotMatch(block, /Secrets:[^\n]*env:/, `${FULL_LOOP} Secrets does not depend on where it ran`);
+  assert.doesNotMatch(block, /Diff:[^\n]*env:/, `${FULL_LOOP} Diff does not depend on where it ran`);
+  assert.match(block, /E2E:[^\n]*env:/, `${FULL_LOOP} needs an E2E or smoke line with env (ISS-021)`);
+  assert.match(flatten(text), /NOT JUDGEABLE or NOT RUN[^.]*Overall: NOT READY/, `${FULL_LOOP} must tie NOT JUDGEABLE to Overall`);
+});
+
+test('G: the env legend places web, API and CLI checks', () => {
+  const text = flatten(read(FULL_LOOP));
+  assert.match(text, /Playwright[^.]*localhost[^.]*simulator/i, `${FULL_LOOP} must place Playwright against localhost`);
+  const unitLine = text.match(/`unit`:[^.]*\./);
+  assert.ok(unitLine && /\bCI\b/.test(unitLine[0]) && /local database|container/.test(unitLine[0]), `${FULL_LOOP} must place CI and local-DB integration tests under unit`);
+});
+
+test('H: a real-environment pass names the env that satisfies it, applies at milestone close, and the roadmap guidance mentions it', () => {
+  const text = flatten(read(EXECUTING_A_PHASE));
+  assert.match(text, /only a check labelled with that env satisfies it/i, `${EXECUTING_A_PHASE} must say which env satisfies the rule`);
+  assert.match(text, /at milestone close/i, `${EXECUTING_A_PHASE} must say when it applies`);
+  assert.match(flatten(read('skills/milestone-planning/SKILL.md')), /Real-environment pass: required/, 'milestone-planning ROADMAP.md guidance must mention the declaration');
 });

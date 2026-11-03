@@ -43,6 +43,7 @@ One section per phase: number, name, one-line goal, the plans it contains with c
 and a status line. Phases are vertical slices (a user-visible capability end to end), not
 horizontal layers (all models, then all APIs, then all UI). A roadmap of four to eight phases
 is typical; if you have more than ten, the milestone is too big.
+A "Definition of done" may add `Real-environment pass: required (physical-device|prod-like)`.
 
 ### STATE.md
 
