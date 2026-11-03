@@ -17,3 +17,5 @@ Deferred enhancements and known gaps found during execution, numbered ISS-NNN. R
 - ISS-013: STATE's "complete, N human checks pending" is counted by hand; bin/status.js should count pending REVIEW-QUEUE.md rows (found in 02-02; fits 04-04)
 - ISS-014: review-pack.js is regex-only and misses risks outside its eight categories (skill-text rules, changed defaults); consider a per-project `.opm/risk-paths` list (found in 02-03)
 - ISS-015: review-pack.js runs one `git show` per commit; a single `git log -p` pass would be faster on large ranges (found in 02-03)
+- ISS-016: milestone-planning (2389) and jump-start (2396) cores have almost no room under the 2400 ceiling; move Red flags / Safety / Gates tables to references/ before adding rules (found in 02-04)
+- ISS-017: "wait for the developer to confirm rotation" is prose only; an unattended run stopped on a secret leaves no durable marker. Write a REVIEW-QUEUE.md row or a STATE.md blocker when the gate fires (found in 02-04)
