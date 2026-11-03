@@ -12,14 +12,14 @@ Each pending row of `docs/milestones/v0.1/REVIEW-QUEUE.md` (ID, what to check, h
 Phases completed, screens and flows delivered, stack used.
 
 ## Evidence
-| Check | Result |
-|---|---|
-| Unit tests | N passed, M failed |
-| Typecheck | |
-| Lint | |
-| E2E or smoke | routes tested |
-| Code review | findings by severity, all CRITICAL/HIGH fixed |
-| Security review | |
+| Check | Result | Env |
+|---|---|---|
+| Unit tests | N passed, M failed | unit |
+| Typecheck | | unit |
+| Lint | | unit |
+| E2E or smoke | routes tested | simulator, physical-device or prod-like |
+| Code review | findings by severity, all CRITICAL/HIGH fixed | |
+| Security review | | |
 
 ## Decisions made for you
 Link to `docs/milestones/v0.1/DECISIONS.md` and list the three that matter most.

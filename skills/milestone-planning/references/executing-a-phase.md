@@ -54,6 +54,10 @@ the review findings table and what went differently than planned, and commit it.
 cadence after each phase, wait for the developer to say they read it before planning the next
 phase (a stop for reading, not a question); with "only at the end", write it and continue without waiting.
 
+A milestone's definition of done may require a real-environment pass. Then phase or milestone close
+needs at least one check labelled physical-device or prod-like (the `env:` in the verification report);
+with only unit or simulator checks the phase is not complete. An unlabelled check reads "env: not stated".
+
 ## SUMMARY files
 
 Written by the orchestrator from the text the executing subagent returns when a plan finishes. The frontmatter is what makes history

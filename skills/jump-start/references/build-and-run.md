@@ -55,6 +55,7 @@ Mobile (Flutter):
 1. `flutter devices`.
 2. Pick the target in this order: the developer's stated preference, a connected physical device, an already booted simulator or emulator, then boot one (`open -a Simulator` and wait until `flutter devices` lists it, or `flutter emulators --launch <id>`).
 3. Start detached: `dev-server.sh start --project "<abs path>" --name mobile -- flutter run -d <device id>` (no `--url`).
+   Label the run in the evidence with the target's env: physical-device or simulator (the emulator counts as simulator).
 4. Confirm from `.opm/mobile.log` that the app launched. Keep it running.
 
 If the app cannot start, treat it as a failing verification: fix, then retry.

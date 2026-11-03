@@ -52,8 +52,8 @@ expiry and protected /app routes". Never "plan complete".]**
 
 ## Verification
 
-- Tests: [command] -> [X passed, Y failed, Z skipped]
-- Build / types / lint: [PASS or details]
+- Tests: [command] -> [X passed, Y failed, Z skipped] env: [unit|simulator|physical-device|prod-like]
+- Build / types / lint: [PASS or details] env: [unit|simulator|physical-device|prod-like]
 
 ## Next-phase readiness
 

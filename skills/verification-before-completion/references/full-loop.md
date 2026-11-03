@@ -83,18 +83,28 @@ and changes that widen scope beyond the task.
 VERIFICATION REPORT
 ===================
 Stack:     node (pnpm) | python (uv) | flutter
-Build:     PASS | FAIL | N/A
-Types:     PASS | FAIL  (N errors, M pre-existing)
-Lint:      PASS | FAIL  (N errors, M warnings)
-Tests:     PASS | FAIL  (X passed, Y failed, Z skipped, C% coverage)
-Secrets:   PASS | FAIL  (N findings)
-Diff:      N files, +A/-D lines, reviewed
+Build:     PASS | FAIL | N/A  env: unit
+Types:     PASS | FAIL  (N errors, M pre-existing)  env: unit
+Lint:      PASS | FAIL  (N errors, M warnings)  env: unit
+Tests:     PASS | FAIL  (X passed, Y failed, Z skipped, C% coverage)  env: unit
+Secrets:   PASS | FAIL  (N findings)  env: unit
+Diff:      N files, +A/-D lines, reviewed  env: unit
 
 Overall:   READY | NOT READY
 
 Findings:
 1. <gate>: <what>, <where>, <planned fix or why accepted>
 ```
+
+`env:` says where the check ran:
+- `unit`: tests or scripts on the dev machine with no app running.
+- `simulator`: iOS simulator, Android emulator, browser devtools device mode, or a local dev server.
+- `physical-device`: a real phone, tablet or target hardware.
+- `prod-like`: a deployed staging or production-shaped environment.
+
+A gate with no label, such as in an old report, reads as "env: not stated", not as a failure.
+Claims about performance, startup time, battery or network behaviour from a simulator or unit run
+are written `NOT JUDGEABLE (env: simulator)`, never PASS.
 
 Every line must come from a command that was actually run in this session. If a gate could not
 be run (tool missing, no network), write `NOT RUN: <reason>` rather than PASS.
