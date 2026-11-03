@@ -13,8 +13,8 @@ phase boundary. Keep it under 100 lines: it is a digest, not a log.
 ## Position
 
 Phase: [N] of [total] ([name])
-Plan: [A] of [B] in this phase
-Status: [Ready to plan | Planning | Ready to execute | Executing | Phase complete]
+Plan: [A] of [B] in this phase [, complete, N human checks pending - while REVIEW-QUEUE.md has pending rows]
+Status: [Ready to plan | Planning | Ready to execute | Executing | Phase complete | Phase complete, N human checks pending]
 Last activity: [YYYY-MM-DD] - [what happened]
 Progress: [completed plans] / [total plans]
 

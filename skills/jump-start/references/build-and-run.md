@@ -18,6 +18,8 @@ For each phase, for each wave:
 4. After the wave: run build and tests. If red, dispatch one fix subagent with the failing output and the files involved. Do not start the next wave on red.
 5. After the phase: the orchestrator writes the SUMMARY files from the returned text, updates STATE.md, appends to `docs/milestones/v0.1/PROGRESS.md` and commits. Subagents write no report files.
 
+A subagent that returns a `checkpoint:human-verify` does not stop the run: append a row to `docs/milestones/v0.1/REVIEW-QUEUE.md` (template in `skills/milestone-planning/templates/review-queue.md`) with the evidence, then continue. A queued check does not block the next plan unless a later plan depends on what it verifies. Never mark a row passed; only the developer does. STATE.md reads "complete, N human checks pending" until the queue is clear.
+
 Subagents may not ask the developer anything. If a plan is blocked, the
 orchestrator decides, logs the decision, and moves on. Only stop the run for
 the four stop conditions in `opm:executing-plans`.

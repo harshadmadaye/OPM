@@ -122,7 +122,7 @@ Before writing any plan, run the retrieval half of `opm:compound-learnings` agai
 
 ## Checkpoint types
 
-`checkpoint:human-verify` (most), `checkpoint:decision` (some), `checkpoint:human-action` (rare). If it has a CLI or API, the executor does it; checkpoints are for confirmation and decisions only. Any plan containing a checkpoint sets `autonomous: false`.
+`checkpoint:human-verify` (most), `checkpoint:decision` (some), `checkpoint:human-action` (rare). If it has a CLI or API, the executor does it; checkpoints are for confirmation and decisions only. Any plan containing a checkpoint sets `autonomous: false`. In unattended runs `checkpoint:human-verify` items go to REVIEW-QUEUE.md and the agent never marks them passed (see executing-a-phase.md).
 
 ## Wave algorithm
 

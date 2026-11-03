@@ -82,3 +82,14 @@ during execution is not a failure; it becomes a dynamic `human-action` checkpoin
 `vercel login`, then reply done") followed by a retry.
 
 Any plan containing a checkpoint sets `autonomous: false`.
+
+### Unattended runs
+
+An unattended run is jump-start, or a run the developer told to proceed without them (including
+review cadence "only at the end"). There, a `checkpoint:human-verify` neither stops the run nor is
+ticked by an agent. The orchestrator appends a row to
+`docs/milestones/<milestone>/REVIEW-QUEUE.md` (template: `templates/review-queue.md`) with the
+checkpoint's what and how to verify and links to the evidence, then continues. A queued check does
+not block the next plan unless a later plan depends on what it verifies; that plan waits. Only a
+person sets a row to passed or failed. STATE.md reads "complete, N human checks pending" while any
+row is pending. `checkpoint:decision` and `checkpoint:human-action` are unchanged.

@@ -1,5 +1,8 @@
 # <project-name> is running
 
+## Human checks pending
+Each pending row of `docs/milestones/v0.1/REVIEW-QUEUE.md` (ID, what to check, how, evidence), or "None". These come before everything else: no agent has passed them.
+
 ## Where
 - URL or device:
 - Stop with: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/dev-server.sh" stop --project <abs path> --name <web|mobile>`
