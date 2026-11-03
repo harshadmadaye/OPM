@@ -144,3 +144,15 @@ test('E: no skill or agent calls the secret gate "the one case"', () => {
     .filter((file) => /the one case/i.test(read(file)));
   assert.deepEqual(offenders, []);
 });
+
+test('unattended runs rule an architecture change and queue it for a person', () => {
+  for (const file of [BUILD_AND_RUN, 'skills/milestone-planning/references/executing-a-phase.md']) {
+    const text = flatten(read(file));
+    assert.match(text, /unattended[^.]*deviation rule 4[^.]*ruled[^.]*logged[^.]*REVIEW-QUEUE\.md/i, `${file}: rule 4 in unattended runs`);
+  }
+});
+
+test('a subagent running the full gate returns an exposed secret as a BLOCKING checkpoint', () => {
+  const text = flatten(read(FULL_LOOP));
+  assert.match(text, /subagent[^.]*returns? [^.]*BLOCKING checkpoint[^.]*orchestrator/i, `${FULL_LOOP}: subagent path`);
+});

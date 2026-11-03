@@ -32,7 +32,7 @@ Plans are guides, not straitjackets. During execution:
 4. **Architecture change** - stop and ask. Do not refactor structure on your own initiative.
 5. **Enhancement or polish** - log to ISSUES.md as `ISS-NNN` with the plan and task, continue.
 
-Only rule 4 needs the human. Everything else is recorded, not asked.
+Only rule 4 needs the human (in unattended runs it is ruled, logged and queued; see What stops a run). Everything else is recorded, not asked.
 
 ### ISSUES.md
 
@@ -116,7 +116,7 @@ A run stops only for:
 2. A `checkpoint:human-action`: a step with no CLI or API, such as an auth login.
 3. The review-cadence pause at a phase close when the cadence is "after each phase". A pause is a stop for reading, not a question.
 
-In unattended runs, a `checkpoint:human-verify` goes to REVIEW-QUEUE.md and a `checkpoint:decision` is ruled by the orchestrator and logged (DECISIONS.md in jump-start, STATE.md in milestones). Nothing else stops the run.
+In unattended runs, a `checkpoint:human-verify` goes to REVIEW-QUEUE.md and a `checkpoint:decision` is ruled by the orchestrator and logged (DECISIONS.md in jump-start, STATE.md in milestones). In unattended runs deviation rule 4 (architecture change) is ruled and logged the same way, and also added to REVIEW-QUEUE.md so a person reviews it. Nothing else stops the run.
 
 In an attended run, `checkpoint:human-verify` and `checkpoint:decision` also wait for the developer.
 

@@ -32,7 +32,7 @@ A run stops only for:
 2. A `checkpoint:human-action`: a step with no CLI or API, such as an auth login.
 3. The review-cadence pause at a phase close when the cadence is "after each phase". A pause is a stop for reading, not a question.
 
-In unattended runs, a `checkpoint:human-verify` goes to REVIEW-QUEUE.md and a `checkpoint:decision` is ruled by the orchestrator and logged (DECISIONS.md in jump-start, STATE.md in milestones). Nothing else stops the run.
+In unattended runs, a `checkpoint:human-verify` goes to REVIEW-QUEUE.md and a `checkpoint:decision` is ruled by the orchestrator and logged (DECISIONS.md in jump-start, STATE.md in milestones). In unattended runs deviation rule 4 (architecture change) is ruled and logged the same way, and also added to REVIEW-QUEUE.md so a person reviews it. Nothing else stops the run.
 
 An exposed secret blocks at once. A finding that a secret reached git history, logs, or a client bundle is a blocking `checkpoint:human-action` raised when found, not at a release checklist: stop, name the secret and where it is used, give the rotation step, remove it from the code, and wait for the developer to confirm rotation. A subagent that finds an exposed secret cannot stop the run itself: it returns a BLOCKING checkpoint to the orchestrator. The orchestrator lets plans already running in the wave finish, starts nothing new, and stops for the developer.
 
