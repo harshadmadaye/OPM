@@ -334,6 +334,104 @@ test('stop-format-typecheck: tsc errors still block the stop', () => {
   assert.match(out.reason, /prettier: skipped \(OPM_SKIP_FORMAT=1\)/);
 });
 
+// A fake formatter that appends one JSON line {cwd, args} per real call to OPM_FAKE_TOOL_LOG.
+const LOGGING_TOOL = [
+  "const fs = require('fs');",
+  'const args = process.argv.slice(2);',
+  "if (args[0] !== '--version') {",
+  '  fs.appendFileSync(process.env.OPM_FAKE_TOOL_LOG, JSON.stringify({ cwd: process.cwd(), args }) + "\\n");',
+  '}',
+  'process.exit(0);',
+].join('\n');
+
+function readToolLog(logFile) {
+  if (!fs.existsSync(logFile)) return [];
+  return fs.readFileSync(logFile, 'utf8').split('\n').filter(Boolean).map((line) => JSON.parse(line));
+}
+
+function realDir(relativePath) {
+  return fs.realpathSync(path.join(tmpRoot, relativePath));
+}
+
+// repo/ (the session cwd, no marker) holds a JS app, a ruff-only service, a nested
+// Dart package and a loose file with no project marker above it.
+function buildRootingRepo(name) {
+  const bin = path.join(tmpRoot, `${name}-bin`);
+  writeFakeTool(bin, 'ruff', LOGGING_TOOL);
+  writeFakeTool(bin, 'dart', LOGGING_TOOL);
+  writeFixture(`${name}/apps/web/package.json`, '{"name":"web"}');
+  writeFixture(`${name}/apps/web/.prettierrc`, '{"printWidth":120}');
+  writeFakeTool(path.join(tmpRoot, name, 'apps', 'web', 'node_modules', '.bin'), 'prettier', LOGGING_TOOL);
+  writeFixture(`${name}/services/api/ruff.toml`, 'line-length = 100\n');
+  writeFixture(`${name}/packages/ui/pubspec.yaml`, 'name: ui\n');
+  writeFixture(`${name}/packages/ui/analysis_options.yaml`, 'formatter:\n  page_width: 100\n');
+  return {
+    bin,
+    log: path.join(tmpRoot, `${name}-tools.log`),
+    ts: writeFixture(`${name}/apps/web/src/a.ts`, 'const a = 1\n'),
+    py: writeFixture(`${name}/services/api/app.py`, 'x = 1\n'),
+    dart: writeFixture(`${name}/packages/ui/lib/b.dart`, 'void main() {}\n'),
+    loose: writeFixture(`${name}/loose/notes.js`, 'const n = 1\n'),
+  };
+}
+
+function runStopIn(cwd, sessionId, files, env) {
+  fs.writeFileSync(accumulatorFile(sessionId), files.join('\n') + '\n');
+  return runHook('stop-format-typecheck.js', { session_id: sessionId, cwd }, env);
+}
+
+function toolCalls(calls, cwd) {
+  return calls.filter((call) => fs.realpathSync(call.cwd) === cwd);
+}
+
+test('stop-format-typecheck: each formatter runs from its file\'s project root on listed files only', () => {
+  const repo = buildRootingRepo('rooting');
+  const env = envWithPath(repo.bin, { OPM_FAKE_TOOL_LOG: repo.log });
+  const { status, stdout } = runStopIn(path.join(tmpRoot, 'rooting'), 'rooting', [repo.ts, repo.py, repo.dart, repo.loose], env);
+  assert.equal(status, 0);
+  const message = parseOutput(stdout).systemMessage;
+  const calls = readToolLog(repo.log);
+
+  const prettier = toolCalls(calls, realDir('rooting/apps/web'));
+  assert.equal(prettier.length, 1, JSON.stringify(calls));
+  assert.deepEqual(prettier[0].args.filter((arg) => !arg.startsWith('--')), [repo.ts]);
+  const ruff = toolCalls(calls, realDir('rooting/services/api'));
+  assert.deepEqual(ruff.map((call) => call.args), [['format', repo.py], ['check', repo.py]]);
+  const dart = toolCalls(calls, realDir('rooting/packages/ui'));
+  assert.deepEqual(dart.map((call) => call.args), [['format', repo.dart]]);
+  assert.equal(calls.length, prettier.length + ruff.length + dart.length, JSON.stringify(calls));
+
+  for (const call of calls) {
+    for (const arg of call.args) {
+      assert.notEqual(arg, '.', JSON.stringify(call));
+      assert.doesNotMatch(arg, /[*?]/, JSON.stringify(call));
+      if (path.isAbsolute(arg)) assert.equal(fs.statSync(arg).isDirectory(), false, `directory passed: ${arg}`);
+    }
+    assert.equal(call.args.includes(repo.loose), false, 'a file outside any project was formatted');
+  }
+  assert.match(message, /skipped \(no project root\)/);
+  assert.match(message, /notes\.js/);
+});
+
+test('stop-format-typecheck: a later turn formats only that turn\'s files', () => {
+  const repo = buildRootingRepo('turns');
+  const env = envWithPath(repo.bin, { OPM_FAKE_TOOL_LOG: repo.log });
+  const cwd = path.join(tmpRoot, 'turns');
+  runStopIn(cwd, 'turns', [repo.ts], env);
+  assert.equal(fs.existsSync(accumulatorFile('turns')), false, 'first turn list should be cleared');
+  const firstTurnCalls = readToolLog(repo.log).length;
+  assert.ok(firstTurnCalls > 0);
+
+  const later = writeFixture('turns/apps/web/src/later.ts', 'const later = 1\n');
+  const deleted = path.join(tmpRoot, 'turns', 'apps', 'web', 'src', 'deleted.ts');
+  runStopIn(cwd, 'turns', [later, deleted], env);
+  const secondTurn = readToolLog(repo.log).slice(firstTurnCalls);
+  assert.equal(secondTurn.length, 1, JSON.stringify(secondTurn));
+  assert.equal(secondTurn[0].args.includes(repo.ts), false, 'earlier turn file formatted again');
+  assert.equal(secondTurn[0].args.includes(deleted), false, 'deleted file passed to the formatter');
+  assert.equal(secondTurn[0].args.includes(later), true);
+});
+
 test('session-start: injects fixture skill content with frontmatter stripped', () => {
   const pluginRoot = path.join(tmpRoot, 'plugin');
   writeFixture('plugin/skills/using-opm/SKILL.md', '---\nname: using-opm\ndescription: fixture\n---\n# Using OPM\n\nAlways start here.\n');
