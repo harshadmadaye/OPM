@@ -272,3 +272,14 @@ test('the parser module uses no Node APIs', () => {
   const source = fs.readFileSync(MODULE_PATH, 'utf8');
   assert.doesNotMatch(source, /\bimport\b[^;]*from|\brequire\(|\bprocess\.|\bfs\.|\bpath\./);
 });
+
+test('formatReport counts findings from ledgers when they have Finding lines, so packs do not double count', async () => {
+  const { countLedgerOutcomes, countMilestoneOutcomes, formatReport } = await loadLedger();
+  const ledgerText = '# OPM ledger - plan: docs/plans/x.md\nTask 1: complete (commits a..b, review clean)\nFinding: HIGH fixed - missing 401 path\n';
+  const pack = '| Severity | Found | Fixed | Parked | Dismissed |\n|---|---|---|---|---|\n| HIGH | 1 | 1 | | |\n';
+  const milestone = countMilestoneOutcomes({ issuesText: '', reviewQueueText: '', reviewPackTexts: [pack] });
+  const ledgers = [{ path: 'docs/plans/x.progress.md', outcomes: countLedgerOutcomes(ledgerText) }];
+  assert.match(formatReport({ ledgers, milestone })[1], /HIGH 1 \(1 fixed\)/);
+  const noFindingLines = [{ path: 'docs/plans/y.progress.md', outcomes: countLedgerOutcomes('# OPM ledger - plan: y.md\nTask 1: complete (x)\n') }];
+  assert.match(formatReport({ ledgers: noFindingLines, milestone })[1], /HIGH 1 \(1 fixed\)/, 'packs are the fallback');
+});

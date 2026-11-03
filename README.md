@@ -209,7 +209,7 @@ code. From 0.10:
 - **Reviewers state confidence and the line they cite**, and final reports
   count findings by severity and by fixed, parked or dismissed.
 
-`npx opm-core status --report` prints the outcome from the ledger and git: tasks
+`npx opm-core status --report` prints the outcome from the ledgers and milestone files: tasks
 done, findings by severity, fix rounds, items parked, human checks pending,
 issues opened and closed, rulings made.
 

@@ -28,7 +28,7 @@ OPM 0.10 protects the developer's judgment on long runs. The numbers in brackets
 
 - (12) Six behaviour evals on scaffolded sample repos (architecture-change stop, no "done" without fresh output, ignoring a mid-run chat message, queued human checks, no re-dispatch of ledger-complete tasks, no push or PR without a yes) and a gated runner, `npm run eval:behaviour -- --yes`. **Authored, not run.** The maintainer chose not to pay for eval runs for this release, so no behaviour result is claimed (ISS-031). One harness smoke run of one case scored 0.25 before a grader fix and says nothing about OPM's behaviour.
 - (13) The full 30-prompt trigger eval (`npm run eval:triggers -- --yes`). **Authored, not run** for this release; no hit-rate table is committed (ISS-032).
-- (14) `npx opm-core status --report` prints the project outcome from the ledger and git: tasks done, reviewer findings by severity and outcome, fix rounds, items parked, human checks pending, issues opened and closed, rulings made and tasks escalated for no commits. Plain `status` is unchanged.
+- (14) `npx opm-core status --report` prints the project outcome from the ledgers and milestone files (no git or network): tasks done, reviewer findings by severity and outcome, fix rounds, items parked, human checks pending, issues opened and closed, rulings made and tasks escalated for no commits. Plain `status` is unchanged.
 
 **Fixed**
 

@@ -272,7 +272,10 @@ function severityText(severity, counts) {
 // outcomes come from countLedgerOutcomes, milestone from countMilestoneOutcomes (or null).
 export function formatReport({ ledgers = [], milestone = null } = {}) {
   const sum = (key) => ledgers.reduce((total, ledger) => total + ledger.outcomes[key], 0);
-  const findings = mergeSeverityCounts(...ledgers.map((ledger) => ledger.outcomes.findings), milestone && milestone.findings);
+  // Ledger `Finding:` lines and REVIEW-PACK tables can describe the same findings, so use the
+  // ledgers when any has Finding lines and fall back to the packs only when none do.
+  const ledgerFindings = mergeSeverityCounts(...ledgers.map((ledger) => ledger.outcomes.findings));
+  const findings = ledgerFindings || mergeSeverityCounts(milestone && milestone.findings);
   const escalated = ledgers.flatMap(({ path, outcomes }) => outcomes.escalated.map((task) => `Task ${task} (${path})`));
   const issuesOpen = milestone ? milestone.issuesOpen : 0;
   const issuesClosed = milestone ? milestone.issuesClosed : 0;

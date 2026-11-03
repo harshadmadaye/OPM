@@ -132,7 +132,7 @@ test('status --report prints every outcome field from ledgers and milestone file
   assert.equal(status, 0, lines.join('\n'));
   assert.deepEqual(lines, [
     'tasks done: 2 (across 2 ledgers)',
-    'reviewer findings: CRITICAL none, HIGH 2 (2 fixed), MEDIUM none, LOW 3 (1 fixed, 2 parked)',
+    'reviewer findings: CRITICAL none, HIGH 1 (1 fixed), MEDIUM none, LOW 1 (1 parked)',
     'fix rounds: 1',
     'items parked: 1',
     'human checks pending: 1',
