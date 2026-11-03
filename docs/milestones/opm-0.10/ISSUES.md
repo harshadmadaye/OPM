@@ -19,3 +19,6 @@ Deferred enhancements and known gaps found during execution, numbered ISS-NNN. R
 - ISS-015: review-pack.js runs one `git show` per commit; a single `git log -p` pass would be faster on large ranges (found in 02-03)
 - ISS-016: milestone-planning (2389) and jump-start (2396) cores have almost no room under the 2400 ceiling; move Red flags / Safety / Gates tables to references/ before adding rules (found in 02-04)
 - ISS-017: "wait for the developer to confirm rotation" is prose only; an unattended run stopped on a secret leaves no durable marker. Write a REVIEW-QUEUE.md row or a STATE.md blocker when the gate fires (found in 02-04)
+- ISS-018: review-pack.js skips merges (`--no-merges`), so conflict resolutions are invisible; any deleted file scores as data deletion (noisy); path-only test/doc hits still rank at 0.75 (Phase 2 review, LOW)
+- ISS-019: the expected-commit-count rule ignores REVIEW-PACK and queue commits at phase close; it undercounts slightly (Phase 2 review, LOW)
+- ISS-020: review-pack.js `unquote` strips quotes but not C escapes, so paths git still quotes (tab, quote, backslash, newline) keep escapes and may miss path categories (found in 02-05, Task 3)

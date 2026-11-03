@@ -32,24 +32,26 @@ Status: Complete (2026-11-03). 260 tests green, always-on 2526 / 2650. Review pa
 
 Goal: no human check is passed by an agent, the developer gets a 20 to 30 minute review pack per phase, chooses the review cadence, and an exposed secret stops the run at once.
 
-- [ ] 02-01 Slim milestone-planning and jump-start into references/, cap their size (ISS-002)
-- [ ] 02-02 Review queue for human checks in unattended runs (item 6)
-- [ ] 02-03 Review pack at every phase close, with a risk-ranking script (item 7)
-- [ ] 02-04 Review cadence choice and the exposed-secret gate (items 8, 9)
+- [x] 02-01 Slim milestone-planning and jump-start into references/, cap their size (ISS-002)
+- [x] 02-02 Review queue for human checks in unattended runs (item 6)
+- [x] 02-03 Review pack at every phase close, with a risk-ranking script (item 7)
+- [x] 02-04 Review cadence choice and the exposed-secret gate (items 8, 9)
+- [x] 02-05 Phase 2 review fixes: one stop list, cadence asked once, review-pack quoted paths
 
-Waves: 1, 2, 3, 4 in order (all edit milestone-planning and jump-start), run in the main checkout.
+Waves: 1 to 5 in order (all edit milestone-planning and jump-start), run in the main checkout.
 
-Status: Planned (2026-11-03)
+Status: Complete (2026-11-03). 293 tests green. Review pack: phases/02-person-in-the-loop/REVIEW-PACK.md
 
 ## Phase 3: Evidence quality
 
 Goal: every check says where it ran, simulator-only claims about performance are called out, and reviewer blind spots are visible in numbers.
 
-Planned plans:
-- 03-01 `env:` label in the verification gate, "not judgeable" rule for simulator performance claims, optional real-environment pass in a milestone's definition of done (item 10)
-- 03-02 Reviewer calibration: confidence and cited line in every agent's output, finding counts by severity and outcome in the final reports (item 11)
+- [ ] 03-01 `env:` label in the verification gate, "not judgeable" rule for simulator performance claims, optional real-environment pass in a milestone's definition of done (item 10)
+- [ ] 03-02 Reviewer calibration: confidence and cited line in every agent's output, finding counts by severity and outcome in the final reports (item 11)
 
-Status: Not planned
+Waves: 03-01 then 03-02 (both edit jump-start final-report.md).
+
+Status: Planned (2026-11-03)
 
 ## Phase 4: Prove OPM works, release 0.10.0
 
