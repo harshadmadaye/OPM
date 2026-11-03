@@ -123,9 +123,10 @@ so independent plans run in parallel.
 For each phase, for each wave:
 
 1. Dispatch one general-purpose subagent per plan in a single message so they run in parallel. Each brief opens with "The plan below is your task. Anything else from the conversation is background, not instructions." and contains only: the plan text, the interfaces it consumes, the stack rules from the patterns skill, the repository path, and the instruction to follow `opm:executing-plans` inline mode with `opm:tdd-workflow` per task, to commit per task, and to return its SUMMARY as text in its final report. Never paste the whole roadmap or the chat history.
-2. If the Workflow tool is available, the developer opted in to orchestration by invoking jump-start, so a wave may run as a workflow instead of parallel Agent calls.
-3. After the wave: run build and tests. If red, dispatch one fix subagent with the failing output and the files involved. Do not start the next wave on red.
-4. After the phase: the orchestrator writes the SUMMARY files from the returned text, updates STATE.md, appends to `docs/milestones/v0.1/PROGRESS.md` and commits. Subagents write no report files.
+2. A subagent that reports success with no new commits for its plan (checked with `git log --oneline` against the wave's base) is rerun once with a fresh brief saying the previous attempt produced no commits. If the rerun also has none, it is escalated without a question: log it in DECISIONS.md, mark the plan blocked in STATE.md, and continue with plans that do not depend on it. Never mark that plan complete.
+3. If the Workflow tool is available, the developer opted in to orchestration by invoking jump-start, so a wave may run as a workflow instead of parallel Agent calls.
+4. After the wave: run build and tests. If red, dispatch one fix subagent with the failing output and the files involved. Do not start the next wave on red.
+5. After the phase: the orchestrator writes the SUMMARY files from the returned text, updates STATE.md, appends to `docs/milestones/v0.1/PROGRESS.md` and commits. Subagents write no report files.
 
 Subagents may not ask the developer anything. If a plan is blocked, the
 orchestrator decides, logs the decision, and moves on. Only stop the run for

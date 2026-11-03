@@ -90,3 +90,5 @@ prompt: |
 - **BLOCKED:** change something. Context problem: add context, same model. Reasoning problem: more capable model. Too large: split it. Plan is wrong: rule on the correction, ledger it, re-dispatch with the ruling in the brief. Never re-run the same dispatch unchanged.
 
 Before review, confirm independently that commits exist: `git log --oneline BASE..HEAD`. An implementer report is a claim (see `opm:verification-before-completion`).
+
+**No new commits:** if the report is DONE or DONE_WITH_CONCERNS but `git log --oneline BASE..HEAD` is empty, ledger `Task N: no commits (rerun 1/1)` and rerun once with a fresh brief: a fresh agent, the same task text, plus one line saying the previous attempt produced no commits. If the rerun also has no new commits, ledger `Task N: escalated - no commits after rerun` and stop for the user. Never write `complete` for that task.

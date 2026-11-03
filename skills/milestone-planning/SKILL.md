@@ -170,6 +170,11 @@ SUMMARY-NN-MM.md, updates STATE.md and makes the `docs(NN-MM): complete plan` co
 subagent hits a checkpoint, it stops and returns the checkpoint content plus a table of completed tasks; after the human responds, a fresh subagent continues from the next
 task. Agents are not resumed; state lives in files and commits, not in context.
 
+A subagent that reports success with no new commits (`git log --oneline <wave base>..HEAD` shows
+no `(NN-MM)` commit for its plan) is rerun once with a fresh brief saying the previous attempt
+produced no commits. If the rerun also has none, it is escalated: the orchestrator records it in
+its notes for the plan and in STATE.md open blockers and stops for the user. Never mark that plan complete.
+
 ### Deviation rules
 
 Plans are guides, not straitjackets. During execution:
