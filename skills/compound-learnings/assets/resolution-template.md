@@ -10,6 +10,7 @@ root_cause: "One sentence naming the mechanism, not the symptom"
 severity: medium
 tags: [library-name, concept, module-name]
 related: []
+# component: opm   (opm when the lesson is about OPM itself; otherwise omit)
 ---
 
 # Short, specific problem title
