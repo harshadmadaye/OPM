@@ -4,7 +4,7 @@
 // Usage: node validate-design-md.mjs [path/to/DESIGN.md]
 import fs from 'node:fs';
 import { isMain } from '../../../shared/is-main.mjs';
-import { isHex, contrastRatio, AA_NORMAL_TEXT } from '../../frontend-design/scripts/contrast.mjs';
+import { isHex, contrastRatio, formatRatio, AA_NORMAL_TEXT } from '../../frontend-design/scripts/contrast.mjs';
 
 export const REQUIRED_GROUPS = Object.freeze(['colors', 'typography', 'spacing', 'radius']);
 export const REQUIRED_ROLES = Object.freeze(['text', 'surface']);
@@ -103,7 +103,7 @@ export function validateTokens(tokens) {
   const pair = textSurfaceContrast(tokens.colors);
   if (pair && pair.ratio < AA_NORMAL_TEXT) {
     violations.push({
-      rule: `F-01 text "${pair.text}" on surface "${pair.surface}" is ${pair.ratio.toFixed(2)}:1, under ${AA_NORMAL_TEXT}:1`,
+      rule: `F-01 text "${pair.text}" on surface "${pair.surface}" is ${formatRatio(pair.ratio)}:1, under ${AA_NORMAL_TEXT}:1`,
       fix: 'darken the text or lighten the surface token',
     });
   }
@@ -137,7 +137,7 @@ function main(argv) {
     return 1;
   }
   const pair = textSurfaceContrast(tokens.colors);
-  console.log(`ok: ${file} has ${Object.keys(tokens.colors).length} colours; text on surface is ${pair.ratio.toFixed(2)}:1`);
+  console.log(`ok: ${file} has ${Object.keys(tokens.colors).length} colours; text on surface is ${formatRatio(pair.ratio)}:1`);
   return 0;
 }
 

@@ -18,6 +18,14 @@ test('known WCAG pairs', async () => {
   close(contrastRatio('#336699', '#336699'), 1, 0.001);
 });
 
+test('formatRatio truncates so a failing ratio never prints as the threshold', async () => {
+  const { formatRatio } = await load();
+  assert.equal(formatRatio(4.4999), '4.49');
+  assert.equal(formatRatio(4.496), '4.49');
+  assert.equal(formatRatio(21), '21.00');
+  assert.equal(formatRatio(4.48), '4.48');
+});
+
 test('passesAA uses 4.5 for body text and 3 for large text', async () => {
   const { passesAA, contrastRatio } = await load();
   const grey = contrastRatio('#777777', '#FFFFFF');
@@ -48,7 +56,7 @@ test('the CLI exits 0 on a pass, 1 on a fail and 2 on bad input', () => {
   assert.match(pass.stdout, /21\.00:1 PASS \(needs 4\.5:1\)/);
   const fail = run('#777777', '#FFFFFF');
   assert.equal(fail.status, 1);
-  assert.match(fail.stdout, /4\.48:1 FAIL/);
+  assert.match(fail.stdout, /4\.47:1 FAIL/);
   assert.equal(run('#777777', '#FFFFFF', '--large').status, 0);
   const delta = run('--delta', '#FF0000', '#FE0101');
   assert.equal(delta.status, 0);

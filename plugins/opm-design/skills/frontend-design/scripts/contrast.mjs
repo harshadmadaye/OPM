@@ -43,6 +43,11 @@ export function contrastRatio(foreground, background) {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
+// Truncates, never rounds: 4.496 must not print as "4.50:1" next to a FAIL.
+export function formatRatio(ratio) {
+  return (Math.floor(ratio * 100) / 100).toFixed(2);
+}
+
 export function passesAA(ratio, { isLargeText = false } = {}) {
   return ratio >= (isLargeText ? AA_LARGE_TEXT : AA_NORMAL_TEXT);
 }
@@ -75,7 +80,7 @@ export function runCli(argv) {
   const ratio = contrastRatio(foreground, background);
   const needed = isLargeText ? AA_LARGE_TEXT : AA_NORMAL_TEXT;
   const isPass = passesAA(ratio, { isLargeText });
-  return { code: isPass ? EXIT.pass : EXIT.fail, out: `${ratio.toFixed(2)}:1 ${isPass ? 'PASS' : 'FAIL'} (needs ${needed}:1)` };
+  return { code: isPass ? EXIT.pass : EXIT.fail, out: `${formatRatio(ratio)}:1 ${isPass ? 'PASS' : 'FAIL'} (needs ${needed}:1)` };
 }
 
 if (isMain(import.meta.url)) {
