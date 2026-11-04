@@ -37,6 +37,8 @@ The first available rung wins:
 - `summary`: one line to quote in your report.
 - `screenshots`: Read every file. Look for overlap, clipped text, broken alignment and missing
   states.
+- To check a colour pair yourself run `contrast.mjs '#1A1A1A' '#FFFFFF'`; quote hex values, because
+  the shell reads an unquoted `#` as a comment.
 - `horizontalOverflow`: any `true` breaks F-05 at that width.
 - `consoleErrors`: fix them all or explain each.
 - `axe`: each violation names a rule; map it to F-01, F-08 or F-09 where it fits.

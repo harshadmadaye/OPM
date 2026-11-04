@@ -16,8 +16,8 @@ group:
 
 1. List every distinct colour with its source file and count.
 2. Convert `rgb()`, `hsl()` and named colours to hex.
-3. Merge near-duplicates: run `contrast.mjs --delta <a> <b>` on pairs that look alike. Under 3
-   means the same colour; keep the more frequent value.
+3. Merge near-duplicates: run `contrast.mjs --delta '#3B82F6' '#3A80F5'` on pairs that look alike (quote hex
+   values: the shell reads an unquoted `#` as a comment). Under 3 means the same colour; keep the more frequent value.
 4. Name by role, never by hue: what the colour does (text, surface, Primary action, Danger,
    Border, Muted text). If a colour has two jobs, it becomes two roles that share a value.
 5. Pick the `text` and `surface` roles from the most common body text and page background.

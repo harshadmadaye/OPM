@@ -32,7 +32,7 @@ Follow `references/extract-from-code.md`:
 
 1. Read sources in priority order: Tailwind config or theme files, then CSS custom properties,
    then component styles.
-2. Merge near-duplicate colours: `node P/skills/frontend-design/scripts/contrast.mjs --delta <a> <b>`.
+2. Merge near-duplicate colours: `node P/skills/frontend-design/scripts/contrast.mjs --delta '#3B82F6' '#3A80F5'` (quote hex values).
    Under 3 is the same colour; keep the one used more often.
 3. Name each colour by role ("Primary action", "Surface", "Danger"), never by hue, and record the
    source file of each token in the Components section.
