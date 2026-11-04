@@ -24,9 +24,13 @@ and you have no edit tools. If `${CLAUDE_PLUGIN_ROOT}` is not set, the plugin ro
 
 ## Process
 
-1. **Evidence check.** Read `visual-qa.json`. If any listed screenshot is missing or unreadable,
-   if the screenshot paths in the brief differ from the report's, or if the report's `tool` is
-   `playwright` with no screenshots, stop and answer `recapture` with one line saying what is
+1. **Evidence check.** Read `visual-qa.json`. If the report's `tool` is `mcp`, the report lists
+   no screenshots because the skill took them through the MCP server: accept the brief's
+   screenshot paths if they exist and can be read, and treat the report's empty `consoleErrors`
+   and `horizontalOverflow` as not checked (the brief's author checked them; judge from the
+   screenshots and the diff), never as clean. Otherwise, if any listed screenshot is missing or
+   unreadable, if the screenshot paths in the brief differ from the report's, or if the report's
+   `tool` is `playwright` with no screenshots, stop and answer `recapture` with one line saying what is
    missing. A `manual` report (no screenshots) is acceptable: review from the diff and the report's `checklist`, and give `ship` only when every floor rule can be confirmed from the code; otherwise `fix` with the unconfirmed rule IDs.
 2. **Look.** Read every screenshot. Note overlap, clipped text, broken alignment, missing states
    and anything that contradicts `DESIGN.md`.

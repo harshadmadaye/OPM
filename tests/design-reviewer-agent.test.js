@@ -20,7 +20,7 @@ test('the prompt keeps the reviewer independent and the output contract fixed', 
   const body = fs.readFileSync(AGENT, 'utf8').split(/\n---\n/).slice(1).join('\n---\n');
   assert.ok(body.trimStart().startsWith('You did not build this and will not be told why anything is the way it is.'));
   for (const verdict of ['ship', 'fix', 'rebuild', 'recapture']) assert.ok(body.includes(`\`${verdict}\``), verdict);
-  for (const needle of ['at most 8 findings', 'never edit', 'visual-qa.mjs', 'craft-floor.md', 'unwaived floor violation', 'confidence', 'Design waivers']) {
+  for (const needle of ['at most 8 findings', 'never edit', 'visual-qa.mjs', 'craft-floor.md', 'unwaived floor violation', 'confidence', 'Design waivers', '`mcp`', 'not checked']) {
     assert.ok(body.toLowerCase().includes(needle.toLowerCase()), needle);
   }
 });
