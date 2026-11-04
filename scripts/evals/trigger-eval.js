@@ -33,7 +33,7 @@ const RUN_TIMEOUT_MS = 180000;
 const MAX_OUTPUT_BYTES = 32 * 1024 * 1024;
 const COST_WARNING = [
   'trigger-eval spends tokens: one headless claude run per prompt',
-  `(${EVAL_MODEL}, about $0.02 each, about $0.70 for all 30).`,
+  `(${EVAL_MODEL}, about $0.02 per prompt: 30 in the core suite, 14 in the design suite).`,
   'Re-run with --yes to start, optionally with --limit N, --only <sizeClass> or --suite design.',
 ].join(' ');
 
