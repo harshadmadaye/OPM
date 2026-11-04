@@ -193,3 +193,74 @@ test('gotoSettled waits for load, tolerates an idle timeout and rethrows other e
   assert.equal(await gotoSettled(fakePage(timeout), 'http://x/'), 'response');
   await assert.rejects(gotoSettled(fakePage(new Error('boom')), 'http://x/'), /boom/);
 });
+
+test('nextSelectionAfterLaunchFailure moves past a project Playwright with no browser', async () => {
+  const { nextSelectionAfterLaunchFailure } = await load('visual-qa.mjs');
+  const project = { mode: 'playwright', source: 'project', modulePath: '/p/playwright' };
+  const missing = new Error("browserType.launch: Executable doesn't exist at /x/chromium\nRun playwright install");
+  const projectOnly = () => '/p/playwright';
+  const base = { env: {}, exists: () => false, toolsDir: path.join(os.tmpdir(), 'no-tools'), resolveInProject: projectOnly };
+  const consent = nextSelectionAfterLaunchFailure(project, missing, { ...base, flags: {} });
+  assert.equal(consent.selection.mode, 'needs-consent');
+  assert.equal(consent.reason, "project Playwright has no browser: browserType.launch: Executable doesn't exist at /x/chromium");
+  assert.equal(nextSelectionAfterLaunchFailure(project, missing, { ...base, flags: { mcp: true } }).selection.mode, 'mcp');
+  assert.equal(nextSelectionAfterLaunchFailure(project, missing, { ...base, flags: { install: true } }).selection.mode, 'install');
+  const home = nextSelectionAfterLaunchFailure(project, missing, { ...base, flags: {}, exists: installed(base.toolsDir) });
+  assert.equal(home.selection.source, 'home');
+});
+
+test('nextSelectionAfterLaunchFailure rethrows anything else', async () => {
+  const { nextSelectionAfterLaunchFailure } = await load('visual-qa.mjs');
+  const project = { mode: 'playwright', source: 'project', modulePath: '/p/playwright' };
+  const other = new Error('net::ERR_CONNECTION_REFUSED');
+  assert.throws(() => nextSelectionAfterLaunchFailure(project, other, { flags: {} }), /ERR_CONNECTION_REFUSED/);
+  const missing = new Error("Executable doesn't exist");
+  const home = { mode: 'playwright', source: 'home', toolsDir: '/t' };
+  assert.throws(() => nextSelectionAfterLaunchFailure(home, missing, { flags: {} }), /Executable doesn't exist/);
+});
+
+test('redactUrl removes credentials from http(s) URLs and leaves other values alone', async () => {
+  const { redactUrl } = await load('visual-qa.mjs');
+  assert.equal(redactUrl('https://user:token@example.test/a?b=1'), 'https://example.test/a?b=1');
+  assert.equal(redactUrl('http://user@localhost:3000/'), 'http://localhost:3000/');
+  assert.equal(redactUrl('http://localhost:3000/'), 'http://localhost:3000/');
+  assert.equal(redactUrl('file:///tmp/page.html'), 'file:///tmp/page.html');
+  assert.equal(redactUrl('not a url'), 'not a url');
+});
+
+test('checkReachable messages never carry credentials', async () => {
+  const { checkReachable } = await load('visual-qa.mjs');
+  const refused = async () => { throw new Error('refused'); };
+  await assert.rejects(checkReachable('https://user:secret@example.test/', refused), (e) => !e.message.includes('secret') && e.message.includes('example.test'));
+  const notFound = async () => ({ ok: false, status: 404 });
+  await assert.rejects(checkReachable('https://user:secret@example.test/', notFound), (e) => !e.message.includes('secret'));
+});
+
+test('findProjectRoot finds the nearest ancestor with a .git entry, else the start folder', async () => {
+  const { findProjectRoot } = await load('visual-qa.mjs');
+  const root = fs.realpathSync(tmp('opm-vqa-root-'));
+  const deep = path.join(root, 'a', 'b');
+  fs.mkdirSync(deep, { recursive: true });
+  fs.mkdirSync(path.join(root, '.git'));
+  assert.equal(findProjectRoot(deep), root);
+  const nested = path.join(root, 'a');
+  fs.writeFileSync(path.join(nested, '.git'), 'gitdir: ../.git/worktrees/x');
+  assert.equal(findProjectRoot(deep), nested);
+  const bare = fs.realpathSync(tmp('opm-vqa-bare-'));
+  assert.equal(findProjectRoot(bare, () => false), bare);
+});
+
+test('assertOutsideProject compares real paths, so a link into the project is inside', async (t) => {
+  const { assertOutsideProject } = await load('visual-qa.mjs');
+  const project = tmp('opm-vqa-real-');
+  const outside = tmp('opm-vqa-link-');
+  const link = path.join(outside, 'link');
+  try {
+    fs.symlinkSync(project, link, 'junction');
+  } catch (error) {
+    t.skip(`symlinks unavailable: ${error.code}`);
+    return;
+  }
+  assert.throws(() => assertOutsideProject(path.join(link, 'shots', 'deep'), project), /inside the project/);
+  assert.doesNotThrow(() => assertOutsideProject(path.join(outside, 'new', 'deep'), project));
+});

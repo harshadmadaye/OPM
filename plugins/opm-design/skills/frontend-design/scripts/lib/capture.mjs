@@ -4,6 +4,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import { browsersPath } from './install.mjs';
+import { redactUrl } from './redact-url.mjs';
 
 export const VIEWPORTS = Object.freeze([{ width: 375, height: 812 }, { width: 1280, height: 800 }]);
 export const OVERFLOW_PROBE_WIDTH = 320;
@@ -59,7 +60,7 @@ const HTTP_ERROR_STATUS = 400;
 
 // A null response happens for file:// pages and is allowed.
 function assertPageLoaded(response, url) {
-  if (response && response.status() >= HTTP_ERROR_STATUS) throw new Error(`${url} answered HTTP ${response.status()}; the page did not render`);
+  if (response && response.status() >= HTTP_ERROR_STATUS) throw new Error(`${redactUrl(url)} answered HTTP ${response.status()}; the page did not render`);
 }
 
 // Pages with SSE or long-poll never go network-idle, so wait for load and give idle a short grace.

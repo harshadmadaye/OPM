@@ -10,6 +10,9 @@ import { selectTool, projectResolver, DOWNLOAD_NOTE } from './lib/tool-ladder.mj
 import { installTools } from './lib/install.mjs';
 import { capture, loadPlaywright, axeSourceFor, VIEWPORTS, OVERFLOW_PROBE_WIDTH, viewportLabel } from './lib/capture.mjs';
 import { designContrast } from './lib/design-contrast.mjs';
+import { redactUrl } from './lib/redact-url.mjs';
+
+export { redactUrl };
 
 export const EXIT = Object.freeze({ ok: 0, error: 1, needsConsent: 2 });
 const FLAGS = Object.freeze(['--mcp', '--install', '--manual']);
@@ -49,8 +52,34 @@ export function toUrl(target, exists = fs.existsSync) {
   throw new UsageError(`${target} is neither an http(s) URL nor an existing file`);
 }
 
+// The nearest ancestor of cwd holding a .git file or folder, else cwd itself.
+export function findProjectRoot(cwd, exists = fs.existsSync) {
+  const start = path.resolve(cwd);
+  for (let dir = start; ; dir = path.dirname(dir)) {
+    if (exists(path.join(dir, '.git'))) return dir;
+    if (path.dirname(dir) === dir) return start;
+  }
+}
+
+// Real path of the deepest existing ancestor, with the not-yet-created remainder appended.
+function realPathOfPlanned(target, realpath = fs.realpathSync) {
+  const remainder = [];
+  let current = path.resolve(target);
+  for (;;) {
+    try {
+      return path.join(realpath(current), ...remainder);
+    } catch (error) {
+      if (error.code !== 'ENOENT' && error.code !== 'ENOTDIR') throw error;
+      const parent = path.dirname(current);
+      if (parent === current) return path.resolve(target);
+      remainder.unshift(path.basename(current));
+      current = parent;
+    }
+  }
+}
+
 export function assertOutsideProject(outDir, projectRoot) {
-  const relative = path.relative(path.resolve(projectRoot), path.resolve(outDir));
+  const relative = path.relative(realPathOfPlanned(projectRoot), realPathOfPlanned(outDir));
   const isOutside = relative === '..' || relative.startsWith('..' + path.sep) || path.isAbsolute(relative);
   if (!isOutside) {
     throw new UsageError(`out-dir ${outDir} is inside the project; use the scratchpad or the OS temp folder`);
@@ -64,9 +93,9 @@ export async function checkReachable(url, fetchImpl = fetch) {
     response = await fetchImpl(url, { method: 'GET', signal: AbortSignal.timeout(REACH_TIMEOUT_MS) });
   } catch (error) {
     const reason = (error.cause && error.cause.code) || error.message;
-    throw new UnreachableError(`Could not reach ${url} (${reason}). Start the dev server, for example with npm run dev, then run visual QA again.`);
+    throw new UnreachableError(`Could not reach ${redactUrl(url)} (${reason}). Start the dev server, for example with npm run dev, then run visual QA again.`);
   }
-  if (!response.ok) throw new UnreachableError(`${url} answered HTTP ${response.status}. Start the dev server or fix the page, then run visual QA again.`);
+  if (!response.ok) throw new UnreachableError(`${redactUrl(url)} answered HTTP ${response.status}. Start the dev server or fix the page, then run visual QA again.`);
 }
 
 function summarize(report) {
@@ -126,26 +155,64 @@ function installOrFallBack(selection) {
   }
 }
 
-async function buildReport({ selection, url, outDir, cwd, contrast }) {
-  if (selection.mode !== 'playwright') return fallbackReport({ tool: selection.mode, url, reason: selection.reason, contrast });
+const MISSING_BROWSER = /Executable doesn't exist|playwright install/i;
+
+// A project Playwright without a browser must not steer toward an unconsented download:
+// resolve again without the project rung and continue down the ladder.
+export function nextSelectionAfterLaunchFailure(selection, error, selectArgs) {
+  if (selection.source !== 'project' || !MISSING_BROWSER.test(error?.message ?? '')) throw error;
+  const firstLine = error.message.split('\n')[0];
+  return {
+    selection: selectTool({ ...selectArgs, resolveInProject: () => null }),
+    reason: `project Playwright has no browser: ${firstLine}`,
+  };
+}
+
+async function buildReport({ selection, url, shownUrl, outDir, cwd, contrast }) {
+  if (selection.mode !== 'playwright') return fallbackReport({ tool: selection.mode, url: shownUrl, reason: selection.reason, contrast });
   const playwright = await loadPlaywright(selection);
   const captured = await capture({ playwright, url, outDir, axeSource: axeSourceFor(selection, cwd) });
-  return playwrightReport({ url, selection, capture: captured, contrast });
+  return playwrightReport({ url: shownUrl, selection, capture: captured, contrast });
+}
+
+function needsConsentMessage(selection) {
+  return `Visual QA tools are not installed. Ask the user first, then rerun with --install to download ${DOWNLOAD_NOTE} into ${selection.toolsDir}, or rerun with --manual.`;
+}
+
+// Builds the report; when a project Playwright has no browser, falls down the ladder once.
+async function reportWithFallback({ selection, selectArgs, ...rest }) {
+  try {
+    return { report: await buildReport({ selection, ...rest }) };
+  } catch (error) {
+    const next = nextSelectionAfterLaunchFailure(selection, error, selectArgs);
+    if (next.selection.mode === 'needs-consent') return { consent: next };
+    const settled = next.selection.mode === 'install' ? installOrFallBack(next.selection) : next.selection;
+    const report = await buildReport({ selection: settled, ...rest });
+    return { report: { ...report, reason: next.reason } };
+  }
 }
 
 export async function run(argv, { env = process.env, cwd = process.cwd() } = {}) {
   const args = parseArgs(argv);
   const url = toUrl(args.target);
-  assertOutsideProject(args.outDir, cwd);
+  assertOutsideProject(args.outDir, findProjectRoot(cwd));
   await checkReachable(url);
-  let selection = selectTool({ env, flags: args.flags, resolveInProject: projectResolver(cwd) });
+  const selectArgs = { env, flags: args.flags };
+  let selection = selectTool({ ...selectArgs, resolveInProject: projectResolver(cwd) });
   if (selection.mode === 'needs-consent') {
-    console.error(`Visual QA tools are not installed. Ask the user first, then rerun with --install to download ${DOWNLOAD_NOTE} into ${selection.toolsDir}, or rerun with --manual.`);
+    console.error(needsConsentMessage(selection));
     return EXIT.needsConsent;
   }
   if (selection.mode === 'install') selection = installOrFallBack(selection);
   fs.mkdirSync(args.outDir, { recursive: true });
-  const report = await buildReport({ selection, url, outDir: args.outDir, cwd, contrast: designContrast(cwd) });
+  const outcome = await reportWithFallback({
+    selection, selectArgs, url, shownUrl: redactUrl(url), outDir: args.outDir, cwd, contrast: designContrast(cwd),
+  });
+  if (outcome.consent) {
+    console.error(`${outcome.consent.reason}. ${needsConsentMessage(outcome.consent.selection)}`);
+    return EXIT.needsConsent;
+  }
+  const { report } = outcome;
   const reportPath = path.join(args.outDir, REPORT_FILE);
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n');
   console.log(report.summary);
