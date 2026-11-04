@@ -25,6 +25,8 @@ The first available rung wins:
 6. `--manual`, or a failed install: the script prints a checklist and the report says
    `visual QA: manual, tools unavailable`. Walk the checklist and report it as manual.
 
+A broken install in `~/.opm/design-tools/` is not repaired automatically: delete that folder, then rerun with `--install` after the user agrees.
+
 ## Exit codes
 
 - 0: a report was written. Read it; a 0 is not a pass.
