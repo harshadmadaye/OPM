@@ -45,7 +45,6 @@ below was copied. These projects shaped the ideas:
 | [vercel-labs/web-interface-guidelines](https://github.com/vercel-labs/web-interface-guidelines) | MIT | written interface rules for the web |
 | [ThomasPraun/ux-flow-designer](https://github.com/ThomasPraun/ux-flow-designer) | MIT | Mermaid flow, state and sequence diagrams for app flows |
 
-Apache-2.0 projects in this table (for example pbakaus/impeccable, the Stitch skills and
-anthropics/skills) were read, and their ideas re-expressed. No Apache-2.0 file or passage is
-reproduced, so no NOTICE file is redistributed. Unlicensed or CC-BY-SA repositories were used as
-reference only and are not listed.
+The Apache-2.0 projects in this table (pbakaus/impeccable and google-labs-code/stitch-skills) were read and their ideas
+re-expressed. No Apache-2.0 file or passage is reproduced, so no NOTICE file is redistributed.
+Sources from the research list whose licence could not be verified are not listed.

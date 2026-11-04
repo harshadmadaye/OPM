@@ -3158,10 +3158,9 @@ below was copied. These projects shaped the ideas:
 |---|---|---|
 <one row per verified source: [owner/repo](https://github.com/owner/repo) | SPDX id | the idea, for example "anti-pattern list behind the R rules">
 
-Apache-2.0 projects in this table (for example pbakaus/impeccable, the Stitch skills and
-anthropics/skills) were read, and their ideas re-expressed. No Apache-2.0 file or passage is
-reproduced, so no NOTICE file is redistributed. Unlicensed or CC-BY-SA repositories were used as
-reference only and are not listed.
+The Apache-2.0 projects in this table (<verified Apache-2.0 sources>) were read and their ideas
+re-expressed. No Apache-2.0 file or passage is reproduced, so no NOTICE file is redistributed.
+Sources from the research list whose licence could not be verified are not listed.
 ```
 
 Fill the table only with sources whose licence you verified, using the real `owner/repo` and SPDX id. If a verified source turns out to be MIT and its wording was adapted closely in any file, add that file's attribution line at the bottom of the file, in the existing `<!-- Adapted from owner/repo (MIT) -->` style.
