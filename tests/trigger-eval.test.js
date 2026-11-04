@@ -3,6 +3,7 @@
 // Run with: node --test tests/trigger-eval.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
@@ -15,6 +16,7 @@ const {
   formatReport,
 } = require('../scripts/evals/trigger-eval.js');
 
+const ROOT = path.resolve(__dirname, '..');
 const SCRIPT = path.resolve(__dirname, '..', 'scripts', 'evals', 'trigger-eval.js');
 
 // Recorded from the 04-03 spike (claude 2.1.273, haiku), trimmed: session ids, uuids,
@@ -75,8 +77,8 @@ test('observedSkill picks the first opm skill other than using-opm, without the 
 });
 
 test('parseArgs reads --yes, --limit and --only', () => {
-  assert.deepEqual(parseArgs([]), { yes: false, limit: null, only: null });
-  assert.deepEqual(parseArgs(['--yes', '--limit', '3', '--only', 'spike']), { yes: true, limit: 3, only: 'spike' });
+  assert.deepEqual(parseArgs([]), { yes: false, limit: null, only: null, suite: 'core' });
+  assert.deepEqual(parseArgs(['--yes', '--limit', '3', '--only', 'spike']), { yes: true, limit: 3, only: 'spike', suite: 'core' });
 });
 
 test('parseArgs rejects a bad limit, an unknown size class and unknown flags', () => {
@@ -129,4 +131,32 @@ test('the CLI refuses to start without --yes and spends nothing', () => {
   assert.equal(result.status, 1);
   assert.match(result.stderr, /spends tokens/);
   assert.match(result.stderr, /--yes/);
+});
+
+test('observedSkill keeps the opm-design prefix and strips only opm:', () => {
+  assert.equal(observedSkill(['opm:using-opm', 'opm-design:frontend-design']), 'opm-design:frontend-design');
+  assert.equal(observedSkill(['opm-design:ux-flows', 'opm:brainstorming']), 'opm-design:ux-flows');
+  assert.equal(observedSkill(['other:thing', 'opm:tdd-workflow']), 'tdd-workflow');
+});
+
+test('parseArgs reads --suite and rejects an unknown suite', () => {
+  assert.equal(parseArgs(['--suite', 'design']).suite, 'design');
+  assert.throws(() => parseArgs(['--suite', 'mobile']), /--suite needs one of: core, design/);
+  assert.throws(() => parseArgs(['--suite']), /--suite/);
+});
+
+test('the design fixture is well formed and the design suite loads both plugins', () => {
+  const { SUITES, SIZE_CLASSES } = require(path.join(ROOT, 'scripts', 'evals', 'trigger-eval.js'));
+  const fixture = JSON.parse(fs.readFileSync(SUITES.design.fixture, 'utf8'));
+  const designSkills = ['opm-design:frontend-design', 'opm-design:design-system', 'opm-design:ux-flows'];
+  for (const entry of fixture) {
+    assert.equal(typeof entry.prompt, 'string');
+    assert.ok(SIZE_CLASSES.includes(entry.sizeClass), entry.sizeClass);
+    assert.equal(typeof entry.expectedSkill, 'string');
+  }
+  const positives = fixture.filter((e) => e.sizeClass === 'design');
+  assert.ok(positives.length >= 10, `need at least 10 design prompts, found ${positives.length}`);
+  for (const skill of designSkills) assert.ok(positives.some((e) => e.expectedSkill === skill), skill);
+  assert.ok(fixture.filter((e) => e.sizeClass !== 'design').length >= 3, 'need near misses');
+  assert.deepEqual(SUITES.design.pluginDirs, [ROOT, path.join(ROOT, 'plugins', 'opm-design')]);
 });

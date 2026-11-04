@@ -1,0 +1,16 @@
+[
+  { "prompt": "build a pricing page for our SaaS with three tiers", "sizeClass": "design", "expectedSkill": "opm-design:frontend-design" },
+  { "prompt": "restyle the settings screen in our React app, it looks dated", "sizeClass": "design", "expectedSkill": "opm-design:frontend-design" },
+  { "prompt": "make the dashboard cards look less generic", "sizeClass": "design", "expectedSkill": "opm-design:frontend-design" },
+  { "prompt": "design a landing page hero for our developer tool", "sizeClass": "design", "expectedSkill": "opm-design:frontend-design" },
+  { "prompt": "create a design system for our new web app", "sizeClass": "design", "expectedSkill": "opm-design:design-system" },
+  { "prompt": "pull the colours and fonts out of our Tailwind config into a style guide", "sizeClass": "design", "expectedSkill": "opm-design:design-system" },
+  { "prompt": "we need design tokens before we start building screens", "sizeClass": "design", "expectedSkill": "opm-design:design-system" },
+  { "prompt": "map the user flows for checkout before we build any screens", "sizeClass": "design", "expectedSkill": "opm-design:ux-flows" },
+  { "prompt": "draw the sign-up and onboarding journey with all its error states", "sizeClass": "design", "expectedSkill": "opm-design:ux-flows" },
+  { "prompt": "list every screen in the booking feature and how they link to each other", "sizeClass": "design", "expectedSkill": "opm-design:ux-flows" },
+  { "prompt": "the save button in SettingsForm.tsx sends the request twice, fix it", "sizeClass": "spike", "expectedSkill": "tdd-workflow" },
+  { "prompt": "the dropdown in Navbar.tsx throws when items is empty", "sizeClass": "spike", "expectedSkill": "tdd-workflow" },
+  { "prompt": "add a GET /invoices endpoint with filtering to the Express API", "sizeClass": "bounded", "expectedSkill": "brainstorming" },
+  { "prompt": "add rate limiting to our public REST API", "sizeClass": "bounded", "expectedSkill": "brainstorming" }
+]

@@ -4,7 +4,7 @@
 // and records which OPM skill it invoked. Spends tokens, so it needs --yes and is not
 // part of npm test. See docs/evals.md.
 //
-//   node scripts/evals/trigger-eval.js --yes [--limit N] [--only <sizeClass>]
+//   node scripts/evals/trigger-eval.js --yes [--limit N] [--only <sizeClass>] [--suite core|design]
 
 const fs = require('node:fs');
 const os = require('node:os');
@@ -12,9 +12,18 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
-const FIXTURE = path.join(REPO_ROOT, 'tests', 'fixtures', 'trigger-prompts.json');
-const SIZE_CLASSES = ['spike', 'bounded', 'multi-week', 'unattended', 'contested'];
+const FIXTURES_DIR = path.join(REPO_ROOT, 'tests', 'fixtures');
+const SUITES = {
+  core: { fixture: path.join(FIXTURES_DIR, 'trigger-prompts.json'), pluginDirs: [REPO_ROOT] },
+  design: {
+    fixture: path.join(FIXTURES_DIR, 'design-trigger-prompts.json'),
+    pluginDirs: [REPO_ROOT, path.join(REPO_ROOT, 'plugins', 'opm-design')],
+  },
+};
+const SIZE_CLASSES = ['spike', 'bounded', 'multi-week', 'unattended', 'contested', 'design'];
 const OPM_PREFIX = 'opm:';
+// Skills from these plugins count as routing choices; only the core prefix is stripped.
+const ROUTED_PREFIXES = [OPM_PREFIX, 'opm-design:'];
 // using-opm is already injected by the SessionStart hook; loading it again is not a routing choice.
 const FRONT_DOOR_SKILL = 'opm:using-opm';
 const EVAL_MODEL = 'haiku';
@@ -25,7 +34,7 @@ const MAX_OUTPUT_BYTES = 32 * 1024 * 1024;
 const COST_WARNING = [
   'trigger-eval spends tokens: one headless claude run per prompt',
   `(${EVAL_MODEL}, about $0.02 each, about $0.70 for all 30).`,
-  'Re-run with --yes to start, optionally with --limit N or --only <sizeClass>.',
+  'Re-run with --yes to start, optionally with --limit N, --only <sizeClass> or --suite design.',
 ].join(' ');
 
 // Returns the skill names of every Skill tool_use in stream-json output, in order.
@@ -52,14 +61,16 @@ function parseSkillInvocations(streamJsonText) {
   return skills;
 }
 
-// The first OPM skill that is a routing choice, without the opm: prefix, or null.
+// The first OPM skill that is a routing choice, or null. Core skills lose the opm: prefix;
+// add-on skills keep theirs (opm-design:frontend-design).
 function observedSkill(skillNames) {
-  const chosen = skillNames.find((name) => name.startsWith(OPM_PREFIX) && name !== FRONT_DOOR_SKILL);
-  return chosen ? chosen.slice(OPM_PREFIX.length) : null;
+  const chosen = skillNames.find((name) => ROUTED_PREFIXES.some((p) => name.startsWith(p)) && name !== FRONT_DOOR_SKILL);
+  if (!chosen) return null;
+  return chosen.startsWith(OPM_PREFIX) ? chosen.slice(OPM_PREFIX.length) : chosen;
 }
 
 function parseArgs(argv) {
-  const options = { yes: false, limit: null, only: null };
+  const options = { yes: false, limit: null, only: null, suite: 'core' };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--yes') {
@@ -73,6 +84,11 @@ function parseArgs(argv) {
       const sizeClass = argv[i + 1];
       if (!SIZE_CLASSES.includes(sizeClass)) throw new Error(`--only needs one of: ${SIZE_CLASSES.join(', ')}`);
       options.only = sizeClass;
+      i += 1;
+    } else if (arg === '--suite') {
+      const suite = argv[i + 1];
+      if (!Object.prototype.hasOwnProperty.call(SUITES, suite)) throw new Error(`--suite needs one of: ${Object.keys(SUITES).join(', ')}`);
+      options.suite = suite;
       i += 1;
     } else {
       throw new Error(`unknown option ${arg}`);
@@ -120,7 +136,7 @@ function formatReport(rows) {
 }
 
 // Runs one prompt headless in a throwaway directory with this checkout loaded as the plugin.
-function runHeadless(prompt) {
+function runHeadless(prompt, pluginDirs) {
   const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'opm-trigger-eval-'));
   try {
     const result = spawnSync('claude', [
@@ -128,7 +144,7 @@ function runHeadless(prompt) {
       '--output-format', 'stream-json', '--verbose',
       '--model', EVAL_MODEL, '--max-turns', String(MAX_TURNS),
       '--setting-sources', 'project,local', '--no-session-persistence',
-      '--plugin-dir', REPO_ROOT,
+      ...pluginDirs.flatMap((dir) => ['--plugin-dir', dir]),
     ], { cwd: workDir, encoding: 'utf8', timeout: RUN_TIMEOUT_MS, maxBuffer: MAX_OUTPUT_BYTES });
     if (result.error) throw new Error(`could not run claude: ${result.error.message}`);
     // Hitting the turn limit exits 1 but still prints the events we need.
@@ -151,8 +167,9 @@ async function main(argv) {
     console.error(COST_WARNING);
     return 1;
   }
-  const prompts = selectPrompts(JSON.parse(fs.readFileSync(FIXTURE, 'utf8')), options);
-  const rows = await runEval({ prompts, run: async (prompt) => runHeadless(prompt) });
+  const suite = SUITES[options.suite];
+  const prompts = selectPrompts(JSON.parse(fs.readFileSync(suite.fixture, 'utf8')), options);
+  const rows = await runEval({ prompts, run: async (prompt) => runHeadless(prompt, suite.pluginDirs) });
   console.log(formatReport(rows));
   return 0;
 }
@@ -164,4 +181,4 @@ if (require.main === module) {
   );
 }
 
-module.exports = { parseSkillInvocations, observedSkill, parseArgs, selectPrompts, runEval, formatReport };
+module.exports = { parseSkillInvocations, observedSkill, parseArgs, selectPrompts, runEval, formatReport, SUITES, SIZE_CLASSES };
