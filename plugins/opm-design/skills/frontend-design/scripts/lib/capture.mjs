@@ -9,15 +9,26 @@ export const VIEWPORTS = Object.freeze([{ width: 375, height: 812 }, { width: 12
 export const OVERFLOW_PROBE_WIDTH = 320;
 const OVERFLOW_PROBE_HEIGHT = 640;
 const NAV_TIMEOUT_MS = 30000;
+export const IDLE_GRACE_MS = 3000;
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
 
 export const viewportLabel = ({ width, height }) => `${width}x${height}`;
+
+// Where PLAYWRIGHT_BROWSERS_PATH should point, or null to leave the environment alone.
+// A home install always owns its browsers; an OPM_DESIGN_TOOLS folder only fills a gap.
+export function browsersPathFor(selection, env = process.env, exists = fs.existsSync) {
+  if (selection.source === 'home') return browsersPath(selection.toolsDir);
+  if (selection.source !== 'env' || env.PLAYWRIGHT_BROWSERS_PATH) return null;
+  const candidate = browsersPath(selection.toolsDir);
+  return exists(candidate) ? candidate : null;
+}
 
 export async function loadPlaywright(selection) {
   if (selection.source === 'project') {
     return assertChromium(await import(pathToFileURL(selection.modulePath).href), selection.modulePath);
   }
-  process.env.PLAYWRIGHT_BROWSERS_PATH = browsersPath(selection.toolsDir);
+  const browsers = browsersPathFor(selection);
+  if (browsers) process.env.PLAYWRIGHT_BROWSERS_PATH = browsers;
   const modulePath = path.join(selection.toolsDir, 'node_modules', 'playwright', 'index.js');
   return assertChromium(await import(pathToFileURL(modulePath).href), modulePath);
 }
@@ -51,6 +62,17 @@ function assertPageLoaded(response, url) {
   if (response && response.status() >= HTTP_ERROR_STATUS) throw new Error(`${url} answered HTTP ${response.status()}; the page did not render`);
 }
 
+// Pages with SSE or long-poll never go network-idle, so wait for load and give idle a short grace.
+export async function gotoSettled(page, url) {
+  const response = await page.goto(url, { waitUntil: 'load', timeout: NAV_TIMEOUT_MS });
+  try {
+    await page.waitForLoadState('networkidle', { timeout: IDLE_GRACE_MS });
+  } catch (error) {
+    if (error.name !== 'TimeoutError') throw error;
+  }
+  return response;
+}
+
 const hasOverflow = (page) => page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
 
 async function runAxe(page, axeSource) {
@@ -67,7 +89,7 @@ async function captureViewport(browser, { url, outDir, viewport, axeSource }) {
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('pageerror', (error) => consoleErrors.push(error.message));
   try {
-    assertPageLoaded(await page.goto(url, { waitUntil: 'networkidle', timeout: NAV_TIMEOUT_MS }), url);
+    assertPageLoaded(await gotoSettled(page, url), url);
     const screenshot = path.join(outDir, `${viewportLabel(viewport)}.png`);
     await page.screenshot({ path: screenshot, fullPage: true });
     return {
@@ -85,7 +107,7 @@ async function captureViewport(browser, { url, outDir, viewport, axeSource }) {
 async function probeOverflow(browser, url) {
   const page = await browser.newPage({ viewport: { width: OVERFLOW_PROBE_WIDTH, height: OVERFLOW_PROBE_HEIGHT }, bypassCSP: true });
   try {
-    assertPageLoaded(await page.goto(url, { waitUntil: 'networkidle', timeout: NAV_TIMEOUT_MS }), url);
+    assertPageLoaded(await gotoSettled(page, url), url);
     return await hasOverflow(page);
   } finally {
     await page.close();

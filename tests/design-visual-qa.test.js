@@ -162,3 +162,34 @@ test('assertOutsideProject treats ..foo inside the project as inside', async () 
   const project = tmp('opm-vqa-project-');
   assert.throws(() => assertOutsideProject(path.join(project, '..foo'), project), /inside the project/);
 });
+
+test('browsersPathFor leaves an env-supplied PLAYWRIGHT_BROWSERS_PATH alone', async () => {
+  const { browsersPathFor } = await load('lib/capture.mjs');
+  const tools = path.join('/t', 'tools');
+  const browsers = path.join(tools, 'browsers');
+  const present = () => true;
+  const absent = () => false;
+  assert.equal(browsersPathFor({ source: 'home', toolsDir: tools }, {}, absent), browsers);
+  assert.equal(browsersPathFor({ source: 'home', toolsDir: tools }, { PLAYWRIGHT_BROWSERS_PATH: '/mine' }, present), browsers);
+  assert.equal(browsersPathFor({ source: 'env', toolsDir: tools }, { PLAYWRIGHT_BROWSERS_PATH: '/mine' }, present), null);
+  assert.equal(browsersPathFor({ source: 'env', toolsDir: tools }, {}, absent), null);
+  assert.equal(browsersPathFor({ source: 'env', toolsDir: tools }, {}, present), browsers);
+});
+
+test('gotoSettled waits for load, tolerates an idle timeout and rethrows other errors', async () => {
+  const { gotoSettled, IDLE_GRACE_MS } = await load('lib/capture.mjs');
+  assert.equal(IDLE_GRACE_MS, 3000);
+  const calls = [];
+  const fakePage = (idleError) => ({
+    goto: async (url, options) => { calls.push(['goto', options.waitUntil]); return 'response'; },
+    waitForLoadState: async (state, options) => {
+      calls.push(['idle', state, options.timeout]);
+      if (idleError) throw idleError;
+    },
+  });
+  assert.equal(await gotoSettled(fakePage(null), 'http://x/'), 'response');
+  assert.deepEqual(calls, [['goto', 'load'], ['idle', 'networkidle', 3000]]);
+  const timeout = Object.assign(new Error('t'), { name: 'TimeoutError' });
+  assert.equal(await gotoSettled(fakePage(timeout), 'http://x/'), 'response');
+  await assert.rejects(gotoSettled(fakePage(new Error('boom')), 'http://x/'), /boom/);
+});
