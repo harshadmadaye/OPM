@@ -51,19 +51,22 @@ export function toUrl(target, exists = fs.existsSync) {
 
 export function assertOutsideProject(outDir, projectRoot) {
   const relative = path.relative(path.resolve(projectRoot), path.resolve(outDir));
-  if (!relative.startsWith('..') && !path.isAbsolute(relative)) {
+  const isOutside = relative === '..' || relative.startsWith('..' + path.sep) || path.isAbsolute(relative);
+  if (!isOutside) {
     throw new UsageError(`out-dir ${outDir} is inside the project; use the scratchpad or the OS temp folder`);
   }
 }
 
 export async function checkReachable(url, fetchImpl = fetch) {
   if (!/^https?:/i.test(url)) return;
+  let response;
   try {
-    await fetchImpl(url, { method: 'GET', signal: AbortSignal.timeout(REACH_TIMEOUT_MS) });
+    response = await fetchImpl(url, { method: 'GET', signal: AbortSignal.timeout(REACH_TIMEOUT_MS) });
   } catch (error) {
     const reason = (error.cause && error.cause.code) || error.message;
     throw new UnreachableError(`Could not reach ${url} (${reason}). Start the dev server, for example with npm run dev, then run visual QA again.`);
   }
+  if (!response.ok) throw new UnreachableError(`${url} answered HTTP ${response.status}. Start the dev server or fix the page, then run visual QA again.`);
 }
 
 function summarize(report) {
@@ -89,7 +92,7 @@ export function playwrightReport({ url, selection, capture: captured, contrast }
     consoleErrors: byViewport('consoleErrors'),
     horizontalOverflow: { ...byViewport('horizontalOverflow'), [OVERFLOW_PROBE_WIDTH]: captured.probe },
     axe: isAxeAvailable ? byViewport('axe') : 'unavailable',
-    accessibility: isAxeAvailable ? 'full' : contrast ? 'partial' : 'unavailable',
+    accessibility: isAxeAvailable ? 'full' : contrast && !contrast.error ? 'partial' : 'unavailable',
     contrast,
   };
   return { ...report, summary: summarize(report) };

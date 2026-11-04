@@ -15,12 +15,17 @@ export const viewportLabel = ({ width, height }) => `${width}x${height}`;
 
 export async function loadPlaywright(selection) {
   if (selection.source === 'project') {
-    const mod = await import(pathToFileURL(selection.modulePath).href);
-    return mod.default ?? mod;
+    return assertChromium(await import(pathToFileURL(selection.modulePath).href), selection.modulePath);
   }
   process.env.PLAYWRIGHT_BROWSERS_PATH = browsersPath(selection.toolsDir);
-  const mod = await import(pathToFileURL(path.join(selection.toolsDir, 'node_modules', 'playwright', 'index.js')).href);
-  return mod.default ?? mod;
+  const modulePath = path.join(selection.toolsDir, 'node_modules', 'playwright', 'index.js');
+  return assertChromium(await import(pathToFileURL(modulePath).href), modulePath);
+}
+
+function assertChromium(mod, modulePath) {
+  const playwright = mod.default ?? mod;
+  if (typeof playwright?.chromium?.launch !== 'function') throw new Error(`${modulePath} does not export chromium; install playwright`);
+  return playwright;
 }
 
 export function axeSourceFor(selection, cwd) {
@@ -39,6 +44,13 @@ function resolveOrNull(projectRequire, request) {
   }
 }
 
+const HTTP_ERROR_STATUS = 400;
+
+// A null response happens for file:// pages and is allowed.
+function assertPageLoaded(response, url) {
+  if (response && response.status() >= HTTP_ERROR_STATUS) throw new Error(`${url} answered HTTP ${response.status()}; the page did not render`);
+}
+
 const hasOverflow = (page) => page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
 
 async function runAxe(page, axeSource) {
@@ -50,12 +62,12 @@ async function runAxe(page, axeSource) {
 }
 
 async function captureViewport(browser, { url, outDir, viewport, axeSource }) {
-  const page = await browser.newPage({ viewport });
+  const page = await browser.newPage({ viewport, bypassCSP: true });
   const consoleErrors = [];
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('pageerror', (error) => consoleErrors.push(error.message));
   try {
-    await page.goto(url, { waitUntil: 'networkidle', timeout: NAV_TIMEOUT_MS });
+    assertPageLoaded(await page.goto(url, { waitUntil: 'networkidle', timeout: NAV_TIMEOUT_MS }), url);
     const screenshot = path.join(outDir, `${viewportLabel(viewport)}.png`);
     await page.screenshot({ path: screenshot, fullPage: true });
     return {
@@ -71,9 +83,9 @@ async function captureViewport(browser, { url, outDir, viewport, axeSource }) {
 }
 
 async function probeOverflow(browser, url) {
-  const page = await browser.newPage({ viewport: { width: OVERFLOW_PROBE_WIDTH, height: OVERFLOW_PROBE_HEIGHT } });
+  const page = await browser.newPage({ viewport: { width: OVERFLOW_PROBE_WIDTH, height: OVERFLOW_PROBE_HEIGHT }, bypassCSP: true });
   try {
-    await page.goto(url, { waitUntil: 'networkidle', timeout: NAV_TIMEOUT_MS });
+    assertPageLoaded(await page.goto(url, { waitUntil: 'networkidle', timeout: NAV_TIMEOUT_MS }), url);
     return await hasOverflow(page);
   } finally {
     await page.close();

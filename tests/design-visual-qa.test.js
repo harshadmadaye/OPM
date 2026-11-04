@@ -18,7 +18,8 @@ const CLI_TIMEOUT_MS = 20000;
 
 const envInstall = path.join(os.tmpdir(), 'tools-env');
 const homeInstall = path.join(os.tmpdir(), 'tools-home');
-const installed = (...dirs) => (p) => dirs.some((d) => p === path.join(d, 'node_modules', 'playwright', 'package.json'));
+const installed = (...dirs) => (p) => dirs.some((d) => p === path.join(d, 'node_modules', 'playwright', 'package.json') || p === path.join(d, '.opm-installed'));
+const withoutMarker = (...dirs) => (p) => dirs.some((d) => p === path.join(d, 'node_modules', 'playwright', 'package.json'));
 
 test('the tool ladder picks the first available rung', async () => {
   const { selectTool } = await load('lib/tool-ladder.mjs');
@@ -125,4 +126,39 @@ test('designContrast reads DESIGN.md tokens when present', async () => {
   assert.equal(designContrast(dir), null);
   fs.writeFileSync(path.join(dir, 'DESIGN.md'), '---\ncolors:\n  ink:\n    value: "#000000"\n    role: text\n  paper:\n    value: "#FFFFFF"\n    role: surface\n---\n');
   assert.deepEqual(designContrast(dir), { text: 'ink', surface: 'paper', ratio: 21, passes: true, source: 'DESIGN.md' });
+});
+
+test('a home install without the marker is not trusted; --install repairs it', async () => {
+  const { selectTool, INSTALL_MARKER } = await load('lib/tool-ladder.mjs');
+  assert.equal(INSTALL_MARKER, '.opm-installed');
+  const base = { env: {}, flags: {}, resolveInProject: () => null, toolsDir: homeInstall };
+  assert.equal(selectTool({ ...base, exists: withoutMarker(homeInstall) }).mode, 'needs-consent');
+  assert.deepEqual(selectTool({ ...base, flags: { install: true }, exists: withoutMarker(homeInstall) }), { mode: 'install', toolsDir: homeInstall });
+  assert.equal(selectTool({ ...base, exists: installed(homeInstall) }).source, 'home');
+});
+
+test('npmInvocation handles npm_execpath, win32 quoting and plain npm', async () => {
+  const { npmInvocation } = await load('lib/install.mjs');
+  const args = ['install', '--prefix', 'C:\\My Tools\\x'];
+  assert.deepEqual(npmInvocation(args, { platform: 'win32', npmExecPath: '/n/npm-cli.js', execPath: '/node' }), { command: '/node', args: ['/n/npm-cli.js', ...args], shell: false });
+  assert.deepEqual(npmInvocation(args, { platform: 'win32', npmExecPath: '', execPath: '/node' }), { command: 'npm', args: ['install', '--prefix', '"C:\\My Tools\\x"'], shell: true });
+  assert.deepEqual(npmInvocation(args, { platform: 'linux', npmExecPath: '', execPath: '/node' }), { command: 'npm', args, shell: false });
+});
+
+test('checkReachable rejects an HTTP error status', async () => {
+  const { checkReachable } = await load('visual-qa.mjs');
+  await assert.rejects(checkReachable('http://localhost:5173/', async () => ({ ok: false, status: 500 })), /HTTP 500/);
+  await assert.doesNotReject(checkReachable('http://localhost:5173/', async () => ({ ok: true, status: 200 })));
+});
+
+test('a contrast error is not a partial accessibility result', async () => {
+  const { playwrightReport } = await load('visual-qa.mjs');
+  const capture = { results: [{ viewport: '375x812', screenshot: '/o/a.png', consoleErrors: [], horizontalOverflow: false, axe: 'unavailable' }], probe: false };
+  assert.equal(playwrightReport({ url: 'http://x/', selection: { source: 'home' }, capture, contrast: { error: 'DESIGN.md bad' } }).accessibility, 'unavailable');
+});
+
+test('assertOutsideProject treats ..foo inside the project as inside', async () => {
+  const { assertOutsideProject } = await load('visual-qa.mjs');
+  const project = tmp('opm-vqa-project-');
+  assert.throws(() => assertOutsideProject(path.join(project, '..foo'), project), /inside the project/);
 });
