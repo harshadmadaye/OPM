@@ -81,3 +81,28 @@ test('package.json declares the tested Claude Code range and a modsMin no newer 
   assert.ok(compare(low, high) <= 0, 'range low is above its high');
   assert.ok(compare(declared.modsMin, high) <= 0, 'modsMin is above the tested upper bound');
 });
+
+test('opm-design ships its three skills and agent, and core points to it without depending on it', () => {
+  const design = path.join(ROOT, 'plugins', 'opm-design');
+  for (const skill of ['frontend-design', 'design-system', 'ux-flows']) {
+    assert.ok(fs.existsSync(path.join(design, 'skills', skill, 'SKILL.md')), `${skill} SKILL.md missing`);
+  }
+  assert.ok(fs.existsSync(path.join(design, 'agents', 'design-reviewer.md')));
+  assert.ok(fs.existsSync(path.join(design, 'shared', 'craft-floor.md')));
+  const pointer = 'Optional: `/opm-design:frontend-design`, `/opm-design:design-system` and `/opm-design:ux-flows` for UI work (install the opm-design plugin first).';
+  const usingOpm = fs.readFileSync(path.join(ROOT, 'skills', 'using-opm', 'SKILL.md'), 'utf8');
+  assert.ok(usingOpm.includes(pointer), 'using-opm does not carry the opm-design pointer line');
+  assert.equal(usingOpm.split('opm-design:').length - 1, 3, 'using-opm mentions opm-design only in the pointer');
+  const fullLoop = fs.readFileSync(path.join(ROOT, 'skills', 'verification-before-completion', 'references', 'full-loop.md'), 'utf8');
+  assert.match(fullLoop, /opm-design.*visual-qa\.json.*design-reviewer/);
+});
+
+test('the README and the notices cover opm-design', () => {
+  const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
+  assert.ok(readme.includes('claude plugin install opm-design@opm'));
+  assert.ok(readme.includes('### 🎨 `opm-design`'));
+  assert.match(readme, /plugins\/ +opm-video and opm-design/);
+  const notices = fs.readFileSync(path.join(ROOT, 'THIRD_PARTY_NOTICES.md'), 'utf8');
+  assert.match(notices, /## opm-design sources/);
+  assert.match(notices, /Apache-2\.0/);
+});

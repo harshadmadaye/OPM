@@ -52,6 +52,7 @@ Read references/orchestration.md when you are about to escalate.
 5. `opm:compound-learnings` - capture anything non-obvious learned along the way.
 
 Optional: `/opm-video:explainer-video <path>` turns this into a narrated explainer (install the opm-video plugin first).
+Optional: `/opm-design:frontend-design`, `/opm-design:design-system` and `/opm-design:ux-flows` for UI work (install the opm-design plugin first).
 
 ## Red Flags
 

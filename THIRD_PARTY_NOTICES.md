@@ -30,3 +30,22 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## opm-design sources
+
+opm-design's rules, skills and scripts are written in OPM's own words. No file from the projects
+below was copied. These projects shaped the ideas:
+
+| Project | Licence | Ideas drawn on |
+|---|---|---|
+| [Nutlope/hallmark](https://github.com/Nutlope/hallmark) | MIT | naming and banning the default look of AI-built UI |
+| [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Apache-2.0 | a shared design vocabulary, plus critique and audit passes |
+| [google-labs-code/stitch-skills](https://github.com/google-labs-code/stitch-skills) | Apache-2.0 | design-system documents that agents can read |
+| [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | MIT | design intelligence applied across platforms |
+| [vercel-labs/web-interface-guidelines](https://github.com/vercel-labs/web-interface-guidelines) | MIT | written interface rules for the web |
+| [ThomasPraun/ux-flow-designer](https://github.com/ThomasPraun/ux-flow-designer) | MIT | Mermaid flow, state and sequence diagrams for app flows |
+
+Apache-2.0 projects in this table (for example pbakaus/impeccable, the Stitch skills and
+anthropics/skills) were read, and their ideas re-expressed. No Apache-2.0 file or passage is
+reproduced, so no NOTICE file is redistributed. Unlicensed or CC-BY-SA repositories were used as
+reference only and are not listed.

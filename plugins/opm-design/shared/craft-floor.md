@@ -65,3 +65,5 @@ Example: `- R-01 | src/Hero.tsx:12 | Brand guide v3 requires the violet-to-indig
 | P-01 | Editorial restraint: no serif display faces; one sans family throughout |
 | P-02 | No tracked-out uppercase labels |
 | P-03 | No cream or beige page backgrounds; pure white or a neutral grey surface |
+
+<!-- Rule ideas drawn from Nutlope/hallmark, pbakaus/impeccable, google-labs-code/stitch-skills, nextlevelbuilder/ui-ux-pro-max-skill and vercel-labs/web-interface-guidelines; written in OPM's own words. See THIRD_PARTY_NOTICES.md. -->

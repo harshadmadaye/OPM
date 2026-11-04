@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+**New optional plugin: `opm-design`** (`claude plugin install opm-design@opm`)
+
+- `frontend-design`: a direction scored on six axes before code, design tokens and all eight interaction states while building, then visual QA and an independent `design-reviewer` verdict (`ship`, `fix`, `rebuild`, `recapture`).
+- `design-system`: create or extract a `DESIGN.md`, validated for required tokens, hex values, text and surface roles, and F-01 contrast.
+- `ux-flows`: use cases approved before diagrams, Mermaid flow, state and sequence diagrams, a screen inventory checked for dead ends and orphans, and a handoff to `writing-plans`.
+- One craft-floor rules file with stable IDs (`F-*` never waived, `R-*` waivable with evidence, `N-*` craft notes).
+- Visual QA uses the project's Playwright, or asks before a pinned ~150 MB install into `~/.opm/design-tools`, or falls back to a manual checklist.
+- Core: one pointer line in `using-opm`, one line in the full-gate reference, and `npm run tokens` now reports add-on cost and caps add-on skills at 1,200 tokens.
+- Trigger eval: `--suite design` with 14 prompts. **Authored, not run.**
+
 ## 0.10.0 - 2026-11-03
 
 OPM 0.10 protects the developer's judgment on long runs. The numbers in brackets are the items in `docs/specs/2026-11-03-opm-0.10.md`.

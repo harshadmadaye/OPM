@@ -35,4 +35,5 @@ test('npm package ships only the allowlisted files', { timeout: PACK_TIMEOUT_MS 
   assert.deepEqual(unexpected, [], `files outside the allowlist would be published: ${unexpected.join(', ')}`);
   assert.ok(paths.includes('bin/install.js'), 'the installer must be in the package');
   assert.ok(paths.includes('package.json'), 'package.json must be in the package');
+  assert.ok(!paths.some((file) => file.startsWith('plugins/')), 'add-on plugins (opm-video, opm-design) must not ship in the npm package');
 });
