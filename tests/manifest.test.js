@@ -18,15 +18,33 @@ test('plugin.json and marketplace.json carry the same version and it heads the c
   assert.equal(first[1], plugin.version);
 });
 
-test('the marketplace lists core and the optional opm-video plugin, and only opm-video ships explainer-video', () => {
+test('the marketplace lists core and the optional opm-video and opm-design plugins, and only opm-video ships explainer-video', () => {
   const marketplace = read('.claude-plugin/marketplace.json');
-  assert.deepEqual(marketplace.plugins.map((p) => [p.name, p.source]), [['opm', './'], ['opm-video', './plugins/opm-video']]);
+  assert.deepEqual(marketplace.plugins.map((p) => [p.name, p.source]), [
+    ['opm', './'],
+    ['opm-video', './plugins/opm-video'],
+    ['opm-design', './plugins/opm-design'],
+  ]);
   const video = read('plugins/opm-video/.claude-plugin/plugin.json');
   assert.equal(video.name, 'opm-video');
   assert.equal(video.version, read('.claude-plugin/plugin.json').version);
   assert.match(video.description, /Microsoft cloud/, 'opm-video must disclose the cloud text-to-speech route');
   assert.ok(fs.existsSync(path.join(ROOT, 'plugins', 'opm-video', 'skills', 'explainer-video', 'SKILL.md')));
   assert.ok(!fs.existsSync(path.join(ROOT, 'skills', 'explainer-video')), 'core must not register explainer-video');
+});
+
+test('opm-design is on the core version and discloses its consented download', () => {
+  const design = read('plugins/opm-design/.claude-plugin/plugin.json');
+  assert.equal(design.name, 'opm-design');
+  assert.equal(design.version, read('.claude-plugin/plugin.json').version);
+  for (const text of [design.description, read('.claude-plugin/marketplace.json').plugins.find((p) => p.name === 'opm-design').description]) {
+    assert.match(text, /asks before/, 'opm-design must say it asks before downloading');
+    assert.match(text, /150 MB/, 'opm-design must state the download size');
+    assert.match(text, /~\/\.opm\/design-tools/, 'opm-design must name the install folder');
+  }
+  for (const core of ['frontend-design', 'design-system', 'ux-flows']) {
+    assert.ok(!fs.existsSync(path.join(ROOT, 'skills', core)), `core must not register ${core}`);
+  }
 });
 
 test('every skill directory is listed in the README and using-opm names brew-idea', () => {
