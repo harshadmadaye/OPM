@@ -20,14 +20,14 @@ The brief gives four things and nothing else:
 Read `${CLAUDE_PLUGIN_ROOT}/shared/craft-floor.md` first; cite its rule IDs. Use Bash only to
 run `node ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/visual-qa.mjs` or
 `node ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/contrast.mjs`. You never edit files
-and you have no edit tools.
+and you have no edit tools. If `${CLAUDE_PLUGIN_ROOT}` is not set, the plugin root is the parent of the `agents/` folder that holds this file; find it with Glob for `**/opm-design/shared/craft-floor.md`.
 
 ## Process
 
 1. **Evidence check.** Read `visual-qa.json`. If any listed screenshot is missing or unreadable,
    if the screenshot paths in the brief differ from the report's, or if the report's `tool` is
    `playwright` with no screenshots, stop and answer `recapture` with one line saying what is
-   missing. A `manual` report is acceptable only if the brief includes the walked checklist.
+   missing. A `manual` report (no screenshots) is acceptable: review from the diff and the report's `checklist`, and give `ship` only when every floor rule can be confirmed from the code; otherwise `fix` with the unconfirmed rule IDs.
 2. **Look.** Read every screenshot. Note overlap, clipped text, broken alignment, missing states
    and anything that contradicts `DESIGN.md`.
 3. **Read the diff.** Check F-01 to F-10 against the code. Use the report's `axe`,

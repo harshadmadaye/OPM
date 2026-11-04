@@ -12,7 +12,7 @@ Files go in `docs/ux-flows/<feature>/`, with `<feature>` in kebab-case. `P/` bel
 
 ## Size first
 
-A single-screen change gets one use case and one state diagram, with no inventory and no
+A single-screen change gets one use case in `use-cases.md` and one state diagram in `flows.md`, with no inventory and no
 handoff. Everything else runs all four steps.
 
 ## 1. Use cases
