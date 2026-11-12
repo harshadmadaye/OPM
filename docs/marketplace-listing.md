@@ -11,6 +11,7 @@ step is done.
 
 - Plugin: `opm` (display name "OPM Engineering Workflow")
 - Optional add-on: `opm-video` (display name "OPM Explainer Video")
+- Optional add-on: `opm-design` (display name "OPM Design")
 - Marketplace: `opm`, at `harshadmadaye/OPM`
 
 ## Descriptions (drafts)
@@ -47,6 +48,7 @@ ai-coding-assistant, workflow.
 claude plugin marketplace add harshadmadaye/OPM
 claude plugin install opm@opm
 claude plugin install opm-video@opm   # optional, after the core
+claude plugin install opm-design@opm  # optional, after the core
 ```
 
 Or, for the plugin plus the coding rules: `npx opm-core@latest`.
@@ -62,6 +64,7 @@ Or, for the plugin plus the coding rules: `npx opm-core@latest`.
 - opm-video only: a headless browser (Chrome, Chromium, Edge or Brave), and
   Python for the neural voice. It installs pinned ffmpeg, ffprobe and edge-tts
   into `~/.opm/explainer-video-tools` on first build.
+- opm-design only: visual QA uses the project's Playwright, or with consent installs pinned Playwright, axe-core and Chromium (about 150 MB) into `~/.opm/design-tools`. Without them it falls back to a manual checklist.
 
 ## What the hooks and the mod touch
 
@@ -100,6 +103,7 @@ the hook-bypass check each register one.
 - opm-video: the neural voice uses edge-tts, which sends the narration text to
   a Microsoft cloud speech service. The skill asks first, and the local OS
   voice keeps everything on the machine.
+- opm-design: makes no network calls except the consented one-time download from the npm registry and the Playwright browser CDN, and loading the page under test.
 
 ## Support
 

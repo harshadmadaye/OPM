@@ -56,6 +56,8 @@ Run the full suite for the affected stack, not just the tests you wrote. Record 
 passed, failed, skipped, and coverage percentage if the project measures it. Any new `skip` or
 `only` markers must be explained.
 
+UI changes with the opm-design plugin installed: attach the `visual-qa.json` summary line and the `design-reviewer` verdict from `/opm-design:frontend-design` step 3 (small changes: the summary line only, no reviewer). A `fix`, `rebuild` or `recapture` verdict fails this gate.
+
 ### 5. Secrets and debug residue
 Scan the diff, not the whole repo, so pre-existing noise does not hide new problems:
 

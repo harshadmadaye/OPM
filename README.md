@@ -328,8 +328,8 @@ No network calls and no model calls.
 
 ## Optional plugins
 
-The marketplace carries one optional plugin beside the core. It is kept out of
-`opm` so the core stays small and ships no video toolchain.
+The marketplace carries two optional plugins beside the core. They are kept out of
+`opm` so the core stays small and ships no video or browser toolchain.
 
 ### 🎬 `opm-video` — turn a spec into a narrated video
 
@@ -373,6 +373,40 @@ and on first build it installs pinned ffmpeg, ffprobe and edge-tts into
 `~/.opm/explainer-video-tools`. Python is needed for the neural voice.
 **The neural voice sends the narration text to Microsoft's cloud speech service
 through edge-tts**; pick the local OS voice and nothing leaves your machine.
+
+### 🎨 `opm-design` — direction, flows and a second pair of eyes for UI
+
+AI-built UI tends to look the same: purple gradients, three identical cards, centred
+everything, and buttons with no focus state. `opm-design` makes Claude set a direction before
+writing UI code, holds every build to a written craft floor (contrast, focus, motion, tap
+targets, no invented stats), and then checks the result the way a person would, by looking at
+it.
+
+```
+/opm-design:frontend-design   build or redesign a page or component
+/opm-design:design-system     create or extract a validated DESIGN.md
+/opm-design:ux-flows          use cases, Mermaid flows and a screen inventory before any screen
+```
+
+- **Visual QA** screenshots the page at phone and desktop widths, checks horizontal scroll down
+  to 320px, collects console errors and runs axe-core. An independent `design-reviewer` agent
+  that never saw the build reasoning reads the screenshots and answers `ship`, `fix`, `rebuild`
+  or `recapture`.
+- **Rules have IDs** (`F-01` contrast, `R-01` gradients). Floor rules are never waived. AI-default
+  "reflexes" can be kept only with a written waiver that cites evidence.
+- **Flows before screens:** `ux-flows` stops for your approval of the use cases, then checks the
+  screen inventory for dead ends and orphans and hands a navigation table to `writing-plans`.
+
+Install it after the core:
+
+```bash
+claude plugin install opm-design@opm
+```
+
+Visual QA uses your project's own Playwright if it has one. Otherwise it **asks before
+downloading** pinned Playwright, axe-core and Chromium (about 150 MB) into
+`~/.opm/design-tools`. Say no and you get a manual checklist instead, reported as manual.
+Web first; Flutter gets the token mapping and the rules, but no visual QA yet.
 
 ---
 
@@ -459,7 +493,7 @@ let through on purpose, and what is out of scope.
 .claude-plugin/   plugin.json, marketplace.json
 agents/           5 subagents
 skills/           14 skills (SKILL.md plus templates/scripts where needed)
-plugins/          opm-video, the optional explainer-video plugin
+plugins/          opm-video and opm-design, the optional add-on plugins
 hooks/            hooks.json, 6 dependency-free Node scripts and mod/ (the hooks module)
 rules/            copied into <repo>/.claude/rules/opm/ by the installer
 bin/              the npx installer
