@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.11.0 - 2026-11-12
 
 - New `opm:assess` (`/opm:assess [architecture|code|feature|project] [target]`): assesses a project that already exists. It asks which level to assess (architecture, code, one feature or the whole project), maps the repo, runs the baseline gates read-only for code and project, runs parallel lens subagents, and has a verifier re-check every cited line before anything is reported. Findings get IDs, are ranked by severity and effort, and are grouped into bundles in `docs/assessments/YYYY-MM-DD-<level>.md`; a later run marks earlier findings Fixed, New or Still open. Secret values are never quoted, only their location and kind. Every side effect needs a yes: publishing the report as a private artifact page, creating the `fix/assess-<date>-<level>` branch, and committing the report. It then asks which bundles to fix and routes them by the first rule that matches: more than 8 tasks or an L architecture finding to `milestone-planning`, all-small batches of up to 3 to `tdd-workflow` (its own checkpoint commits, with the finding ID), everything else to `writing-plans` and `executing-plans`. The core loads about 1,100 tokens; level briefs load on demand from `skills/assess/references/`.
 - `code-reviewer` and `typescript-reviewer` gain a Sweep mode: only a brief that says "Sweep mode" makes them review whole files instead of a diff (naming paths alone does not), and can return the assess finding format.
