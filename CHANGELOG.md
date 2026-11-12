@@ -1,12 +1,22 @@
 # Changelog
 
-## Unreleased
+## 0.11.0 - 2026-11-12
 
 - New `opm:assess` (`/opm:assess [architecture|code|feature|project] [target]`): assesses a project that already exists. It asks which level to assess (architecture, code, one feature or the whole project), maps the repo, runs the baseline gates read-only for code and project, runs parallel lens subagents, and has a verifier re-check every cited line before anything is reported. Findings get IDs, are ranked by severity and effort, and are grouped into bundles in `docs/assessments/YYYY-MM-DD-<level>.md`; a later run marks earlier findings Fixed, New or Still open. Secret values are never quoted, only their location and kind. Every side effect needs a yes: publishing the report as a private artifact page, creating the `fix/assess-<date>-<level>` branch, and committing the report. It then asks which bundles to fix and routes them by the first rule that matches: more than 8 tasks or an L architecture finding to `milestone-planning`, all-small batches of up to 3 to `tdd-workflow` (its own checkpoint commits, with the finding ID), everything else to `writing-plans` and `executing-plans`. The core loads about 1,100 tokens; level briefs load on demand from `skills/assess/references/`.
 - `code-reviewer` and `typescript-reviewer` gain a Sweep mode: only a brief that says "Sweep mode" makes them review whole files instead of a diff (naming paths alone does not), and can return the assess finding format.
 - `using-opm` routes a new `existing` size class to `opm:assess`; the trigger fixture grows to 34 prompts.
 - Always-on cost rises from about 2,526 to 2,611 tokens per session, still under the 2,650 ceiling.
 - Hook tests run the hook scripts from a temp directory, so an open plan ledger in the OPM repo itself no longer fails the session-start test.
+
+**New optional plugin: `opm-design`** (`claude plugin install opm-design@opm`)
+
+- `frontend-design`: a direction scored on six axes before code, design tokens and all eight interaction states while building, then visual QA and an independent `design-reviewer` verdict (`ship`, `fix`, `rebuild`, `recapture`).
+- `design-system`: create or extract a `DESIGN.md`, validated for required tokens, hex values, text and surface roles, and F-01 contrast.
+- `ux-flows`: use cases approved before diagrams, Mermaid flow, state and sequence diagrams, a screen inventory checked for dead ends and orphans, and a handoff to `writing-plans`.
+- One craft-floor rules file with stable IDs (`F-*` never waived, `R-*` waivable with evidence, `N-*` craft notes).
+- Visual QA uses the project's Playwright, or asks before a pinned ~150 MB install into `~/.opm/design-tools`, or falls back to a manual checklist.
+- Core: one pointer line in `using-opm`, one line in the full-gate reference, and `npm run tokens` now reports add-on cost and caps add-on skills at 1,200 tokens.
+- Trigger eval: `--suite design` with 14 prompts. **Authored, not run.**
 
 ## 0.10.0 - 2026-11-03
 

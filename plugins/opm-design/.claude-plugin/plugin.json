@@ -1,0 +1,20 @@
+{
+  "name": "opm-design",
+  "displayName": "OPM Design",
+  "version": "0.11.0",
+  "description": "Optional OPM add-on: a design workflow for UI work. Sets a direction and a quality floor before code, keeps a validated DESIGN.md design system, maps user flows before screens, and checks the build with screenshots and an independent design reviewer. Visual QA uses the project's own Playwright when present; otherwise it asks before downloading pinned Playwright, axe-core and Chromium (about 150 MB) into ~/.opm/design-tools, and falls back to a manual checklist on a no.",
+  "author": {
+    "name": "Harshad Madaye",
+    "url": "https://github.com/harshadmadaye"
+  },
+  "repository": "https://github.com/harshadmadaye/OPM",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "design-system",
+    "ux-flows",
+    "accessibility",
+    "visual-qa"
+  ],
+  "homepage": "https://github.com/harshadmadaye/OPM"
+}
