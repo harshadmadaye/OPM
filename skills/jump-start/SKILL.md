@@ -63,7 +63,10 @@ A stack named in the brief always wins. Otherwise use the defaults:
 | Mobile and web | Flutter for mobile, Next.js for web, shared Firebase project |
 | Data | Firebase by default; Postgres + Prisma when relational needs are explicit |
 
-Record the choice and the reason in the design. Load the matching patterns skill
+UI library: per UI stack, run the question flow in
+`${CLAUDE_PLUGIN_ROOT}/skills/brainstorming/references/ui-libraries.md` now, before the build.
+
+Record the choices and reasons in the design. Load the matching patterns skill
 (`opm:react-patterns`, `opm:python-patterns`, `opm:flutter-patterns`) before designing.
 
 ## Phase 3: design artifact, confirm after every change
@@ -110,7 +113,8 @@ no questions outside that list. Decisions go to `docs/milestones/<milestone>/DEC
 
 Invoke `opm:milestone-planning` for milestone `v0.1`. Required shape:
 
-- Phase 0, foundation: scaffold from the official generator, lint, format, typecheck, unit tests, a CI workflow, `.env.example`, README, and a health route or hello screen. Must be green before anything else.
+- Phase 0, foundation: scaffold from the official generator, lint, format, typecheck, unit tests, a CI workflow, `.env.example`, README, and a health route or hello screen. Install any chosen UI library and wire the tokens into its theme. Must be green before anything else.
+- Screens use the UI library's components first; hand-built gaps are logged in DECISIONS.md.
 - Feature phases: one vertical slice per core flow from the screen inventory, ordered by dependency.
 - Hardening phase: error and empty states, loading states, accessibility basics, seed data, security review fixes.
 

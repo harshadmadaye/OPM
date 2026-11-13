@@ -10,7 +10,7 @@ wireframes carry the weight.
 5. Data model: entities, fields that matter, relations, ownership and access.
 6. Architecture: client, backend, data store, auth, third parties, where each runs.
 7. API or contract list: endpoints, callable functions, or Firestore collections with read/write rules summary.
-8. Stack: chosen technologies with one reason each.
+8. Stack: chosen technologies with one reason each, including `UI library: <name> (<reason>; source: search | fallback | developer)` for each UI stack.
 9. Milestone outline: foundation, feature slices, hardening.
 10. Assumptions and open questions: what the developer should challenge before approving.
 

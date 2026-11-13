@@ -33,6 +33,9 @@ its rules by ID.
 
 ## 2. Build
 
+- Detect an installed component library with `references/ui-library.md` before writing any
+  component. If one is present, compose from its components and put the tokens into its theme;
+  hand-build only what it lacks and say why. Ask no library question here.
 - Colours, type, spacing and radius come from `DESIGN.md` tokens, never raw hex (F-10).
 - Every control carries the 8 states in `references/interaction-states.md`.
 - A redesign follows `references/redesign.md` first: inventory every link, field, handler and

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- UI library choice. New projects with a UI now choose a component library instead of hand-building every component. `opm:jump-start` (Phase 2) and `opm:brainstorming` follow one flow in `skills/brainstorming/references/ui-libraries.md`: search the web once for maintained, OSI-licensed libraries that fit the stack, then ask one question with the top three (best marked Recommended) and "Custom components"; free-text "Other" lets the developer name any library. One question, so nothing loops. When search is unavailable or thin, fallback lists fill the gaps (Web/React: shadcn/ui, Mantine, MUI; Flutter: Material 3, shadcn_ui, Forui). The choice is recorded as `UI library:` in the Stack section. The question is skipped when the brief names a library, one is installed, or there is no UI.
+- jump-start's foundation installs the chosen library and wires the design tokens into its theme; build tasks use its components first and log hand-built gaps.
+- `opm-design:frontend-design` detects an installed library (`references/ui-library.md`) and builds with it; `react-patterns` and `flutter-patterns` say to theme and wrap a library, never fork it.
+- No change to always-on token cost: the catalogue loads only when read.
+
 ## 0.11.0 - 2026-11-12
 
 - New `opm:assess` (`/opm:assess [architecture|code|feature|project] [target]`): assesses a project that already exists. It asks which level to assess (architecture, code, one feature or the whole project), maps the repo, runs the baseline gates read-only for code and project, runs parallel lens subagents, and has a verifier re-check every cited line before anything is reported. Findings get IDs, are ranked by severity and effort, and are grouped into bundles in `docs/assessments/YYYY-MM-DD-<level>.md`; a later run marks earlier findings Fixed, New or Still open. Secret values are never quoted, only their location and kind. Every side effect needs a yes: publishing the report as a private artifact page, creating the `fix/assess-<date>-<level>` branch, and committing the report. It then asks which bundles to fix and routes them by the first rule that matches: more than 8 tasks or an L architecture finding to `milestone-planning`, all-small batches of up to 3 to `tdd-workflow` (its own checkpoint commits, with the finding ID), everything else to `writing-plans` and `executing-plans`. The core loads about 1,100 tokens; level briefs load on demand from `skills/assess/references/`.
