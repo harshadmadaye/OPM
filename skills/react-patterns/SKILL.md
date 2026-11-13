@@ -43,6 +43,9 @@ function Cart({ items }: { items: CartItem[] }) {
 
 **Compose, do not inherit.** `children`, slot props, and compound components cover every case.
 
+**Theme and wrap the chosen UI library; never fork it.** Feed tokens through its theme API and
+wrap its components for app-specific defaults (shadcn/ui source is copied in and yours to edit).
+
 **Do not define components inside components.** A new component type on every render remounts
 its subtree and loses state.
 

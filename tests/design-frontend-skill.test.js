@@ -24,7 +24,7 @@ test('SKILL.md has frontmatter, stays under the cap and covers the three steps',
 
 test('every reference SKILL.md names exists', () => {
   const refs = [...new Set([...read('SKILL.md').matchAll(/references\/([\w-]+\.md)/g)].map((m) => m[1]))].sort();
-  assert.deepEqual(refs, ['direction.md', 'flutter.md', 'interaction-states.md', 'redesign.md', 'visual-qa.md']);
+  assert.deepEqual(refs, ['direction.md', 'flutter.md', 'interaction-states.md', 'redesign.md', 'ui-library.md', 'visual-qa.md']);
   for (const ref of refs) assert.ok(fs.existsSync(path.join(SKILL, 'references', ref)), ref);
 });
 

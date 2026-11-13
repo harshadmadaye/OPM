@@ -32,6 +32,11 @@ One approach per app: rule `dart/coding-style.md` (Architecture).
 | Teams that want explicit event -> state transitions and event logs | BLoC / Cubit |
 | Tiny app or package with no dependency budget | `ChangeNotifier` + `ListenableBuilder` |
 
+## UI kit
+
+Use the kit recorded as `UI library:` in the spec (Material 3 when none). Theme it through its
+theme data and wrap its widgets for app defaults; never fork the kit's widgets.
+
 ## References
 
 - Read references/dart-idioms-and-state.md when handling nulls, modelling state or data classes (sealed, freezed, records), or writing Riverpod or Cubit code.

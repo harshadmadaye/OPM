@@ -86,6 +86,7 @@ The subsections below serve the bounded and architectural paths (a spike stops a
 - Prefer multiple-choice questions when possible; open-ended is fine too.
 - **Only one question per message.** If a topic needs more exploration, break it into multiple questions.
 - Focus on understanding: purpose, constraints, success criteria.
+- New project, or a first UI in a project without a component library: read references/ui-libraries.md and ask its library question (curated options, one optional search, custom components) as one of your clarifying questions. Record the answer in the spec's Stack section.
 
 **Exploring approaches:**
 
