@@ -9,7 +9,7 @@ const ROOT = path.resolve(__dirname, '..');
 const read = (...p) => fs.readFileSync(path.join(ROOT, ...p), 'utf8');
 const CATALOGUE_REF = 'references/ui-libraries.md';
 const catalogue = read('skills', 'brainstorming', 'references', 'ui-libraries.md');
-const COLUMNS = ['Round', 'Library', 'Description', 'Licence', 'Install', 'Theme hook', 'Detect'];
+const COLUMNS = ['Library', 'Description', 'Licence', 'Install', 'Theme hook', 'Detect'];
 
 function stackRows(heading) {
   const start = catalogue.indexOf(`## ${heading}`);
@@ -22,29 +22,31 @@ function stackRows(heading) {
   return lines.slice(2).map((l) => l.split('|').slice(1, -1).map((c) => c.trim()));
 }
 
-for (const stack of ['Web: React and Next.js', 'Mobile: Flutter']) {
-  test(`${stack}: two round-1 libraries and one held back, every cell filled`, () => {
+for (const stack of ['Fallback: Web, React and Next.js', 'Fallback: Mobile, Flutter']) {
+  test(`${stack}: three fallback libraries, every cell filled`, () => {
     const rows = stackRows(stack);
-    assert.deepEqual(rows.map((r) => r[0]), ['1', '1', 'held']);
+    assert.equal(rows.length, 3);
     for (const row of rows) {
-      assert.equal(row.length, COLUMNS.length, row[1]);
-      for (const [i, cell] of row.entries()) assert.ok(cell.length > 0, `${row[1]} ${COLUMNS[i]} empty`);
+      assert.equal(row.length, COLUMNS.length, row[0]);
+      for (const [i, cell] of row.entries()) assert.ok(cell.length > 0, `${row[0]} ${COLUMNS[i]} empty`);
     }
   });
 }
 
-test('round 1 fits AskUserQuestion: two libraries, search, custom', () => {
-  for (const needle of ['**Search for more libraries**', '**Custom components**', '(Recommended)', '"Other"']) {
-    assert.ok(catalogue.includes(needle), needle);
-  }
+test('search comes first, runs once, and facts are never invented', () => {
+  assert.ok(catalogue.indexOf('**1. Search, once per project.**') < catalogue.indexOf('**2. Ask, once.**'));
+  assert.match(catalogue, /`ui-library-candidates:/);
+  assert.match(catalogue, /do not search again/);
+  assert.match(catalogue, /Never invent/);
+  assert.match(catalogue, /search is unavailable or fewer than three pass/);
 });
 
-test('search runs at most once and round 2 cannot loop', () => {
-  assert.match(catalogue, /search at most once/i);
-  assert.match(catalogue, /`ui-library-searched: yes`/);
-  assert.match(catalogue, /no search option, so the flow cannot loop/);
-  assert.match(catalogue, /Never invent/);
-  assert.match(catalogue, /source: curated \| searched \| other/);
+test('one question: top three, custom, or the developer names a library; no loop', () => {
+  for (const needle of ['**Custom components**', '(Recommended)', '"Other"', 'no second round, so the flow cannot loop']) {
+    assert.ok(catalogue.includes(needle), needle);
+  }
+  assert.ok(!catalogue.includes('Search for more'), 'search is not a question option');
+  assert.match(catalogue, /source: search \| fallback \| developer/);
 });
 
 test('the question is skipped when it does not apply', () => {

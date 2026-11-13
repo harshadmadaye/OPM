@@ -27,21 +27,20 @@ guidance).
 
 1. One catalogue, `skills/brainstorming/references/ui-libraries.md`, read by `jump-start` and
    `brainstorming`. No new skill, so the always-on token cost does not change.
-2. Shortlists. Web/React: shadcn/ui, Mantine, MUI. Flutter: Material 3, shadcn_ui, Forui.
-   The first two of each are shown in round 1; the third is held back for round 2.
-3. Question flow, at most two rounds, never a loop:
-   - Round 1: two curated libraries, "Search for more libraries", "Custom components". The
-     automatic free-text "Other" accepts any library name. Anything but search is final.
-   - Search runs at most once per project: one web search, keep only OSI-licensed libraries
-     with a release in the last 12 months that support the stack version. Facts come from the
-     search results, never invented. Unavailable or empty search is said plainly.
-   - Round 2: the best three of the search finalists plus the held-back library, then "Custom
-     components". No search option. The answer is final.
+2. Search by default instead of recommending a fixed list, so suggestions stay current:
+   - Search once per project: one web search, keep only OSI-licensed libraries with a release
+     in the last 12 months that support the stack version, rank by fit, maintenance and
+     adoption, keep the top three. Facts come from the search results, never invented.
+   - Ask once: the top three (first marked Recommended), then "Custom components". The
+     automatic free-text "Other" lets the developer name any library. The answer is final;
+     there is no second round, so nothing can loop.
+3. Fallback lists, used only when search is unavailable or finds fewer than three: Web/React
+   shadcn/ui, Mantine, MUI; Flutter Material 3, shadcn_ui, Forui. The gap is said plainly.
 4. Skip the question when the brief names a library, a library is already installed, or the
    project is API only. Mobile and web asks one question per UI stack in a single call.
-5. Record `UI library: <name> (<reason>; source: curated | searched | other)` in the Stack
-   section of the spec or design, and `ui-library-searched: yes` once search has run, so a
-   revisited question never offers search again.
+5. Record `UI library: <name> (<reason>; source: search | fallback | developer)` in the Stack
+   section of the spec or design, and `ui-library-candidates: <a>, <b>, <c>` after the search,
+   so a revisited question reuses them instead of searching again.
 6. `jump-start`: the Phase 5 foundation installs the library and wires the token theme; build
    agents use library components first and log any hand-built gap in DECISIONS.md.
 7. `frontend-design`: detect the installed library before building, compose from its
@@ -50,8 +49,8 @@ guidance).
 
 ## Testing
 
-`tests/ui-library-choice.test.js` checks the catalogue shape (two round-1 libraries and one
-held-back library per stack, each with description, licence, install, theme hook and detect
-signal), the once-only search and the search-free round 2, and that every entry point
+`tests/ui-library-choice.test.js` checks the fallback tables (three libraries per stack, each
+with description, licence, install, theme hook and detect signal), that search comes first and
+runs once, that there is a single question with no search option, and that every entry point
 references the catalogue or the detection. The existing suite, token budget included, stays
 green.
