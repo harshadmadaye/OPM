@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const AGENT = path.resolve(__dirname, '..', 'plugins', 'opm-design', 'agents', 'design-reviewer.md');
+const AGENT = path.resolve(__dirname, '..', 'agents', 'design-reviewer.md');
 
 test('frontmatter names the agent and limits its tools', () => {
   const text = fs.readFileSync(AGENT, 'utf8');

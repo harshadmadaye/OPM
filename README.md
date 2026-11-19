@@ -51,7 +51,7 @@ rules. Details: [docs/using-opm.md](docs/using-opm.md).
 Four claims, each with its evidence. Token counts are bytes / 4 estimates from
 `npm run tokens`.
 
-**1. It costs 2,611 tokens per session.** That is every skill and agent
+**1. It costs 3,104 tokens per session.** That is every skill and agent
 description plus the using-opm skill injected at session start. The rules add
 1,401 tokens in repos that install them. CI fails if either grows past its
 ceiling. Evidence: [the cost table](docs/why-opm.md#what-opm-costs-per-session).
@@ -326,19 +326,20 @@ No network calls and no model calls.
 
 ---
 
-## Optional plugins
+## Design and video
 
-The marketplace carries two optional plugins beside the core. They are kept out of
-`opm` so the core stays small and ships no video or browser toolchain.
+Both ship inside `opm`, so one install gives you every command. Their browser,
+ffmpeg and voice tools are not bundled; each skill fetches what it needs on
+first use, as described below.
 
-### 🎬 `opm-video` — turn a spec into a narrated video
+### 🎬 Explainer video — turn a spec into a narrated video
 
 Point it at a spec, a brew-idea result, or any document. You get a 1920x1080
 MP4 with a neural voice-over and subtitles, plus the editable storyboard and
 slides. It is a narrated slideshow with fades, not animation.
 
 ```
-/opm-video:explainer-video docs/specs/2026-09-17-field-sales-brew.md
+/opm:explainer-video docs/specs/2026-09-17-field-sales-brew.md
 ```
 
 **Here is the interesting part.** The first version of this pipeline was run by
@@ -362,30 +363,24 @@ It asks before any audio leaves your machine, and offers a fully offline voice
 if you would rather nothing did. Every fact in the video has to trace back to
 the source document, and a validator enforces it.
 
-Install it after the core:
-
-```bash
-claude plugin install opm-video@opm
-```
-
 It needs a headless browser (Chrome, Chromium, Edge or Brave, or `CHROME_PATH`),
 and on first build it installs pinned ffmpeg, ffprobe and edge-tts into
 `~/.opm/explainer-video-tools`. Python is needed for the neural voice.
 **The neural voice sends the narration text to Microsoft's cloud speech service
 through edge-tts**; pick the local OS voice and nothing leaves your machine.
 
-### 🎨 `opm-design` — direction, flows and a second pair of eyes for UI
+### 🎨 Design — direction, flows and a second pair of eyes for UI
 
 AI-built UI tends to look the same: purple gradients, three identical cards, centred
-everything, and buttons with no focus state. `opm-design` makes Claude set a direction before
+everything, and buttons with no focus state. The design skills make Claude set a direction before
 writing UI code, holds every build to a written craft floor (contrast, focus, motion, tap
 targets, no invented stats), and then checks the result the way a person would, by looking at
 it.
 
 ```
-/opm-design:frontend-design   build or redesign a page or component
-/opm-design:design-system     create or extract a validated DESIGN.md
-/opm-design:ux-flows          use cases, Mermaid flows and a screen inventory before any screen
+/opm:frontend-design          build or redesign a page or component
+/opm:design-system            create or extract a validated DESIGN.md
+/opm:ux-flows                 use cases, Mermaid flows and a screen inventory before any screen
 ```
 
 - **Visual QA** screenshots the page at phone and desktop widths, checks horizontal scroll down
@@ -397,12 +392,6 @@ it.
 - **Flows before screens:** `ux-flows` stops for your approval of the use cases, then checks the
   screen inventory for dead ends and orphans and hands a navigation table to `writing-plans`.
 
-Install it after the core:
-
-```bash
-claude plugin install opm-design@opm
-```
-
 Visual QA uses your project's own Playwright if it has one. Otherwise it **asks before
 downloading** pinned Playwright, axe-core and Chromium (about 150 MB) into
 `~/.opm/design-tools`. Say no and you get a manual checklist instead, reported as manual.
@@ -413,7 +402,7 @@ Web first; Flutter gets the token mapping and the rules, but no visual QA yet.
 ## Everything in the box
 
 <details>
-<summary><b>All 14 skills</b> — invoked as <code>/opm:&lt;name&gt;</code>, or picked up automatically when they match the task</summary>
+<summary><b>All 18 skills</b> — invoked as <code>/opm:&lt;name&gt;</code>, or picked up automatically when they match the task</summary>
 
 **The loop**
 
@@ -449,10 +438,19 @@ Web first; Flutter gets the token mapping and the rules, but no visual QA yet.
 | `python-patterns` | Modern Python: typing, dataclasses and pydantic at boundaries, async basics, uv, ruff and pytest layout. |
 | `flutter-patterns` | Flutter and Dart 3: widget composition, state management choice, async and streams, Firebase, tests. |
 
+**Design and video**
+
+| Skill | What it does |
+|---|---|
+| `frontend-design` | Sets a direction before UI code, holds the build to the craft floor, then checks it with screenshots and the `design-reviewer` agent. |
+| `design-system` | Creates or extracts a validated `DESIGN.md`. |
+| `ux-flows` | Use cases, Mermaid flows and a screen inventory before any screen is built. |
+| `explainer-video` | Turns a spec or document into a narrated 1920x1080 MP4 with subtitles. |
+
 </details>
 
 <details>
-<summary><b>5 reviewer subagents</b> — dispatched automatically when a task matches, or ask for one by name</summary>
+<summary><b>6 reviewer subagents</b> — dispatched automatically when a task matches, or ask for one by name</summary>
 
 | Agent | Model | Use it for |
 |---|---|---|
@@ -461,6 +459,7 @@ Web first; Flutter gets the token mapping and the rules, but no visual QA yet.
 | `typescript-reviewer` | sonnet | TypeScript and Node specifics: types, async pitfalls, merge readiness; Sweep mode reviews whole files |
 | `security-reviewer` | sonnet | OWASP checks, dependency audits for npm, Python and Dart, Firebase rules |
 | `silent-failure-hunter` | sonnet | Swallowed errors, empty catches, misleading fallbacks |
+| `design-reviewer` | sonnet | Independent visual and accessibility review of UI screenshots after `frontend-design` |
 
 </details>
 
@@ -491,9 +490,9 @@ let through on purpose, and what is out of scope.
 
 ```
 .claude-plugin/   plugin.json, marketplace.json
-agents/           5 subagents
-skills/           14 skills (SKILL.md plus templates/scripts where needed)
-plugins/          opm-video and opm-design, the optional add-on plugins
+agents/           6 subagents
+skills/           18 skills (SKILL.md plus templates/scripts where needed)
+shared/           craft-floor.md and helpers used by the design skills
 hooks/            hooks.json, 6 dependency-free Node scripts and mod/ (the hooks module)
 rules/            copied into <repo>/.claude/rules/opm/ by the installer
 bin/              the npx installer

@@ -1,6 +1,6 @@
 ---
 name: explainer-video
-description: Turns a spec or document into a narrated explainer video. Produces a 1920x1080 MP4 of illustrated still slides with a neural voice-over and a sidecar .srt; it is a narrated slideshow with fades, not animation. Slides come from a script-rendered layout kit so the run is cheap and repeatable on macOS, Linux and Windows. Use when the developer runs /opm-video:explainer-video <path>, asks for an explainer or walkthrough video of a spec, brew-idea result, milestone summary or other document, or wants to rebuild such a video after an edit.
+description: Turns a spec or document into a narrated explainer video. Produces a 1920x1080 MP4 of illustrated still slides with a neural voice-over and a sidecar .srt; it is a narrated slideshow with fades, not animation. Slides come from a script-rendered layout kit so the run is cheap and repeatable on macOS, Linux and Windows. Use when the developer runs /opm:explainer-video <path>, asks for an explainer or walkthrough video of a spec, brew-idea result, milestone summary or other document, or wants to rebuild such a video after an edit.
 argument-hint: <path to spec or document>
 disable-model-invocation: true
 ---
@@ -11,7 +11,7 @@ One document in, a narrated explainer out. The developer is involved at three
 points: the length, the storyboard with audio consent, and the finished video.
 Everything between is scripts.
 
-**Announce at start:** "Using opm-video:explainer-video; this makes a narrated slideshow, not animation."
+**Announce at start:** "Using opm:explainer-video; this makes a narrated slideshow, not animation."
 
 Invocation text is in `$ARGUMENTS`. Scripts live next to this file in
 `${CLAUDE_PLUGIN_ROOT}/skills/explainer-video/scripts/` (written `S/` below). Every

@@ -5,7 +5,7 @@ description: Maps user flows before screens are built, producing use cases with 
 
 # UX flows
 
-**Announce at start:** "Using opm-design:ux-flows to map use cases, flows and screens before building."
+**Announce at start:** "Using opm:ux-flows to map use cases, flows and screens before building."
 
 Files go in `docs/ux-flows/<feature>/`, with `<feature>` in kebab-case. `P/` below is
 `${CLAUDE_PLUGIN_ROOT}`.

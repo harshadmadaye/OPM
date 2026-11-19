@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const SKILL = path.resolve(__dirname, '..', 'plugins', 'opm-design', 'skills', 'frontend-design');
+const SKILL = path.resolve(__dirname, '..', 'skills', 'frontend-design');
 const read = (...p) => fs.readFileSync(path.join(SKILL, ...p), 'utf8');
 const MAX_SKILL_BYTES = 4800;
 const STATES = ['default', 'hover', 'focus', 'active', 'disabled', 'loading', 'error', 'success'];
@@ -15,8 +15,8 @@ test('SKILL.md has frontmatter, stays under the cap and covers the three steps',
   const text = read('SKILL.md');
   assert.match(text, /^---\nname: frontend-design\ndescription: .*Use when.*Not for backend.*\n---\n/);
   assert.ok(Buffer.byteLength(text) <= MAX_SKILL_BYTES, `SKILL.md is ${Buffer.byteLength(text)} bytes`);
-  for (const needle of ['Using opm-design:frontend-design', '## 1. Direction', '## 2. Build', '## 3. Check', '## Size first',
-    'visual-qa.mjs', 'opm-design:design-reviewer', 'change.diff', 'Design waivers', '## Red flags', 'F-06', 'F-10']) {
+  for (const needle of ['Using opm:frontend-design', '## 1. Direction', '## 2. Build', '## 3. Check', '## Size first',
+    'visual-qa.mjs', 'opm:design-reviewer', 'change.diff', 'Design waivers', '## Red flags', 'F-06', 'F-10']) {
     assert.ok(text.includes(needle), needle);
   }
   for (const verdict of ['ship', 'fix', 'rebuild', 'recapture']) assert.ok(text.includes(`\`${verdict}\``), verdict);

@@ -109,10 +109,12 @@ function writeSkillOfSize(root, name, totalBytes) {
   writeFile(root, `skills/${name}/SKILL.md`, skillText(name, 'Split skill.', 'e'.repeat(totalBytes - Buffer.byteLength(empty))));
 }
 
-test('the soft cap is 1,200 tokens and is enforced for the four split skills', () => {
+test('the soft cap is 1,200 tokens and is enforced for the split skills and the design skills', () => {
   assert.equal(budget.SKILL_SOFT_CAP_TOKENS, 1200);
-  assert.deepEqual(budget.ENFORCED_SOFT_CAP_SKILLS,
-    ['executing-plans', 'react-patterns', 'python-patterns', 'flutter-patterns']);
+  assert.deepEqual(budget.ENFORCED_SOFT_CAP_SKILLS, [
+    'executing-plans', 'react-patterns', 'python-patterns', 'flutter-patterns',
+    'frontend-design', 'design-system', 'ux-flows',
+  ]);
 });
 
 test('an enforced skill grown past 4,800 bytes fails check(), naming the skill', () => {
@@ -203,34 +205,4 @@ test('--write without markers exits non-zero with a clear message', () => {
 test('the real repo stays within its token ceilings', () => {
   const result = budget.check(budget.measure(ROOT));
   assert.equal(result.isOk, true, result.failures.join('\n'));
-});
-
-test('add-on plugins are measured separately from core', () => {
-  const root = makeFixture();
-  writeFile(root, 'plugins/opm-design/skills/flows/SKILL.md', skillText('flows', 'Maps flows.', 'f'.repeat(100)));
-  writeFile(root, 'plugins/opm-design/agents/critic.md', skillText('critic', 'Reviews UI.', 'Body.'));
-  const coreOnly = budget.measure(makeFixture());
-  const report = budget.measure(root);
-  assert.deepEqual(budget.SUB_PLUGINS, ['opm-design']);
-  assert.equal(report.plugin.totalBytes, coreOnly.plugin.totalBytes, 'add-on bytes must not count toward core');
-  const design = report.subPlugins.find((p) => p.name === 'opm-design');
-  assert.equal(design.skillDescriptions, Buffer.byteLength('flows') + Buffer.byteLength('Maps flows.'));
-  assert.equal(design.agentDescriptions, Buffer.byteLength('critic') + Buffer.byteLength('Reviews UI.'));
-  assert.equal(design.totalTokens, Math.ceil(design.totalBytes / budget.BYTES_PER_TOKEN));
-  assert.deepEqual(coreOnly.subPlugins, []);
-});
-
-test('an add-on skill over the soft cap fails check()', () => {
-  const root = makeFixture();
-  writeFile(root, 'plugins/opm-design/skills/huge/SKILL.md', skillText('huge', 'Too big.', 'h'.repeat(5000)));
-  const result = budget.check(budget.measure(root), { plugin: Infinity, rulesCommon: Infinity });
-  assert.equal(result.isOk, false);
-  assert.ok(result.failures.some((f) => /^opm-design skill huge is \d+ tokens, over the soft cap of 1200 \(enforced for add-on plugins\)$/.test(f)), result.failures.join('\n'));
-});
-
-test('the text report shows the add-on always-on cost', () => {
-  const root = makeFixture();
-  writeFile(root, 'plugins/opm-design/skills/flows/SKILL.md', skillText('flows', 'Maps flows.', 'f'));
-  const run = spawnSync('node', [SCRIPT, '--root', root]);
-  assert.match(run.stdout.toString(), /opm-design always-on when installed: \d+ tokens \(skill and agent descriptions\)/);
 });

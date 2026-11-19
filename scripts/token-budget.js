@@ -10,19 +10,19 @@ const path = require('path');
 
 const BYTES_PER_TOKEN = 4;
 // Ceilings = measured baseline on 2026-10-05 plus 10%, rounded up to the next 50.
-const PLUGIN_ALWAYS_ON_CEILING_TOKENS = 2650; // measured 2,379 (0.7.1)
+const PLUGIN_ALWAYS_ON_CEILING_TOKENS = 3450; // measured 3,104 after folding in the design and video skills
 const RULES_COMMON_CEILING_TOKENS = 1550; // measured 1,401
 const SKILL_SOFT_CAP_TOKENS = 1200; // fits a 4.5 KB SKILL.md core
-// Split skills keep their core under the soft cap as a hard limit; others only warn.
-const ENFORCED_SOFT_CAP_SKILLS = ['executing-plans', 'react-patterns', 'python-patterns', 'flutter-patterns'];
+// Split skills and the design skills keep their core under the soft cap as a hard limit; others only warn.
+const ENFORCED_SOFT_CAP_SKILLS = [
+  'executing-plans', 'react-patterns', 'python-patterns', 'flutter-patterns',
+  'frontend-design', 'design-system', 'ux-flows',
+];
 // Hard ceilings for skills that stay over the soft cap. Core size after 02-01 (about
 // 2,300) plus headroom for the Phase 2 rules, so execution detail goes to references/.
 const SKILL_CEILING_TOKENS = { 'milestone-planning': 2400, 'jump-start': 2400 };
 const REFERENCES_DIR = 'references';
 const LARGEST_SKILLS_SHOWN = 10;
-// Add-on plugins under plugins/: measured apart from core, with the soft cap enforced on their skills.
-const SUB_PLUGINS = ['opm-design'];
-const SUB_PLUGINS_DIR = 'plugins';
 
 const DOC_RELATIVE_PATH = path.join('docs', 'why-opm.md');
 const START_MARKER = '<!-- token-budget:start -->';
@@ -92,15 +92,6 @@ function measurePlugin(root, skillTexts) {
   return { skillDescriptions, agentDescriptions, sessionStart, totalBytes, totalTokens: toTokens(totalBytes) };
 }
 
-function measureSubPlugin(root, name) {
-  const dir = path.join(root, SUB_PLUGINS_DIR, name);
-  if (!fs.existsSync(path.join(dir, 'skills'))) return null;
-  const skillTexts = readSkills(dir);
-  const { skillDescriptions, agentDescriptions } = descriptionTotals(dir, skillTexts);
-  const totalBytes = skillDescriptions + agentDescriptions;
-  return { name, skillDescriptions, agentDescriptions, totalBytes, totalTokens: toTokens(totalBytes), skills: measureSkills(skillTexts) };
-}
-
 function measureRulesCommon(root) {
   const files = listMarkdown(path.join(root, 'rules', 'common')).map((file) => {
     const bytes = byteLength(readText(file));
@@ -133,7 +124,6 @@ function measure(root) {
     plugin: measurePlugin(root, skillTexts),
     rulesCommon: measureRulesCommon(root),
     skills: measureSkills(skillTexts),
-    subPlugins: SUB_PLUGINS.map((name) => measureSubPlugin(root, name)).filter(Boolean),
   };
 }
 
@@ -154,10 +144,6 @@ function check(report, ceilings = DEFAULT_CEILINGS) {
   const overCeiling = report.skills.filter((s) => s.tokens > (SKILL_CEILING_TOKENS[s.name] ?? Infinity));
   failures.push(...overCeiling.map((s) =>
     `skill ${s.name} is ${s.tokens} tokens, over its ceiling of ${SKILL_CEILING_TOKENS[s.name]} (move detail to ${REFERENCES_DIR}/)`));
-  for (const sub of report.subPlugins || []) {
-    failures.push(...sub.skills.filter((s) => s.isOverSoftCap)
-      .map((s) => `${sub.name} skill ${s.name} is ${s.tokens} tokens, over the soft cap of ${SKILL_SOFT_CAP_TOKENS} (enforced for add-on plugins)`));
-  }
   const warnings = overCap.filter((s) => !isEnforced(s)).map(capMessage);
   return { isOk: failures.length === 0, failures, warnings };
 }
@@ -198,7 +184,6 @@ function formatReport(report, result) {
   const lines = [
     `plugin always-on: ${report.plugin.totalTokens} tokens (ceiling ${PLUGIN_ALWAYS_ON_CEILING_TOKENS})`,
     `rules/common:     ${report.rulesCommon.totalTokens} tokens (ceiling ${RULES_COMMON_CEILING_TOKENS})`,
-    ...(report.subPlugins || []).map((sub) => `${sub.name} always-on when installed: ${sub.totalTokens} tokens (skill and agent descriptions)`),
     ...report.skills
       .filter((s) => s.referenceBytes > 0)
       .map((s) => `${s.name}: ${s.referenceBytes} bytes on demand in ${REFERENCES_DIR}/`),
@@ -247,7 +232,6 @@ module.exports = {
   SKILL_SOFT_CAP_TOKENS,
   ENFORCED_SOFT_CAP_SKILLS,
   SKILL_CEILING_TOKENS,
-  SUB_PLUGINS,
   START_MARKER,
   END_MARKER,
   stripFrontmatter,

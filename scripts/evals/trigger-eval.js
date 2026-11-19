@@ -15,15 +15,10 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const FIXTURES_DIR = path.join(REPO_ROOT, 'tests', 'fixtures');
 const SUITES = {
   core: { fixture: path.join(FIXTURES_DIR, 'trigger-prompts.json'), pluginDirs: [REPO_ROOT] },
-  design: {
-    fixture: path.join(FIXTURES_DIR, 'design-trigger-prompts.json'),
-    pluginDirs: [REPO_ROOT, path.join(REPO_ROOT, 'plugins', 'opm-design')],
-  },
+  design: { fixture: path.join(FIXTURES_DIR, 'design-trigger-prompts.json'), pluginDirs: [REPO_ROOT] },
 };
 const SIZE_CLASSES = ['spike', 'bounded', 'multi-week', 'unattended', 'contested', 'design'];
 const OPM_PREFIX = 'opm:';
-// Skills from these plugins count as routing choices; only the core prefix is stripped.
-const ROUTED_PREFIXES = [OPM_PREFIX, 'opm-design:'];
 // using-opm is already injected by the SessionStart hook; loading it again is not a routing choice.
 const FRONT_DOOR_SKILL = 'opm:using-opm';
 const EVAL_MODEL = 'haiku';
@@ -61,12 +56,10 @@ function parseSkillInvocations(streamJsonText) {
   return skills;
 }
 
-// The first OPM skill that is a routing choice, or null. Core skills lose the opm: prefix;
-// add-on skills keep theirs (opm-design:frontend-design).
+// The first OPM skill that is a routing choice, without its opm: prefix, or null.
 function observedSkill(skillNames) {
-  const chosen = skillNames.find((name) => ROUTED_PREFIXES.some((p) => name.startsWith(p)) && name !== FRONT_DOOR_SKILL);
-  if (!chosen) return null;
-  return chosen.startsWith(OPM_PREFIX) ? chosen.slice(OPM_PREFIX.length) : chosen;
+  const chosen = skillNames.find((name) => name.startsWith(OPM_PREFIX) && name !== FRONT_DOOR_SKILL);
+  return chosen ? chosen.slice(OPM_PREFIX.length) : null;
 }
 
 function parseArgs(argv) {

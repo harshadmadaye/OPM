@@ -1,6 +1,6 @@
 # Craft floor
 
-The one rules file for opm-design. Skills and the design-reviewer agent cite rules by ID and
+The one rules file for the design skills. Skills and the design-reviewer agent cite rules by ID and
 never restate them. Three tiers: Floor rules are never waived, Reflex rules need a recorded
 waiver, Finish rules are craft notes that never block.
 

@@ -5,7 +5,7 @@ description: Creates or extracts a DESIGN.md design system with colour roles, ty
 
 # Design system
 
-**Announce at start:** "Using opm-design:design-system to write a validated DESIGN.md."
+**Announce at start:** "Using opm:design-system to write a validated DESIGN.md."
 
 `P/` below is `${CLAUDE_PLUGIN_ROOT}`. Read `references/design-md-format.md` before writing; the
 validator accepts only that format.
@@ -44,7 +44,7 @@ Run `node P/skills/design-system/scripts/validate-design-md.mjs DESIGN.md`. Fix 
 `Violation:` line and rerun until it prints `ok:`. A failing text/surface pair (F-01) is fixed by
 changing a token, never by removing the role.
 
-Report the `ok:` line and the token counts. Offer `/opm-design:frontend-design` next if UI work
+Report the `ok:` line and the token counts. Offer `/opm:frontend-design` next if UI work
 is waiting.
 
 ## Red flags

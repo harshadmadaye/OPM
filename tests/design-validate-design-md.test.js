@@ -8,7 +8,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
 
-const SCRIPT = path.resolve(__dirname, '..', 'plugins', 'opm-design', 'skills', 'design-system', 'scripts', 'validate-design-md.mjs');
+const SCRIPT = path.resolve(__dirname, '..', 'skills', 'design-system', 'scripts', 'validate-design-md.mjs');
 const load = () => import(pathToFileURL(SCRIPT).href);
 
 const VALID = [
