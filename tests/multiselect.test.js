@@ -5,8 +5,9 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const { EventEmitter } = require('node:events');
 
-const { createState, reduce, render, selected } = require(path.resolve(__dirname, '..', 'bin', 'multiselect.js'));
+const { createState, reduce, render, selected, screenRows, pick } = require(path.resolve(__dirname, '..', 'bin', 'multiselect.js'));
 
 const ITEMS = ['typescript', 'react', 'python', 'dart'];
 const press = (state, ...keys) => keys.reduce((s, name) => reduce(s, typeof name === 'string' ? { name } : name).state, state);
@@ -80,4 +81,25 @@ test('render shows ticks, the cursor, both actions and a key hint', () => {
   assert.match(lines[ITEMS.length], /Select all/);
   assert.match(lines[ITEMS.length + 1], /Submit/);
   assert.match(lines.at(-1), /enter/i);
+});
+
+test('screenRows counts wrapped lines by their visible width', () => {
+  const coloured = `\u001b[36m${'x'.repeat(10)}\u001b[0m`;
+  assert.equal(screenRows(['short', coloured], 10), 2, 'colour codes take no width');
+  assert.equal(screenRows(['x'.repeat(11), ''], 10), 3, 'a long line wraps, an empty line still takes a row');
+  assert.equal(screenRows(['x'.repeat(80)], undefined), 1, 'unknown width falls back to one row per line');
+});
+
+test('pick moves back over every wrapped row when it redraws in a narrow terminal', async () => {
+  const input = Object.assign(new EventEmitter(), { setRawMode() {}, resume() {}, pause() {} });
+  const writes = [];
+  const output = { columns: 60, write: (s) => writes.push(s) };
+  const picked = pick(ITEMS, [], { input, output });
+  input.emit('keypress', '', { name: 'down' });
+  input.emit('keypress', '', { name: 'escape' });
+  await picked;
+  const firstFrame = writes.find((w) => w.includes('typescript')).trimEnd().split('\n');
+  const moveUp = writes.map((w) => w.match(/^\u001b\[(\d+)A/)).find(Boolean);
+  assert.equal(Number(moveUp[1]), screenRows(firstFrame, 60));
+  assert.ok(Number(moveUp[1]) > firstFrame.length, 'the hint wraps at 60 columns');
 });

@@ -9,6 +9,13 @@ const HINT = '↑/↓ move · enter or space ticks · a selects all · enter on 
 
 const dim = (s) => `\u001b[2m${s}\u001b[0m`;
 const cyan = (s) => `\u001b[36m${s}\u001b[0m`;
+const visibleWidth = (s) => [...s.replace(/\u001b\[[0-9;]*m/g, '')].length;
+
+// A line wider than the terminal wraps, so redrawing must move up by rows, not lines.
+function screenRows(lines, columns) {
+  if (!columns) return lines.length;
+  return lines.reduce((rows, line) => rows + Math.max(1, Math.ceil(visibleWidth(line) / columns)), 0);
+}
 
 function createState(items, preselected) {
   return { items, ticked: items.map((item) => preselected.includes(item)), cursor: 0 };
@@ -55,12 +62,12 @@ function render(state) {
 function pick(items, preselected, { input = process.stdin, output = process.stdout, indent = '  ' } = {}) {
   return new Promise((resolve) => {
     let state = createState(items, preselected);
-    let drawnLines = 0;
+    let drawnRows = 0;
     const draw = () => {
-      const lines = render(state).split('\n');
-      if (drawnLines) output.write(`\u001b[${drawnLines}A\r\u001b[0J`);
-      output.write(`${lines.map((line) => indent + line).join('\n')}\n`);
-      drawnLines = lines.length;
+      const lines = render(state).split('\n').map((line) => indent + line);
+      if (drawnRows) output.write(`\u001b[${drawnRows}A\r\u001b[0J`);
+      output.write(`${lines.join('\n')}\n`);
+      drawnRows = screenRows(lines, output.columns);
     };
 
     readline.emitKeypressEvents(input);
@@ -89,4 +96,4 @@ function pick(items, preselected, { input = process.stdin, output = process.stdo
   });
 }
 
-module.exports = { createState, reduce, render, selected, pick };
+module.exports = { createState, reduce, render, selected, screenRows, pick };
