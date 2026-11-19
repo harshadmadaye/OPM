@@ -96,10 +96,11 @@ the hook-bypass check each register one.
   turn data in one local store key, capped at 256 KiB. Nothing is sent.
 - `/opm-status` keeps per-repo snapshots in the local store under a hashed key,
   with no path in the key.
-- opm: the neural voice uses edge-tts, which sends the narration text to
-  a Microsoft cloud speech service. The skill asks first, and the local OS
-  voice keeps everything on the machine.
-- opm: makes no network calls except the consented one-time download from the npm registry and the Playwright browser CDN, and loading the page under test.
+- explainer-video: on first build it downloads pinned ffmpeg, ffprobe and
+  edge-tts into `~/.opm/explainer-video-tools`. The neural voice uses edge-tts,
+  which sends the narration text to a Microsoft cloud speech service. The skill
+  asks first, and the local OS voice keeps everything on the machine.
+- Design skills: no network calls except the consented one-time download from the npm registry and the Playwright browser CDN, and loading the page under test.
 
 ## Support
 
