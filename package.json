@@ -1,7 +1,7 @@
 {
   "name": "opm-core",
   "version": "0.11.0",
-  "description": "Claude Code plugin: spec-driven, test-first engineering workflow. Brainstorm, plan, TDD with fresh-context subagents, code review and verification, with lower token costs.",
+  "description": "Claude Code plugin: spec-driven, test-first engineering workflow with design system workflows, UX flow mapping, visual QA, and explainer video generation. Brainstorm, plan, TDD with fresh-context subagents, code review and verification, with lower token costs.",
   "bin": {
     "opm-core": "bin/install.js"
   },
@@ -32,7 +32,13 @@
     "multi-agent",
     "spec-driven-development",
     "ai-coding-assistant",
-    "workflow"
+    "workflow",
+    "design-system",
+    "ux-flows",
+    "accessibility",
+    "visual-qa",
+    "explainer-video",
+    "text-to-speech"
   ],
   "author": "Harshad Madaye (https://github.com/harshadmadaye)",
   "license": "MIT",

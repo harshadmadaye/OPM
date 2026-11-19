@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
-const SKILL = path.resolve(__dirname, '..', 'plugins', 'opm-design', 'skills', 'ux-flows');
+const SKILL = path.resolve(__dirname, '..', 'skills', 'ux-flows');
 const read = (...p) => fs.readFileSync(path.join(SKILL, ...p), 'utf8');
 const MAX_SKILL_BYTES = 4800;
 const MAX_NODES = 20;
@@ -15,7 +15,7 @@ test('SKILL.md has frontmatter, stays under the cap and stops for approval', () 
   const text = read('SKILL.md');
   assert.match(text, /^---\nname: ux-flows\ndescription: .*Use when.*\n---\n/);
   assert.ok(Buffer.byteLength(text) <= MAX_SKILL_BYTES, `SKILL.md is ${Buffer.byteLength(text)} bytes`);
-  for (const needle of ['Using opm-design:ux-flows', '**Stop.', 'check-flows.mjs', 'docs/ux-flows/<feature>/', 'opm:writing-plans',
+  for (const needle of ['Using opm:ux-flows', '**Stop.', 'check-flows.mjs', 'docs/ux-flows/<feature>/', 'opm:writing-plans',
     'Screen | Use cases | Key elements | Outgoing links', '## Size first', '## Red flags']) {
     assert.ok(text.includes(needle), needle);
   }

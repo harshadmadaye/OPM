@@ -6,7 +6,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
 
-const SCRIPT = path.resolve(__dirname, '..', 'plugins', 'opm-design', 'skills', 'frontend-design', 'scripts', 'contrast.mjs');
+const SCRIPT = path.resolve(__dirname, '..', 'skills', 'frontend-design', 'scripts', 'contrast.mjs');
 const load = () => import(pathToFileURL(SCRIPT).href);
 const close = (actual, expected, tolerance) => assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} is not within ${tolerance} of ${expected}`);
 

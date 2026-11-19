@@ -5,8 +5,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const PLUGIN = path.resolve(__dirname, '..', 'plugins', 'opm-design');
+const PLUGIN = path.resolve(__dirname, '..');
 const FLOOR = path.join(PLUGIN, 'shared', 'craft-floor.md');
+const DESIGN_PATHS = ['shared', 'agents/design-reviewer.md', 'skills/frontend-design', 'skills/design-system', 'skills/ux-flows']
+  .map((p) => path.join(PLUGIN, p));
 const DEFINITION = /^\| ([FRNP]-\d{2}) \|/gm;
 const CITATION = /\b([FRNP]-\d{2})\b/g;
 
@@ -34,9 +36,10 @@ test('the floor, reflex, finish and preset sets are complete', () => {
   }
 });
 
-test('every rule ID cited anywhere in opm-design exists', () => {
+test('every rule ID cited in the design skills, agent and shared files exists', () => {
   const ids = new Set(definedIds());
-  for (const file of markdownFiles(PLUGIN)) {
+  const files = DESIGN_PATHS.flatMap((p) => (fs.statSync(p).isDirectory() ? markdownFiles(p) : [p]));
+  for (const file of files) {
     const cited = [...fs.readFileSync(file, 'utf8').matchAll(CITATION)].map((m) => m[1]);
     const unknown = [...new Set(cited.filter((id) => !ids.has(id)))];
     assert.deepEqual(unknown, [], `${path.relative(PLUGIN, file)} cites unknown rules: ${unknown.join(', ')}`);

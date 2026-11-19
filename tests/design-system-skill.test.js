@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
-const PLUGIN = path.resolve(__dirname, '..', 'plugins', 'opm-design');
+const PLUGIN = path.resolve(__dirname, '..');
 const SKILL = path.join(PLUGIN, 'skills', 'design-system');
 const read = (...p) => fs.readFileSync(path.join(SKILL, ...p), 'utf8');
 const MAX_SKILL_BYTES = 4800;
@@ -15,7 +15,7 @@ test('SKILL.md has frontmatter, stays under the cap and names its scripts', () =
   const text = read('SKILL.md');
   assert.match(text, /^---\nname: design-system\ndescription: .*Use when.*\n---\n/);
   assert.ok(Buffer.byteLength(text) <= MAX_SKILL_BYTES, `SKILL.md is ${Buffer.byteLength(text)} bytes`);
-  assert.ok(text.includes('Using opm-design:design-system'));
+  assert.ok(text.includes('Using opm:design-system'));
   for (const needle of ['validate-design-md.mjs', 'contrast.mjs --delta', '## Red flags', 'F-01']) assert.ok(text.includes(needle), needle);
 });
 

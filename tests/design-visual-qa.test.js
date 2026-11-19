@@ -9,7 +9,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
 
-const SCRIPTS = path.resolve(__dirname, '..', 'plugins', 'opm-design', 'skills', 'frontend-design', 'scripts');
+const SCRIPTS = path.resolve(__dirname, '..', 'skills', 'frontend-design', 'scripts');
 const CLI = path.join(SCRIPTS, 'visual-qa.mjs');
 const load = (rel) => import(pathToFileURL(path.join(SCRIPTS, rel)).href);
 const tmp = (prefix) => fs.mkdtempSync(path.join(os.tmpdir(), prefix));

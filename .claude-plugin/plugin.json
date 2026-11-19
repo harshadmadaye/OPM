@@ -2,7 +2,7 @@
   "name": "opm",
   "displayName": "OPM Engineering Workflow",
   "version": "0.11.0",
-  "description": "An opinionated engineering workflow for Claude Code: brainstorm -> plan -> TDD execution with fresh-context subagents -> verification -> captured learnings. Lean reviewers, stack-specific patterns for TypeScript/React, Python and Flutter, and six light safety hooks.",
+  "description": "An opinionated engineering workflow for Claude Code: brainstorm -> plan -> TDD execution with fresh-context subagents -> verification -> captured learnings. Lean reviewers, stack-specific patterns for TypeScript/React, Python and Flutter, six light safety hooks, UI design skills with visual QA, and a narrated explainer-video skill. Visual QA uses the project's Playwright when present; otherwise it asks before downloading Playwright, axe-core and Chromium (about 150 MB) into ~/.opm/design-tools. The explainer video's neural voice (edge-tts) sends narration text to a Microsoft cloud service unless the local OS voice is chosen.",
   "author": {
     "name": "Harshad Madaye",
     "url": "https://github.com/harshadmadaye"
@@ -18,7 +18,12 @@
     "hooks",
     "react",
     "python",
-    "flutter"
+    "flutter",
+    "design-system",
+    "ux-flows",
+    "accessibility",
+    "visual-qa",
+    "explainer-video"
   ],
   "homepage": "https://github.com/harshadmadaye/OPM"
 }

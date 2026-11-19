@@ -1,6 +1,6 @@
 ---
 name: design-reviewer
-description: Independent visual and accessibility reviewer for UI changes. Use after frontend-design builds or restyles UI and visual QA has produced screenshots. Returns ship, fix, rebuild or recapture with at most 8 line-cited findings against the opm-design craft floor, and never edits files.
+description: Independent visual and accessibility reviewer for UI changes. Use after frontend-design builds or restyles UI and visual QA has produced screenshots. Returns ship, fix, rebuild or recapture with at most 8 line-cited findings against the design craft floor, and never edits files.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
@@ -20,7 +20,7 @@ The brief gives four things and nothing else:
 Read `${CLAUDE_PLUGIN_ROOT}/shared/craft-floor.md` first; cite its rule IDs. Use Bash only to
 run `node ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/visual-qa.mjs` or
 `node ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/contrast.mjs`. You never edit files
-and you have no edit tools. If `${CLAUDE_PLUGIN_ROOT}` is not set, the plugin root is the parent of the `agents/` folder that holds this file; find it with Glob for `**/opm-design/shared/craft-floor.md`.
+and you have no edit tools. If `${CLAUDE_PLUGIN_ROOT}` is not set, the plugin root is the parent of the `agents/` folder that holds this file; find it with Glob for `**/shared/craft-floor.md`.
 
 ## Process
 

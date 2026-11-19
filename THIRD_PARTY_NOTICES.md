@@ -31,9 +31,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## opm-design sources
+## Design skills sources
 
-opm-design's rules, skills and scripts are written in OPM's own words. No file from the projects
+The design skills' rules, skills and scripts are written in OPM's own words. No file from the projects
 below was copied. These projects shaped the ideas:
 
 | Project | Licence | Ideas drawn on |

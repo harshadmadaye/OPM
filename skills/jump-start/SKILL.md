@@ -136,7 +136,7 @@ Start it, smoke-test it, keep it running.
 1. Run `opm:compound-learnings` if anything non-obvious was learned.
 2. Commit everything.
 3. Report using `templates/final-report.md`: what was built, the URL or device, how to stop, test and review numbers, known gaps and assumptions, next steps.
-4. Optional: `/opm-video:explainer-video <path>` turns this into a narrated explainer (install the opm-video plugin first).
+4. Optional: `/opm:explainer-video <path>` turns this into a narrated explainer.
 
 ## Resuming
 

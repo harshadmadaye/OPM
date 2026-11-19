@@ -115,12 +115,12 @@ test('package.json ships the installer and the rules, and matches the plugin ver
   assert.ok(!pkg.dependencies, 'the installer stays dependency-free');
 });
 
-test('the Next list names every user-facing command and the optional video plugin', () => {
+test('the Next list names every user-facing command, including design and video', () => {
   const source = require('node:fs').readFileSync(BIN, 'utf8');
-  for (const command of ['/opm:brainstorming', '/opm:brew-idea', '/opm:jump-start', '/opm-video:explainer-video', 'claude plugin install opm-video@opm']) {
+  for (const command of ['/opm:brainstorming', '/opm:brew-idea', '/opm:jump-start', '/opm:frontend-design', '/opm:explainer-video']) {
     assert.ok(source.includes(command), `Next list is missing ${command}`);
   }
-  assert.ok(!source.includes('/opm:explainer-video'), 'explainer-video is no longer a core command');
+  assert.ok(!source.includes('opm-video'), 'there is no separate video plugin to install');
 });
 
 test('installRules writes a version stamp whose hashes match the copied files', () => {

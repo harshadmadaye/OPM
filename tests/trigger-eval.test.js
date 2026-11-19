@@ -133,9 +133,8 @@ test('the CLI refuses to start without --yes and spends nothing', () => {
   assert.match(result.stderr, /--yes/);
 });
 
-test('observedSkill keeps the opm-design prefix and strips only opm:', () => {
-  assert.equal(observedSkill(['opm:using-opm', 'opm-design:frontend-design']), 'opm-design:frontend-design');
-  assert.equal(observedSkill(['opm-design:ux-flows', 'opm:brainstorming']), 'opm-design:ux-flows');
+test('observedSkill skips using-opm and other plugins, and strips opm:', () => {
+  assert.equal(observedSkill(['opm:using-opm', 'opm:frontend-design']), 'frontend-design');
   assert.equal(observedSkill(['other:thing', 'opm:tdd-workflow']), 'tdd-workflow');
 });
 
@@ -145,10 +144,10 @@ test('parseArgs reads --suite and rejects an unknown suite', () => {
   assert.throws(() => parseArgs(['--suite']), /--suite/);
 });
 
-test('the design fixture is well formed and the design suite loads both plugins', () => {
+test('the design fixture is well formed and the design suite loads the core plugin', () => {
   const { SUITES, SIZE_CLASSES } = require(path.join(ROOT, 'scripts', 'evals', 'trigger-eval.js'));
   const fixture = JSON.parse(fs.readFileSync(SUITES.design.fixture, 'utf8'));
-  const designSkills = ['opm-design:frontend-design', 'opm-design:design-system', 'opm-design:ux-flows'];
+  const designSkills = ['frontend-design', 'design-system', 'ux-flows'];
   for (const entry of fixture) {
     assert.equal(typeof entry.prompt, 'string');
     assert.ok(SIZE_CLASSES.includes(entry.sizeClass), entry.sizeClass);
@@ -158,5 +157,5 @@ test('the design fixture is well formed and the design suite loads both plugins'
   assert.ok(positives.length >= 10, `need at least 10 design prompts, found ${positives.length}`);
   for (const skill of designSkills) assert.ok(positives.some((e) => e.expectedSkill === skill), skill);
   assert.ok(fixture.filter((e) => e.sizeClass !== 'design').length >= 3, 'need near misses');
-  assert.deepEqual(SUITES.design.pluginDirs, [ROOT, path.join(ROOT, 'plugins', 'opm-design')]);
+  assert.deepEqual(SUITES.design.pluginDirs, [ROOT]);
 });
